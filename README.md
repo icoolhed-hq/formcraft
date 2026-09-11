@@ -9,6 +9,20 @@ React + Tailwind component in dark, light, or auto theme.
 ## Overview
 
 <!-- OVERVIEW:START -->
+Formcraft is a single-file React application for building forms visually and exporting them as JSON schemas or production-ready React + Tailwind components. It provides a complete low-code form builder in one portable file (`FormBuilder.jsx`).
+
+**Features:**  
+- 18 element types organized into Input (text, email, phone, URL, password, number), Choice (radio, checkbox, select, multi-select, toggle), Date & files (date, time, file upload, range slider), and Layout (heading, divider, spacer) groups  
+- Drag-and-drop canvas with reordering, duplication, half/full width layout, and per-field inspector  
+- Live preview with required-field validation and typed submit payloads  
+- Theme-aware exporter supporting dark, light, and auto modes (with `dark:` variants) driven by a unified token system  
+- Undo for delete and clear operations, plus autosave to localStorage with input sanitization  
+
+**Usage:**  
+Run `node tools/serve.mjs` to start a local dev server, then open `preview.html` in a browser. The build script (`tools/build-preview.mjs`) generates `preview.html` from `FormBuilder.jsx`.
+
+**Dependencies:**  
+React, Tailwind CSS, lucide-react
 <!-- OVERVIEW:END -->
 
 ## Quick start
@@ -117,4 +131,5 @@ submission with per-field messages.
 ## Changelog
 
 <!-- CHANGELOG:START -->
+- **2026-09-11** — Add visual form builder with 18 element types, drag reorder, live preview, theme-aware export, and undo/autosave
 <!-- CHANGELOG:END -->
