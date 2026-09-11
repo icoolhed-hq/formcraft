@@ -1,0 +1,2683 @@
+<meta charset="utf-8">
+<title>Formcraft Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  html, body { background: #0A0C12; }
+  body { margin: 0; font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif; color: #E6E9F2; overflow-x: hidden; }
+  #root { min-height: 100vh; }
+  .fc-boot { display: flex; min-height: 100vh; align-items: center; justify-content: center; color: #4b5670; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+</style>
+
+<div id="root"><div class="fc-boot">Loading Formcraft…</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.4/babel.min.js"></script>
+<script>
+  window.tailwind && tailwind.config && (tailwind.config = { theme: { extend: {} } });
+  var ICON_PATHS = {"AlignLeft":[["path",{"d":"M21 6H3"}],["path",{"d":"M15 12H3"}],["path",{"d":"M17 18H3"}]],"ArrowDown":[["path",{"d":"M12 5v14"}],["path",{"d":"m19 12-7 7-7-7"}]],"ArrowUp":[["path",{"d":"m5 12 7-7 7 7"}],["path",{"d":"M12 19V5"}]],"Braces":[["path",{"d":"M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"}],["path",{"d":"M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"}]],"CalendarDays":[["path",{"d":"M8 2v4"}],["path",{"d":"M16 2v4"}],["rect",{"width":"18","height":"18","x":"3","y":"4","rx":"2"}],["path",{"d":"M3 10h18"}],["path",{"d":"M8 14h.01"}],["path",{"d":"M12 14h.01"}],["path",{"d":"M16 14h.01"}],["path",{"d":"M8 18h.01"}],["path",{"d":"M12 18h.01"}]],"Check":[["path",{"d":"M20 6 9 17l-5-5"}]],"Clock":[["circle",{"cx":"12","cy":"12","r":"10"}],["path",{"d":"M12 6v6l4 2"}]],"Contrast":[["circle",{"cx":"12","cy":"12","r":"10"}],["path",{"d":"M12 18a6 6 0 0 0 0-12v12z","fill":"currentColor"}]],"Heading":[["path",{"d":"M6 12h12"}],["path",{"d":"M6 20V4"}],["path",{"d":"M18 20V4"}]],"KeyRound":[["path",{"d":"M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"}],["circle",{"cx":"16.5","cy":"7.5","r":".5","fill":"currentColor"}]],"Link2":[["path",{"d":"M9 17H7A5 5 0 0 1 7 7h2"}],["path",{"d":"M15 7h2a5 5 0 1 1 0 10h-2"}],["path",{"d":"M8 12h8"}]],"ListChecks":[["path",{"d":"m3 17 2 2 4-4"}],["path",{"d":"m3 7 2 2 4-4"}],["path",{"d":"M13 6h8"}],["path",{"d":"M13 12h8"}],["path",{"d":"M13 18h8"}]],"Minus":[["path",{"d":"M5 12h14"}]],"Phone":[["path",{"d":"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"}]],"SlidersHorizontal":[["path",{"d":"M21 4h-7"}],["path",{"d":"M10 4H3"}],["path",{"d":"M21 12h-9"}],["path",{"d":"M8 12H3"}],["path",{"d":"M21 20h-5"}],["path",{"d":"M12 20H3"}],["path",{"d":"M14 2v4"}],["path",{"d":"M8 10v4"}],["path",{"d":"M16 18v4"}]],"Undo2":[["path",{"d":"M9 14 4 9l5-5"}],["path",{"d":"M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"}]],"Upload":[["path",{"d":"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"}],["path",{"d":"M17 8l-5-5-5 5"}],["path",{"d":"M12 3v12"}]],"ChevronDown":[["path",{"d":"m6 9 6 6 6-6"}]],"ChevronUp":[["path",{"d":"m18 15-6-6-6 6"}]],"CircleDot":[["circle",{"cx":"12","cy":"12","r":"10"}],["circle",{"cx":"12","cy":"12","r":"1"}]],"Code2":[["path",{"d":"m18 16 4-4-4-4"}],["path",{"d":"m6 8-4 4 4 4"}],["path",{"d":"m14.5 4-5 16"}]],"Copy":[["rect",{"width":"14","height":"14","x":"8","y":"8","rx":"2","ry":"2"}],["path",{"d":"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"}]],"Eye":[["path",{"d":"M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"}],["circle",{"cx":"12","cy":"12","r":"3"}]],"GripVertical":[["circle",{"cx":"9","cy":"12","r":"1"}],["circle",{"cx":"9","cy":"5","r":"1"}],["circle",{"cx":"9","cy":"19","r":"1"}],["circle",{"cx":"15","cy":"12","r":"1"}],["circle",{"cx":"15","cy":"5","r":"1"}],["circle",{"cx":"15","cy":"19","r":"1"}]],"Hash":[["path",{"d":"M4 9h16"}],["path",{"d":"M4 15h16"}],["path",{"d":"M10 3 8 21"}],["path",{"d":"m16 3-2 18"}]],"LayoutGrid":[["rect",{"width":"7","height":"7","x":"3","y":"3","rx":"1"}],["rect",{"width":"7","height":"7","x":"14","y":"3","rx":"1"}],["rect",{"width":"7","height":"7","x":"14","y":"14","rx":"1"}],["rect",{"width":"7","height":"7","x":"3","y":"14","rx":"1"}]],"Mail":[["rect",{"width":"20","height":"16","x":"2","y":"4","rx":"2"}],["path",{"d":"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"}]],"Plus":[["path",{"d":"M5 12h14"}],["path",{"d":"M12 5v14"}]],"RotateCcw":[["path",{"d":"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"}],["path",{"d":"M3 3v5h5"}]],"Send":[["path",{"d":"m22 2-7 20-4-9-9-4Z"}],["path",{"d":"M22 2 11 13"}]],"Settings2":[["path",{"d":"M20 7h-9"}],["path",{"d":"M14 17H5"}],["circle",{"cx":"17","cy":"17","r":"3"}],["circle",{"cx":"7","cy":"7","r":"3"}]],"Sparkles":[["path",{"d":"m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"}],["path",{"d":"M5 3v4"}],["path",{"d":"M19 17v4"}],["path",{"d":"M3 5h4"}],["path",{"d":"M17 19h4"}]],"ToggleRight":[["rect",{"width":"20","height":"12","x":"2","y":"6","rx":"6","ry":"6"}],["circle",{"cx":"16","cy":"12","r":"2"}]],"Trash2":[["path",{"d":"M3 6h18"}],["path",{"d":"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"}],["path",{"d":"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"}],["path",{"d":"M10 11v6"}],["path",{"d":"M14 11v6"}]],"Type":[["path",{"d":"M12 4v16"}],["path",{"d":"M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"}],["path",{"d":"M9 20h6"}]],"X":[["path",{"d":"M18 6 6 18"}],["path",{"d":"m6 6 12 12"}]]};
+  var LucideShim = {};
+  Object.keys(ICON_PATHS).forEach(function (name) {
+    var nodes = ICON_PATHS[name];
+    function Icon(props) {
+      props = props || {};
+      return React.createElement(
+        "svg",
+        {
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 24 24",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: props.strokeWidth || 2,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          className: props.className,
+          "aria-hidden": props["aria-hidden"]
+        },
+        nodes.map(function (node, i) {
+          return React.createElement(node[0], Object.assign({ key: i }, node[1]));
+        })
+      );
+    }
+    Icon.displayName = name;
+    LucideShim[name] = Icon;
+  });
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useCallback, useEffect, useMemo, useRef, useState } = React;
+const {
+  AlignLeft, ArrowDown, ArrowUp, Braces, CalendarDays, Check, ChevronDown, ChevronUp,
+  CircleDot, Clock, Code2, Contrast, Copy, Eye, GripVertical, Hash, Heading, KeyRound,
+  LayoutGrid, Link2, ListChecks, Mail, Minus, Phone, Plus, RotateCcw, Send, Settings2,
+  SlidersHorizontal, Sparkles, ToggleRight, Trash2, Type, Undo2, Upload, X
+} = LucideShim;
+
+/**
+ * Formcraft — Low-Code Visual Form & Component Builder
+ * -----------------------------------------------------------------------------
+ * A complete, self-contained single-file React application.
+ *
+ * Dependencies: react, tailwindcss, lucide-react
+ * Usage:  import FormBuilder from "./FormBuilder";  <FormBuilder />
+ * -----------------------------------------------------------------------------
+ */
+
+
+
+/* ============================================================================
+ * 1. Theme tokens
+ *
+ * Every token is split into `base` (layout, no colour) plus a `light` and a
+ * `dark` colour set. One source of truth drives three outputs:
+ *   dark   -> base + dark
+ *   light  -> base + light
+ *   auto   -> base + light + every dark class prefixed with `dark:`
+ * The live preview renders with the same strings the exporter emits, so the
+ * generated component is a faithful match of what you see on screen.
+ * ==========================================================================*/
+
+const TOKENS = {
+  label: {
+    base: "mb-2 block text-[13px] font-medium tracking-tight",
+    light: "text-slate-700",
+    dark: "text-slate-200",
+  },
+  required: { base: "ml-1", light: "text-amber-600", dark: "text-amber-400" },
+  input: {
+    base: "w-full rounded-lg border px-3.5 py-2.5 text-sm shadow-sm outline-none transition duration-150",
+    light:
+      "border-slate-300 bg-white text-slate-900 placeholder-slate-400 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15",
+    dark:
+      "border-slate-700/80 bg-slate-900/70 text-slate-100 placeholder-slate-500 hover:border-slate-600 focus:border-indigo-500 focus:bg-slate-900 focus:ring-4 focus:ring-indigo-500/15",
+  },
+  inputError: {
+    base: "w-full rounded-lg border px-3.5 py-2.5 text-sm shadow-sm outline-none transition duration-150",
+    light: "border-rose-400 bg-rose-50 text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15",
+    dark: "border-rose-500/80 bg-rose-950/20 text-slate-100 placeholder-slate-500 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/15",
+  },
+  helper: { base: "mt-2 text-xs leading-relaxed", light: "text-slate-500", dark: "text-slate-400" },
+  error: { base: "mt-2 text-xs font-medium", light: "text-rose-600", dark: "text-rose-400" },
+  choice: {
+    base: "flex cursor-pointer select-none items-center gap-3 rounded-lg border px-3.5 py-2.5 text-sm transition duration-150",
+    light: "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50",
+    dark: "border-slate-700/70 bg-slate-900/50 text-slate-200 hover:border-slate-600 hover:bg-slate-900",
+  },
+  choiceActive: {
+    base: "flex cursor-pointer select-none items-center gap-3 rounded-lg border px-3.5 py-2.5 text-sm transition duration-150",
+    light: "border-indigo-500 bg-indigo-50 text-indigo-900",
+    dark: "border-indigo-500/70 bg-indigo-500/10 text-white",
+  },
+  mark: { base: "flex shrink-0 items-center justify-center border-2 transition-colors", light: "border-slate-400", dark: "border-slate-600" },
+  markActive: { base: "flex shrink-0 items-center justify-center border-2 transition-colors", light: "border-indigo-600", dark: "border-indigo-400" },
+  markDot: { base: "rounded-full", light: "bg-indigo-600", dark: "bg-indigo-400" },
+  markCheck: { base: "", light: "text-white", dark: "text-white" },
+  markFill: { base: "flex shrink-0 items-center justify-center rounded border-2 transition-colors", light: "border-indigo-600 bg-indigo-600", dark: "border-indigo-400 bg-indigo-400" },
+  switchOn: { base: "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-200", light: "bg-indigo-600", dark: "bg-indigo-500" },
+  switchOff: { base: "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-200", light: "bg-slate-300", dark: "bg-slate-700" },
+  switchKnob: { base: "absolute top-0.5 h-4 w-4 rounded-full shadow transition-all duration-200", light: "bg-white", dark: "bg-white" },
+  submit: {
+    base:
+      "inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold tracking-tight text-white outline-none transition duration-150 active:translate-y-px",
+    light: "bg-indigo-600 shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 focus:ring-4 focus:ring-indigo-500/30",
+    dark: "bg-indigo-500 shadow-lg shadow-indigo-500/25 hover:bg-indigo-400 focus:ring-4 focus:ring-indigo-500/30",
+  },
+  file: {
+    base:
+      "w-full cursor-pointer rounded-lg border border-dashed px-3.5 py-2.5 text-sm outline-none transition duration-150 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:px-3 file:py-1.5 file:text-xs file:font-semibold",
+    light: "border-slate-300 bg-slate-50 text-slate-600 hover:border-indigo-400 file:bg-slate-200 file:text-slate-700",
+    dark: "border-slate-700 bg-slate-900/50 text-slate-400 hover:border-indigo-500/60 file:bg-slate-800 file:text-slate-200",
+  },
+  range: {
+    base: "h-1.5 w-full cursor-pointer appearance-none rounded-full outline-none",
+    light: "bg-slate-200 accent-indigo-600",
+    dark: "bg-slate-800 accent-indigo-400",
+  },
+  rangeValue: {
+    base: "fc-mono shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+    light: "bg-slate-100 text-slate-700",
+    dark: "bg-slate-800 text-slate-200",
+  },
+  rangeBound: { base: "fc-mono text-[10px] tabular-nums", light: "text-slate-400", dark: "text-slate-500" },
+  /** Tells the browser how to paint native date/time pickers and their icons. */
+  dateScheme: { base: "", light: "[color-scheme:light]", dark: "[color-scheme:dark]" },
+  heading: { base: "text-base font-semibold tracking-tight", light: "text-slate-900", dark: "text-white" },
+  headingNote: { base: "mt-1 text-xs leading-relaxed", light: "text-slate-500", dark: "text-slate-400" },
+  divider: { base: "border-0 border-t", light: "border-slate-200", dark: "border-slate-800" },
+  card: {
+    base: "rounded-2xl border p-6 sm:p-8",
+    light: "border-slate-200 bg-white shadow-xl shadow-slate-900/5",
+    dark: "border-slate-800 bg-[#12151E] shadow-2xl shadow-black/40",
+  },
+  title: { base: "text-2xl font-semibold tracking-tight", light: "text-slate-900", dark: "text-white" },
+  description: { base: "mt-2 text-sm leading-relaxed", light: "text-slate-600", dark: "text-slate-400" },
+};
+
+const THEME_MODES = ["dark", "light", "auto"];
+
+const darkVariants = (classes) =>
+  classes
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((c) => "dark:" + c)
+    .join(" ");
+
+function buildStyles(mode) {
+  const out = {};
+  Object.keys(TOKENS).forEach((key) => {
+    const t = TOKENS[key];
+    const parts =
+      mode === "dark"
+        ? [t.base, t.dark]
+        : mode === "light"
+        ? [t.base, t.light]
+        : [t.base, t.light, darkVariants(t.dark)];
+    out[key] = parts.filter(Boolean).join(" ").trim();
+  });
+  return out;
+}
+
+/** `auto` is an export-only mode; on screen it renders as the dark set. */
+const STYLES = { dark: buildStyles("dark"), light: buildStyles("light"), auto: buildStyles("auto") };
+const renderStyles = (mode) => (mode === "light" ? STYLES.light : STYLES.dark);
+
+const STORAGE_KEY = "formcraft.document.v1";
+const SCHEMA_VERSION = 2;
+
+/** Injected once so the file stays portable with zero extra config. */
+const RUNTIME_STYLES = `
+  .fc-display { font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif; }
+  .fc-body { font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif; }
+  .fc-mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .fc-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+  .fc-scroll::-webkit-scrollbar-track { background: transparent; }
+  .fc-scroll::-webkit-scrollbar-thumb { background: #2a3145; border: 3px solid transparent; background-clip: content-box; border-radius: 999px; }
+  .fc-scroll::-webkit-scrollbar-thumb:hover { background: #3c455f; background-clip: content-box; }
+  .fc-scroll { scrollbar-width: thin; scrollbar-color: #2a3145 transparent; }
+  .fc-grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(148,163,184,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148,163,184,0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  @keyframes fc-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes fc-pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes fc-toast { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .fc-rise { animation: fc-rise .28s cubic-bezier(.22,1,.36,1) both; }
+  .fc-pop { animation: fc-pop .2s cubic-bezier(.22,1,.36,1) both; }
+  .fc-toast { animation: fc-toast .24s cubic-bezier(.22,1,.36,1) both; }
+  @media (prefers-reduced-motion: reduce) {
+    .fc-rise, .fc-pop, .fc-toast { animation: none !important; }
+  }
+`;
+
+/* ============================================================================
+ * 2. Field blueprints
+ * ==========================================================================*/
+
+const BLUEPRINTS = [
+  {
+    type: "text",
+    name: "Short Text",
+    blurb: "Single-line input",
+    group: "Input",
+    icon: Type,
+    defaults: { label: "Full name", placeholder: "Jane Cooper" },
+  },
+  {
+    type: "textarea",
+    name: "Long Text",
+    blurb: "Multi-line textarea",
+    group: "Input",
+    icon: AlignLeft,
+    defaults: { label: "Tell us more", placeholder: "Share the details…", width: "full" },
+  },
+  {
+    type: "email",
+    name: "Email",
+    blurb: "Validated address",
+    group: "Input",
+    icon: Mail,
+    defaults: { label: "Work email", placeholder: "jane@company.com", helper: "We never share this." },
+  },
+  {
+    type: "tel",
+    name: "Phone",
+    blurb: "Telephone number",
+    group: "Input",
+    icon: Phone,
+    defaults: { label: "Phone", placeholder: "+46 70 123 45 67" },
+  },
+  {
+    type: "url",
+    name: "Website",
+    blurb: "Link input",
+    group: "Input",
+    icon: Link2,
+    defaults: { label: "Website", placeholder: "https://example.com" },
+  },
+  {
+    type: "password",
+    name: "Password",
+    blurb: "Masked input",
+    group: "Input",
+    icon: KeyRound,
+    defaults: { label: "Password", placeholder: "••••••••", helper: "At least 8 characters." },
+  },
+  {
+    type: "number",
+    name: "Number",
+    blurb: "Numeric input",
+    group: "Input",
+    icon: Hash,
+    defaults: { label: "Team size", placeholder: "12" },
+  },
+  {
+    type: "range",
+    name: "Slider",
+    blurb: "Bounded number",
+    group: "Input",
+    icon: SlidersHorizontal,
+    defaults: { label: "Monthly budget", width: "full", min: 0, max: 100, step: 5 },
+  },
+  {
+    type: "select",
+    name: "Dropdown",
+    blurb: "Single choice list",
+    group: "Choice",
+    icon: ChevronDown,
+    defaults: { label: "Plan", placeholder: "Choose a plan", options: ["Starter", "Growth", "Enterprise"] },
+  },
+  {
+    type: "radio",
+    name: "Radio Group",
+    blurb: "One of many",
+    group: "Choice",
+    icon: CircleDot,
+    defaults: {
+      label: "How did you hear about us?",
+      width: "full",
+      options: ["Search", "A friend", "Conference"],
+    },
+  },
+  {
+    type: "checkboxes",
+    name: "Checkbox Group",
+    blurb: "Many of many",
+    group: "Choice",
+    icon: ListChecks,
+    defaults: {
+      label: "What should we cover?",
+      width: "full",
+      options: ["Pricing", "Security review", "Migration"],
+    },
+  },
+  {
+    type: "checkbox",
+    name: "Toggle",
+    blurb: "Single boolean",
+    group: "Choice",
+    icon: ToggleRight,
+    defaults: { label: "Subscribe to the product newsletter", width: "full" },
+  },
+  {
+    type: "date",
+    name: "Date",
+    blurb: "Calendar value",
+    group: "Date & files",
+    icon: CalendarDays,
+    defaults: { label: "Preferred start date" },
+  },
+  {
+    type: "time",
+    name: "Time",
+    blurb: "Clock value",
+    group: "Date & files",
+    icon: Clock,
+    defaults: { label: "Preferred time" },
+  },
+  {
+    type: "file",
+    name: "File Upload",
+    blurb: "Attachment picker",
+    group: "Date & files",
+    icon: Upload,
+    defaults: { label: "Attach a brief", helper: "PDF or DOCX, up to 10 MB.", width: "full", accept: ".pdf,.docx" },
+  },
+  {
+    type: "heading",
+    name: "Section Heading",
+    blurb: "Groups the fields below",
+    group: "Layout",
+    icon: Heading,
+    defaults: { label: "About your team", helper: "", width: "full" },
+  },
+  {
+    type: "divider",
+    name: "Divider",
+    blurb: "Horizontal rule",
+    group: "Layout",
+    icon: Minus,
+    defaults: { label: "Divider", width: "full" },
+  },
+  {
+    type: "submit",
+    name: "Submit Button",
+    blurb: "Ends the form",
+    group: "Layout",
+    icon: Send,
+    defaults: { label: "Send request", width: "full" },
+  },
+];
+
+const BLUEPRINT_MAP = BLUEPRINTS.reduce((acc, bp) => {
+  acc[bp.type] = bp;
+  return acc;
+}, {});
+
+const TOOLBOX_GROUPS = BLUEPRINTS.reduce((acc, bp) => {
+  const group = acc.find((g) => g.name === bp.group);
+  if (group) group.items.push(bp);
+  else acc.push({ name: bp.group, items: [bp] });
+  return acc;
+}, []);
+
+/** Types that never hold a value. */
+const STATIC_TYPES = new Set(["heading", "divider", "submit"]);
+/** Types whose options list is editable. */
+const CHOICE_TYPES = new Set(["select", "radio", "checkboxes"]);
+/** Types that accept placeholder text. */
+const PLACEHOLDER_TYPES = new Set(["text", "email", "tel", "url", "password", "number", "textarea", "select"]);
+/** Types rendered by the generic <input> branch. */
+const PLAIN_INPUT_TYPES = new Set(["text", "email", "tel", "url", "password", "number", "date", "time"]);
+/** Types with no editable label. */
+const NO_LABEL_TYPES = new Set(["divider"]);
+
+/* ============================================================================
+ * 3. Utilities
+ * ==========================================================================*/
+
+let seq = 0;
+const uid = () =>
+  "f" + Date.now().toString(36) + (seq++).toString(36) + Math.random().toString(36).slice(2, 5);
+
+function slugify(value, fallback = "field") {
+  const base = String(value == null ? "" : value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  if (!base) return fallback;
+  return /^[0-9]/.test(base) ? "field_" + base : base;
+}
+
+function uniqueKey(desired, fields, selfId) {
+  const taken = new Set(fields.filter((f) => f.id !== selfId).map((f) => f.key));
+  const root = slugify(desired);
+  let candidate = root;
+  let n = 2;
+  while (taken.has(candidate)) candidate = root + "_" + n++;
+  return candidate;
+}
+
+function createField(type, fields) {
+  const bp = BLUEPRINT_MAP[type] || BLUEPRINT_MAP.text;
+  const d = bp.defaults || {};
+  const id = uid();
+  return {
+    id,
+    type: bp.type,
+    label: d.label || bp.name,
+    key: uniqueKey(d.label || bp.name, fields, id),
+    placeholder: d.placeholder || "",
+    helper: d.helper || "",
+    required: false,
+    width: d.width || "half",
+    options: Array.isArray(d.options) ? d.options.slice() : [],
+    min: d.min == null ? 0 : d.min,
+    max: d.max == null ? 100 : d.max,
+    step: d.step == null ? 1 : d.step,
+    accept: d.accept || "",
+    autoKey: true,
+  };
+}
+
+const toNumber = (value, fallback) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+/** Defensive: anything coming out of localStorage is treated as hostile. */
+function normalizeField(raw, siblings) {
+  if (!raw || typeof raw !== "object") return null;
+  const type = BLUEPRINT_MAP[raw.type] ? raw.type : "text";
+  const label =
+    typeof raw.label === "string" && raw.label.trim() ? raw.label : BLUEPRINT_MAP[type].name;
+  const id = typeof raw.id === "string" && raw.id ? raw.id : uid();
+  const min = toNumber(raw.min, 0);
+  const max = toNumber(raw.max, 100);
+  return {
+    id,
+    type,
+    label,
+    key: uniqueKey(typeof raw.key === "string" && raw.key ? raw.key : label, siblings, id),
+    placeholder: typeof raw.placeholder === "string" ? raw.placeholder : "",
+    helper: typeof raw.helper === "string" ? raw.helper : "",
+    required: raw.required === true,
+    width: raw.width === "full" ? "full" : "half",
+    options: Array.isArray(raw.options) ? raw.options.filter((o) => typeof o === "string") : [],
+    min,
+    max: max > min ? max : min + 1,
+    step: Math.max(toNumber(raw.step, 1), 0.0001),
+    accept: typeof raw.accept === "string" ? raw.accept : "",
+    autoKey: raw.autoKey !== false,
+  };
+}
+
+const DEFAULT_META = { title: "Untitled form", description: "", theme: "dark" };
+
+function normalizeMeta(raw) {
+  const meta = raw && typeof raw === "object" ? raw : {};
+  return {
+    title: typeof meta.title === "string" ? meta.title : DEFAULT_META.title,
+    description: typeof meta.description === "string" ? meta.description : DEFAULT_META.description,
+    theme: THEME_MODES.indexOf(meta.theme) !== -1 ? meta.theme : DEFAULT_META.theme,
+  };
+}
+
+function loadDocument() {
+  const empty = { meta: { ...DEFAULT_META }, fields: [] };
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return empty;
+    const parsed = JSON.parse(raw);
+    const rawFields = Array.isArray(parsed)
+      ? parsed
+      : parsed && Array.isArray(parsed.fields)
+      ? parsed.fields
+      : [];
+    const fields = [];
+    rawFields.forEach((item) => {
+      const field = normalizeField(item, fields);
+      if (field) fields.push(field);
+    });
+    return { meta: normalizeMeta(parsed && parsed.meta), fields };
+  } catch (err) {
+    return empty;
+  }
+}
+
+function starterFields() {
+  const built = [];
+  ["heading", "text", "email", "select", "checkboxes", "textarea", "checkbox", "submit"].forEach((type) => {
+    built.push(createField(type, built));
+  });
+  built[1].required = true;
+  built[2].required = true;
+  built[3].required = true;
+  return built;
+}
+
+function emptyValueFor(field) {
+  if (field.type === "checkbox") return false;
+  if (field.type === "checkboxes") return [];
+  if (field.type === "range") return field.min;
+  return "";
+}
+
+function isBlank(field, value) {
+  if (field.type === "checkbox") return value !== true;
+  if (field.type === "checkboxes") return !Array.isArray(value) || value.length === 0;
+  if (field.type === "range") return false;
+  if (field.type === "file") return !value;
+  return String(value == null ? "" : value).trim() === "";
+}
+
+/* ============================================================================
+ * 4. Exporters
+ * ==========================================================================*/
+
+function buildSchema(meta, fields) {
+  return {
+    version: SCHEMA_VERSION,
+    title: meta.title,
+    description: meta.description,
+    theme: meta.theme,
+    fields: fields.map((f) => {
+      const node = { id: f.id, type: f.type, width: f.width };
+      if (f.type === "divider") return node;
+      node.label = f.label;
+      if (f.type === "heading") {
+        if (f.helper) node.note = f.helper;
+        return node;
+      }
+      if (f.type === "submit") return node;
+      node.key = f.key;
+      node.required = f.required;
+      if (PLACEHOLDER_TYPES.has(f.type) && f.placeholder) node.placeholder = f.placeholder;
+      if (f.helper) node.helper = f.helper;
+      if (CHOICE_TYPES.has(f.type)) node.options = f.options;
+      if (f.type === "range") {
+        node.min = f.min;
+        node.max = f.max;
+        node.step = f.step;
+      }
+      if (f.type === "file" && f.accept) node.accept = f.accept;
+      return node;
+    }),
+  };
+}
+
+const q = (value) => JSON.stringify(String(value == null ? "" : value));
+const jsxText = (value) =>
+  /[<>{}]/.test(String(value == null ? "" : value)) ? "{" + q(value) + "}" : String(value == null ? "" : value);
+const pad = (depth) => "  ".repeat(depth);
+
+const CHECK_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-2.5 w-2.5 text-white"><path d="M20 6 9 17l-5-5" /></svg>';
+
+function emitLabel(field, s, d, out) {
+  out.push(pad(d) + "<label htmlFor=" + q(field.key) + " className=" + q(s.label) + ">");
+  out.push(pad(d + 1) + jsxText(field.label));
+  if (field.required) out.push(pad(d + 1) + "<span className=" + q(s.required) + ">*</span>");
+  out.push(pad(d) + "</label>");
+}
+
+function emitTail(field, s, d, out) {
+  if (field.helper) {
+    out.push(pad(d) + "<p id=" + q(field.key + "-help") + " className=" + q(s.helper) + ">" + jsxText(field.helper) + "</p>");
+  }
+  if (field.required) {
+    out.push(pad(d) + "{errors." + field.key + " && <p className=" + q(s.error) + ">{errors." + field.key + "}</p>}");
+  }
+}
+
+function emitControl(field, s, d, out) {
+  const cls = (extra) => {
+    const base = field.required
+      ? "errors." + field.key + " ? " + q(s.inputError) + " : " + q(s.input)
+      : q(s.input);
+    if (extra) return "{(" + base + ") + " + q(extra) + "}";
+    return field.required ? "{" + base + "}" : base;
+  };
+
+  if (field.type === "textarea") {
+    out.push(pad(d) + "<textarea");
+    out.push(pad(d + 1) + "id=" + q(field.key));
+    out.push(pad(d + 1) + "name=" + q(field.key));
+    if (field.helper) out.push(pad(d + 1) + "aria-describedby=" + q(field.key + "-help"));
+    out.push(pad(d + 1) + "rows={4}");
+    out.push(pad(d + 1) + "value={values." + field.key + "}");
+    if (field.placeholder) out.push(pad(d + 1) + "placeholder=" + q(field.placeholder));
+    out.push(pad(d + 1) + "onChange={(event) => setField(" + q(field.key) + ", event.target.value)}");
+    out.push(pad(d + 1) + "className=" + cls(" min-h-[112px] resize-y"));
+    out.push(pad(d) + "/>");
+    return;
+  }
+
+  if (field.type === "select") {
+    out.push(pad(d) + '<div className="relative">');
+    out.push(pad(d + 1) + "<select");
+    out.push(pad(d + 2) + "id=" + q(field.key));
+    out.push(pad(d + 2) + "name=" + q(field.key));
+    if (field.helper) out.push(pad(d + 2) + "aria-describedby=" + q(field.key + "-help"));
+    out.push(pad(d + 2) + "value={values." + field.key + "}");
+    out.push(pad(d + 2) + "onChange={(event) => setField(" + q(field.key) + ", event.target.value)}");
+    out.push(pad(d + 2) + "className=" + cls(" cursor-pointer appearance-none pr-10"));
+    out.push(pad(d + 1) + ">");
+    out.push(pad(d + 2) + '<option value="">' + jsxText(field.placeholder || "Select an option") + "</option>");
+    field.options.forEach((opt) => {
+      out.push(pad(d + 2) + "<option value=" + q(opt) + ">" + jsxText(opt) + "</option>");
+    });
+    out.push(pad(d + 1) + "</select>");
+    out.push(
+      pad(d + 1) +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60">'
+    );
+    out.push(pad(d + 2) + '<path d="m6 9 6 6 6-6" />');
+    out.push(pad(d + 1) + "</svg>");
+    out.push(pad(d) + "</div>");
+    return;
+  }
+
+  if (field.type === "radio") {
+    out.push(pad(d) + '<div role="radiogroup" aria-label=' + q(field.label) + ' className="grid gap-2">');
+    field.options.forEach((opt) => {
+      const match = "values." + field.key + " === " + q(opt);
+      out.push(pad(d + 1) + "<label");
+      out.push(pad(d + 2) + "key=" + q(opt));
+      out.push(pad(d + 2) + "className={" + match + " ? " + q(s.choiceActive) + " : " + q(s.choice) + "}");
+      out.push(pad(d + 1) + ">");
+      out.push(pad(d + 2) + "<input");
+      out.push(pad(d + 3) + 'type="radio"');
+      out.push(pad(d + 3) + "name=" + q(field.key));
+      out.push(pad(d + 3) + "value=" + q(opt));
+      out.push(pad(d + 3) + "checked={" + match + "}");
+      out.push(pad(d + 3) + "onChange={() => setField(" + q(field.key) + ", " + q(opt) + ")}");
+      out.push(pad(d + 3) + 'className="sr-only"');
+      out.push(pad(d + 2) + "/>");
+      out.push(
+        pad(d + 2) +
+          "<span className={" +
+          match +
+          " ? " +
+          q(s.markActive + " h-4 w-4 rounded-full") +
+          " : " +
+          q(s.mark + " h-4 w-4 rounded-full") +
+          "}>"
+      );
+      out.push(pad(d + 3) + "{" + match + " && <span className=" + q(s.markDot + " h-1.5 w-1.5") + " />}");
+      out.push(pad(d + 2) + "</span>");
+      out.push(pad(d + 2) + jsxText(opt));
+      out.push(pad(d + 1) + "</label>");
+    });
+    out.push(pad(d) + "</div>");
+    return;
+  }
+
+  if (field.type === "checkboxes") {
+    out.push(pad(d) + '<div role="group" aria-label=' + q(field.label) + ' className="grid gap-2">');
+    field.options.forEach((opt) => {
+      const match = "values." + field.key + ".includes(" + q(opt) + ")";
+      out.push(pad(d + 1) + "<label");
+      out.push(pad(d + 2) + "key=" + q(opt));
+      out.push(pad(d + 2) + "className={" + match + " ? " + q(s.choiceActive) + " : " + q(s.choice) + "}");
+      out.push(pad(d + 1) + ">");
+      out.push(pad(d + 2) + "<input");
+      out.push(pad(d + 3) + 'type="checkbox"');
+      out.push(pad(d + 3) + "name=" + q(field.key));
+      out.push(pad(d + 3) + "value=" + q(opt));
+      out.push(pad(d + 3) + "checked={" + match + "}");
+      out.push(pad(d + 3) + "onChange={() => toggleOption(" + q(field.key) + ", " + q(opt) + ")}");
+      out.push(pad(d + 3) + 'className="sr-only"');
+      out.push(pad(d + 2) + "/>");
+      out.push(
+        pad(d + 2) +
+          "<span className={" +
+          match +
+          " ? " +
+          q(s.markFill + " h-4 w-4") +
+          " : " +
+          q(s.mark + " h-4 w-4 rounded") +
+          "}>"
+      );
+      out.push(pad(d + 3) + "{" + match + " && " + CHECK_SVG + "}");
+      out.push(pad(d + 2) + "</span>");
+      out.push(pad(d + 2) + jsxText(opt));
+      out.push(pad(d + 1) + "</label>");
+    });
+    out.push(pad(d) + "</div>");
+    return;
+  }
+
+  if (field.type === "checkbox") {
+    const on = "values." + field.key;
+    out.push(pad(d) + "<label className=" + q(s.choice) + ">");
+    out.push(pad(d + 1) + "<input");
+    out.push(pad(d + 2) + 'type="checkbox"');
+    out.push(pad(d + 2) + "id=" + q(field.key));
+    out.push(pad(d + 2) + "name=" + q(field.key));
+    out.push(pad(d + 2) + "checked={" + on + "}");
+    out.push(pad(d + 2) + "onChange={(event) => setField(" + q(field.key) + ", event.target.checked)}");
+    out.push(pad(d + 2) + 'className="sr-only"');
+    out.push(pad(d + 1) + "/>");
+    out.push(pad(d + 1) + "<span className={" + on + " ? " + q(s.switchOn) + " : " + q(s.switchOff) + "}>");
+    out.push(
+      pad(d + 2) +
+        "<span className={" +
+        on +
+        " ? " +
+        q(s.switchKnob + " left-[18px]") +
+        " : " +
+        q(s.switchKnob + " left-0.5") +
+        "} />"
+    );
+    out.push(pad(d + 1) + "</span>");
+    out.push(pad(d + 1) + "<span>");
+    out.push(pad(d + 2) + jsxText(field.label));
+    if (field.required) out.push(pad(d + 2) + "<span className=" + q(s.required) + ">*</span>");
+    out.push(pad(d + 1) + "</span>");
+    out.push(pad(d) + "</label>");
+    return;
+  }
+
+  if (field.type === "range") {
+    out.push(pad(d) + '<div className="flex items-center gap-3">');
+    out.push(pad(d + 1) + "<input");
+    out.push(pad(d + 2) + "id=" + q(field.key));
+    out.push(pad(d + 2) + "name=" + q(field.key));
+    out.push(pad(d + 2) + 'type="range"');
+    if (field.helper) out.push(pad(d + 2) + "aria-describedby=" + q(field.key + "-help"));
+    out.push(pad(d + 2) + "min={" + field.min + "}");
+    out.push(pad(d + 2) + "max={" + field.max + "}");
+    out.push(pad(d + 2) + "step={" + field.step + "}");
+    out.push(pad(d + 2) + "value={values." + field.key + "}");
+    out.push(pad(d + 2) + "onChange={(event) => setField(" + q(field.key) + ", Number(event.target.value))}");
+    out.push(pad(d + 2) + "className=" + q(s.range));
+    out.push(pad(d + 1) + "/>");
+    out.push(pad(d + 1) + "<span className=" + q(s.rangeValue) + ">{values." + field.key + "}</span>");
+    out.push(pad(d) + "</div>");
+    out.push(pad(d) + '<div className="mt-1 flex justify-between">');
+    out.push(pad(d + 1) + "<span className=" + q(s.rangeBound) + ">" + field.min + "</span>");
+    out.push(pad(d + 1) + "<span className=" + q(s.rangeBound) + ">" + field.max + "</span>");
+    out.push(pad(d) + "</div>");
+    return;
+  }
+
+  if (field.type === "file") {
+    out.push(pad(d) + "<input");
+    out.push(pad(d + 1) + "id=" + q(field.key));
+    out.push(pad(d + 1) + "name=" + q(field.key));
+    out.push(pad(d + 1) + 'type="file"');
+    if (field.accept) out.push(pad(d + 1) + "accept=" + q(field.accept));
+    if (field.helper) out.push(pad(d + 1) + "aria-describedby=" + q(field.key + "-help"));
+    out.push(
+      pad(d + 1) + "onChange={(event) => setField(" + q(field.key) + ", event.target.files[0] || null)}"
+    );
+    out.push(pad(d + 1) + "className=" + q(s.file));
+    out.push(pad(d) + "/>");
+    return;
+  }
+
+  out.push(pad(d) + "<input");
+  out.push(pad(d + 1) + "id=" + q(field.key));
+  out.push(pad(d + 1) + "name=" + q(field.key));
+  if (field.helper) out.push(pad(d + 1) + "aria-describedby=" + q(field.key + "-help"));
+  out.push(pad(d + 1) + "type=" + q(field.type));
+  out.push(pad(d + 1) + "value={values." + field.key + "}");
+  if (field.placeholder && PLACEHOLDER_TYPES.has(field.type)) {
+    out.push(pad(d + 1) + "placeholder=" + q(field.placeholder));
+  }
+  out.push(pad(d + 1) + "onChange={(event) => setField(" + q(field.key) + ", event.target.value)}");
+  const dateish = field.type === "date" || field.type === "time";
+  out.push(pad(d + 1) + "className=" + cls(dateish ? " " + s.dateScheme : ""));
+  out.push(pad(d) + "/>");
+}
+
+function initialValueLiteral(field) {
+  if (field.type === "checkbox") return "false";
+  if (field.type === "checkboxes") return "[]";
+  if (field.type === "range") return String(field.min);
+  if (field.type === "file") return "null";
+  return '""';
+}
+
+function generateReactCode(meta, fields) {
+  if (!fields.length) {
+    return (
+      "// Nothing to export yet.\n" +
+      "// Add an element from the panel on the left and your component appears here."
+    );
+  }
+
+  const s = STYLES[meta.theme] || STYLES.dark;
+  const inputs = fields.filter((f) => !STATIC_TYPES.has(f.type));
+  const hasSubmit = fields.some((f) => f.type === "submit");
+  const hasCheckboxGroup = fields.some((f) => f.type === "checkboxes");
+  const required = inputs.filter((f) => f.required);
+  const out = [];
+
+  out.push('import { useState } from "react";');
+  out.push("");
+  if (meta.theme === "auto") {
+    out.push("// Light by default, dark under Tailwind's `dark` variant.");
+  }
+  out.push("export default function GeneratedForm({ onSubmit }) {");
+  if (inputs.length) {
+    out.push(pad(1) + "const [values, setValues] = useState({");
+    inputs.forEach((f) => out.push(pad(2) + f.key + ": " + initialValueLiteral(f) + ","));
+    out.push(pad(1) + "});");
+  } else {
+    out.push(pad(1) + "const [values, setValues] = useState({});");
+  }
+  out.push(pad(1) + "const [errors, setErrors] = useState({});");
+  out.push("");
+  out.push(pad(1) + "const setField = (key, value) => {");
+  out.push(pad(2) + "setValues((prev) => ({ ...prev, [key]: value }));");
+  out.push(pad(2) + "setErrors((prev) => (prev[key] ? { ...prev, [key]: undefined } : prev));");
+  out.push(pad(1) + "};");
+  out.push("");
+  if (hasCheckboxGroup) {
+    out.push(pad(1) + "const toggleOption = (key, option) => {");
+    out.push(pad(2) + "const current = values[key];");
+    out.push(
+      pad(2) + "setField(key, current.includes(option) ? current.filter((v) => v !== option) : current.concat(option));"
+    );
+    out.push(pad(1) + "};");
+    out.push("");
+  }
+  out.push(pad(1) + "const handleSubmit = (event) => {");
+  out.push(pad(2) + "event.preventDefault();");
+  out.push(pad(2) + "const nextErrors = {};");
+  required.forEach((f) => {
+    const message = f.label + " is required";
+    if (f.type === "checkbox") {
+      out.push(pad(2) + "if (!values." + f.key + ") nextErrors." + f.key + " = " + q(message) + ";");
+    } else if (f.type === "checkboxes") {
+      out.push(pad(2) + "if (values." + f.key + ".length === 0) nextErrors." + f.key + " = " + q(message) + ";");
+    } else if (f.type === "file") {
+      out.push(pad(2) + "if (!values." + f.key + ") nextErrors." + f.key + " = " + q(message) + ";");
+    } else {
+      out.push(pad(2) + "if (!String(values." + f.key + ").trim()) nextErrors." + f.key + " = " + q(message) + ";");
+    }
+  });
+  out.push(pad(2) + "setErrors(nextErrors);");
+  out.push(pad(2) + "if (Object.keys(nextErrors).length > 0) return;");
+  out.push(pad(2) + "if (onSubmit) onSubmit(values);");
+  out.push(pad(1) + "};");
+  out.push("");
+  out.push(pad(1) + "return (");
+  out.push(pad(2) + '<form onSubmit={handleSubmit} noValidate className="mx-auto w-full max-w-xl">');
+  out.push(pad(3) + '<header className="mb-8">');
+  out.push(pad(4) + "<h2 className=" + q(s.title) + ">" + jsxText(meta.title || "Untitled form") + "</h2>");
+  if (meta.description) {
+    out.push(pad(4) + "<p className=" + q(s.description) + ">" + jsxText(meta.description) + "</p>");
+  }
+  out.push(pad(3) + "</header>");
+  out.push(pad(3) + '<div className="grid grid-cols-1 gap-6 sm:grid-cols-2">');
+
+  fields.forEach((field) => {
+    const span = field.width === "half" ? "" : " sm:col-span-2";
+
+    if (field.type === "divider") {
+      out.push(pad(4) + "<div className=" + q("py-1" + span) + ">");
+      out.push(pad(5) + "<hr className=" + q(s.divider) + " />");
+      out.push(pad(4) + "</div>");
+      return;
+    }
+
+    if (field.type === "heading") {
+      out.push(pad(4) + "<div className=" + q("pt-2" + span) + ">");
+      out.push(pad(5) + "<h3 className=" + q(s.heading) + ">" + jsxText(field.label) + "</h3>");
+      if (field.helper) {
+        out.push(pad(5) + "<p className=" + q(s.headingNote) + ">" + jsxText(field.helper) + "</p>");
+      }
+      out.push(pad(4) + "</div>");
+      return;
+    }
+
+    if (field.type === "submit") {
+      out.push(pad(4) + "<div className=" + q("pt-2" + span) + ">");
+      out.push(pad(5) + '<button type="submit" className=' + q(s.submit) + ">");
+      out.push(pad(6) + jsxText(field.label));
+      out.push(pad(5) + "</button>");
+      out.push(pad(4) + "</div>");
+      return;
+    }
+
+    out.push(pad(4) + "<div className=" + q("min-w-0" + span) + ">");
+    if (field.type !== "checkbox") emitLabel(field, s, 5, out);
+    emitControl(field, s, 5, out);
+    emitTail(field, s, 5, out);
+    out.push(pad(4) + "</div>");
+  });
+
+  out.push(pad(3) + "</div>");
+  if (!hasSubmit) {
+    out.push(pad(3) + "{/* Add a Submit Button element to render the form action. */}");
+  }
+  out.push(pad(2) + "</form>");
+  out.push(pad(1) + ");");
+  out.push("}");
+  return out.join("\n");
+}
+
+/* ============================================================================
+ * 5. Primitives
+ * ==========================================================================*/
+
+const PANEL_INPUT =
+  "w-full rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-[13px] text-slate-100 placeholder-slate-600 outline-none transition duration-150 hover:border-slate-700 focus:border-indigo-500/80 focus:ring-4 focus:ring-indigo-500/10";
+
+function SectionTitle({ icon: Icon, children, aside }) {
+  return (
+    <div className="flex items-center justify-between gap-2 px-5 pb-3 pt-5">
+      <div className="flex items-center gap-2">
+        {Icon ? <Icon className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" /> : null}
+        <h2 className="fc-display text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+          {children}
+        </h2>
+      </div>
+      {aside}
+    </div>
+  );
+}
+
+function IconButton({ icon: Icon, label, onClick, disabled, tone = "default" }) {
+  const tones = {
+    default: "text-slate-400 hover:bg-slate-800 hover:text-slate-100 focus-visible:ring-slate-600",
+    danger: "text-slate-400 hover:bg-rose-500/15 hover:text-rose-300 focus-visible:ring-rose-500/60",
+  };
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      disabled={disabled}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick(event);
+      }}
+      className={
+        "inline-flex h-7 w-7 items-center justify-center rounded-md outline-none transition duration-150 focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-25 " +
+        tones[tone]
+      }
+    >
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+    </button>
+  );
+}
+
+function LabeledField({ label, hint, htmlFor, children }) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between gap-2">
+        <label htmlFor={htmlFor} className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+          {label}
+        </label>
+        {hint ? <span className="fc-mono text-[10px] text-slate-600">{hint}</span> : null}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TextControl({ label, hint, value, onChange, placeholder, mono, multiline, id }) {
+  const cls = PANEL_INPUT + (mono ? " fc-mono text-[12px]" : "");
+  return (
+    <LabeledField label={label} hint={hint} htmlFor={id}>
+      {multiline ? (
+        <textarea
+          id={id}
+          rows={2}
+          value={value}
+          placeholder={placeholder}
+          onChange={(event) => onChange(event.target.value)}
+          className={cls + " resize-y leading-relaxed"}
+        />
+      ) : (
+        <input
+          id={id}
+          type="text"
+          value={value}
+          placeholder={placeholder}
+          onChange={(event) => onChange(event.target.value)}
+          className={cls}
+        />
+      )}
+    </LabeledField>
+  );
+}
+
+function NumberControl({ label, value, onChange, id, step }) {
+  return (
+    <LabeledField label={label} htmlFor={id}>
+      <input
+        id={id}
+        type="number"
+        step={step || "any"}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={PANEL_INPUT + " fc-mono text-[12px] tabular-nums"}
+      />
+    </LabeledField>
+  );
+}
+
+function Switch({ checked, onChange, title, description }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="group flex w-full items-center justify-between gap-4 rounded-lg border border-slate-800 bg-slate-950/50 px-3 py-2.5 text-left outline-none transition duration-150 hover:border-slate-700 focus-visible:ring-2 focus-visible:ring-indigo-500/60"
+    >
+      <span className="min-w-0">
+        <span className="block text-[13px] font-medium text-slate-200">{title}</span>
+        {description ? <span className="mt-0.5 block text-[11px] text-slate-500">{description}</span> : null}
+      </span>
+      <span
+        className={
+          "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-200 " +
+          (checked ? "bg-indigo-500" : "bg-slate-700 group-hover:bg-slate-600")
+        }
+      >
+        <span
+          className={
+            "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all duration-200 " +
+            (checked ? "left-[18px]" : "left-0.5")
+          }
+        />
+      </span>
+    </button>
+  );
+}
+
+function Segmented({ value, onChange, options, size = "md" }) {
+  return (
+    <div className="flex gap-1 rounded-lg border border-slate-800 bg-slate-950/50 p-1">
+      {options.map((opt) => {
+        const active = opt.value === value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            title={opt.title}
+            onClick={() => onChange(opt.value)}
+            className={
+              "flex-1 rounded-md outline-none transition duration-150 focus-visible:ring-2 focus-visible:ring-indigo-500/60 " +
+              (size === "sm" ? "px-2 py-1 text-[11px] font-medium " : "px-2 py-1.5 text-[12px] font-medium ") +
+              (active ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300")
+            }
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ============================================================================
+ * 6. Rendered form field (shared by canvas + live preview)
+ * ==========================================================================*/
+
+function FieldControl({ field, value, onChange, error, idPrefix, s }) {
+  const id = idPrefix + field.key;
+  const describedBy = field.helper ? id + "-help" : undefined;
+  const cls = error ? s.inputError : s.input;
+
+  if (field.type === "textarea") {
+    return (
+      <textarea
+        id={id}
+        name={field.key}
+        rows={4}
+        aria-describedby={describedBy}
+        value={value}
+        placeholder={field.placeholder}
+        onChange={(event) => onChange(event.target.value)}
+        className={cls + " min-h-[112px] resize-y"}
+      />
+    );
+  }
+
+  if (field.type === "select") {
+    return (
+      <div className="relative">
+        <select
+          id={id}
+          name={field.key}
+          aria-describedby={describedBy}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className={cls + " cursor-pointer appearance-none pr-10"}
+        >
+          <option value="">{field.placeholder || "Select an option"}</option>
+          {field.options.map((opt, i) => (
+            <option key={opt + i} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60"
+          aria-hidden="true"
+        />
+      </div>
+    );
+  }
+
+  if (field.type === "radio" || field.type === "checkboxes") {
+    if (!field.options.length) {
+      return (
+        <p className={s.helper + " rounded-lg border border-dashed border-slate-500/40 px-3.5 py-3 opacity-70"}>
+          No options yet — add some in the Inspector.
+        </p>
+      );
+    }
+    const multi = field.type === "checkboxes";
+    const list = Array.isArray(value) ? value : [];
+    return (
+      <div
+        role={multi ? "group" : "radiogroup"}
+        aria-label={field.label}
+        className="grid gap-2"
+      >
+        {field.options.map((opt, i) => {
+          const active = multi ? list.indexOf(opt) !== -1 : value === opt;
+          return (
+            <label key={opt + i} className={active ? s.choiceActive : s.choice}>
+              <input
+                type={multi ? "checkbox" : "radio"}
+                name={multi ? id + "-" + i : id}
+                value={opt}
+                checked={active}
+                onChange={() => {
+                  if (!multi) return onChange(opt);
+                  onChange(active ? list.filter((v) => v !== opt) : list.concat(opt));
+                }}
+                className="sr-only"
+              />
+              <span
+                className={
+                  multi
+                    ? active
+                      ? s.markFill + " h-4 w-4"
+                      : s.mark + " h-4 w-4 rounded"
+                    : active
+                    ? s.markActive + " h-4 w-4 rounded-full"
+                    : s.mark + " h-4 w-4 rounded-full"
+                }
+              >
+                {active ? (
+                  multi ? (
+                    <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} aria-hidden="true" />
+                  ) : (
+                    <span className={s.markDot + " h-1.5 w-1.5"} />
+                  )
+                ) : null}
+              </span>
+              {opt}
+            </label>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (field.type === "checkbox") {
+    const on = value === true;
+    return (
+      <label className={s.choice}>
+        <input
+          type="checkbox"
+          id={id}
+          name={field.key}
+          checked={on}
+          onChange={(event) => onChange(event.target.checked)}
+          className="sr-only"
+        />
+        <span className={on ? s.switchOn : s.switchOff}>
+          <span className={s.switchKnob + (on ? " left-[18px]" : " left-0.5")} />
+        </span>
+        <span>
+          {field.label}
+          {field.required ? <span className={s.required}>*</span> : null}
+        </span>
+      </label>
+    );
+  }
+
+  if (field.type === "range") {
+    return (
+      <div>
+        <div className="flex items-center gap-3">
+          <input
+            id={id}
+            name={field.key}
+            type="range"
+            aria-describedby={describedBy}
+            min={field.min}
+            max={field.max}
+            step={field.step}
+            value={value}
+            onChange={(event) => onChange(Number(event.target.value))}
+            className={s.range}
+          />
+          <span className={s.rangeValue}>{value}</span>
+        </div>
+        <div className="mt-1 flex justify-between">
+          <span className={s.rangeBound}>{field.min}</span>
+          <span className={s.rangeBound}>{field.max}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (field.type === "file") {
+    return (
+      <input
+        id={id}
+        name={field.key}
+        type="file"
+        accept={field.accept || undefined}
+        aria-describedby={describedBy}
+        onChange={(event) => onChange(event.target.files && event.target.files[0] ? event.target.files[0] : null)}
+        className={s.file}
+      />
+    );
+  }
+
+  const dateish = field.type === "date" || field.type === "time";
+  return (
+    <input
+      id={id}
+      name={field.key}
+      type={field.type}
+      aria-describedby={describedBy}
+      value={value}
+      placeholder={PLACEHOLDER_TYPES.has(field.type) ? field.placeholder : undefined}
+      onChange={(event) => onChange(event.target.value)}
+      className={cls + (dateish ? " " + s.dateScheme : "")}
+    />
+  );
+}
+
+function RenderedField({ field, value, onChange, error, idPrefix, s }) {
+  if (field.type === "divider") return <hr className={s.divider} />;
+
+  if (field.type === "heading") {
+    return (
+      <div>
+        <h3 className={s.heading}>{field.label}</h3>
+        {field.helper ? <p className={s.headingNote}>{field.helper}</p> : null}
+      </div>
+    );
+  }
+
+  if (field.type === "submit") {
+    return (
+      <button type="submit" className={s.submit}>
+        {field.label}
+        <Send className="h-4 w-4" aria-hidden="true" />
+      </button>
+    );
+  }
+
+  const id = idPrefix + field.key;
+  return (
+    <div>
+      {field.type !== "checkbox" ? (
+        <label htmlFor={id} className={s.label}>
+          {field.label}
+          {field.required ? <span className={s.required}>*</span> : null}
+        </label>
+      ) : null}
+      <FieldControl field={field} value={value} onChange={onChange} error={error} idPrefix={idPrefix} s={s} />
+      {field.helper ? (
+        <p id={id + "-help"} className={s.helper}>
+          {field.helper}
+        </p>
+      ) : null}
+      {error ? <p className={s.error}>{error}</p> : null}
+    </div>
+  );
+}
+
+/* ============================================================================
+ * 7. Toolbox (left)
+ * ==========================================================================*/
+
+function Toolbox({ onAdd, count }) {
+  return (
+    <aside className="flex w-full shrink-0 flex-col border-b border-slate-800/80 bg-[#0E1119] lg:h-full lg:w-[268px] lg:border-b-0 lg:border-r">
+      <SectionTitle icon={LayoutGrid}>Elements</SectionTitle>
+      <p className="px-5 pb-4 text-xs leading-relaxed text-slate-500">
+        Click any element to append it to the canvas.
+      </p>
+      <div className="fc-scroll flex-1 overflow-y-auto px-3 pb-5">
+        {TOOLBOX_GROUPS.map((group) => (
+          <section key={group.name} className="mb-2">
+            <h3 className="fc-display sticky top-0 z-10 bg-[#0E1119] px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+              {group.name}
+            </h3>
+            <div className="space-y-1">
+              {group.items.map((bp) => {
+                const Icon = bp.icon;
+                return (
+                  <button
+                    key={bp.type}
+                    type="button"
+                    onClick={() => onAdd(bp.type)}
+                    className="group flex w-full items-center gap-3 rounded-xl border border-transparent px-2.5 py-2 text-left outline-none transition duration-150 hover:border-slate-800 hover:bg-slate-900/70 focus-visible:border-indigo-500/60 focus-visible:ring-4 focus-visible:ring-indigo-500/10"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 text-slate-400 transition duration-150 group-hover:border-indigo-500/40 group-hover:bg-indigo-500/10 group-hover:text-indigo-300">
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-medium text-slate-200">{bp.name}</span>
+                      <span className="block truncate text-[11px] text-slate-500">{bp.blurb}</span>
+                    </span>
+                    <Plus
+                      className="h-4 w-4 shrink-0 text-slate-700 transition duration-150 group-hover:text-indigo-400"
+                      aria-hidden="true"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+      <div className="border-t border-slate-800/80 px-5 py-3 text-[11px] text-slate-500">
+        <span className="fc-mono">{count}</span> {count === 1 ? "element" : "elements"} on canvas
+      </div>
+    </aside>
+  );
+}
+
+/* ============================================================================
+ * 8. Canvas (centre, design mode)
+ * ==========================================================================*/
+
+function CanvasCard({
+  field,
+  index,
+  total,
+  selected,
+  onSelect,
+  onMove,
+  onDuplicate,
+  onDelete,
+  dragging,
+  dropTarget,
+  onDragStart,
+  onDragEnter,
+  onDragEnd,
+  onDrop,
+  s,
+  lightArtboard,
+}) {
+  const bp = BLUEPRINT_MAP[field.type];
+  const Icon = bp.icon;
+  const span = field.width === "full" ? "sm:col-span-2" : "";
+  const isStatic = STATIC_TYPES.has(field.type);
+
+  const preview = (
+    <RenderedField
+      field={field}
+      value={emptyValueFor(field)}
+      onChange={() => {}}
+      idPrefix={"canvas-" + field.id + "-"}
+      s={s}
+    />
+  );
+
+  return (
+    <div
+      className={"relative min-w-0 " + span}
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move";
+        try {
+          event.dataTransfer.setData("text/plain", field.id);
+        } catch (err) {
+          /* Safari guards setData in some contexts */
+        }
+        onDragStart(index);
+      }}
+      onDragEnter={() => onDragEnter(index)}
+      onDragOver={(event) => event.preventDefault()}
+      onDragEnd={onDragEnd}
+      onDrop={(event) => {
+        event.preventDefault();
+        onDrop(index);
+      }}
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        aria-current={selected ? "true" : undefined}
+        onClick={() => onSelect(field.id)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelect(field.id);
+          }
+        }}
+        className={
+          "fc-rise group relative cursor-pointer rounded-xl border bg-[#12151E] p-4 outline-none transition duration-200 " +
+          (selected
+            ? "border-indigo-500/80 shadow-[0_0_0_1px_rgba(99,102,241,0.5),0_12px_30px_-12px_rgba(99,102,241,0.55)]"
+            : "border-slate-800 hover:border-slate-700 hover:shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)]") +
+          (dragging ? " opacity-40" : "") +
+          (dropTarget && !dragging ? " border-indigo-400/70 ring-4 ring-indigo-500/10" : "")
+        }
+      >
+        {selected ? (
+          <span className="fc-pop fc-display absolute -top-2.5 left-3 z-10 rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg shadow-indigo-500/30">
+            Selected
+          </span>
+        ) : null}
+
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <GripVertical
+              className="h-3.5 w-3.5 shrink-0 cursor-grab text-slate-700 transition group-hover:text-slate-500"
+              aria-hidden="true"
+            />
+            <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden="true" />
+            <span className="fc-display truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              {bp.name}
+            </span>
+            {field.required ? (
+              <span className="shrink-0 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-amber-400">
+                Required
+              </span>
+            ) : null}
+          </div>
+          <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition duration-150 focus-within:opacity-100 group-hover:opacity-100">
+            <IconButton icon={ArrowUp} label="Move up" disabled={index === 0} onClick={() => onMove(index, -1)} />
+            <IconButton
+              icon={ArrowDown}
+              label="Move down"
+              disabled={index === total - 1}
+              onClick={() => onMove(index, 1)}
+            />
+            <IconButton icon={Copy} label="Duplicate" onClick={() => onDuplicate(field.id)} />
+            <IconButton icon={Trash2} label="Delete" tone="danger" onClick={() => onDelete(field.id)} />
+          </div>
+        </div>
+
+        <div className="pointer-events-none select-none" aria-hidden="true">
+          {lightArtboard ? (
+            <div className="rounded-lg bg-white p-3 ring-1 ring-slate-200">{preview}</div>
+          ) : (
+            preview
+          )}
+        </div>
+
+        <div className="mt-3 flex items-center gap-2 border-t border-slate-800/70 pt-2.5">
+          <span className="fc-mono truncate text-[10px] text-slate-600">
+            {isStatic ? bp.group.toLowerCase() : field.key}
+          </span>
+          <span className="ml-auto shrink-0 text-[10px] uppercase tracking-wider text-slate-500">
+            {field.width === "full" ? "Full width" : "Half width"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyCanvas({ onAddFirst, onStarter }) {
+  return (
+    <div className="fc-rise flex min-h-[420px] flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="relative mb-7">
+        <div className="absolute -inset-10 rounded-full bg-indigo-500/10 blur-3xl" aria-hidden="true" />
+        <svg
+          viewBox="0 0 148 120"
+          className="relative h-[120px] w-[148px]"
+          fill="none"
+          role="img"
+          aria-label="An empty form outline waiting for its first field"
+        >
+          <rect x="12.5" y="10.5" width="123" height="99" rx="10" stroke="#2A3145" strokeDasharray="5 5" />
+          <rect x="28" y="28" width="46" height="7" rx="3.5" fill="#2A3145" />
+          <rect x="28" y="43" width="92" height="18" rx="6" fill="#151A26" stroke="#252B3D" />
+          <rect x="28" y="70" width="34" height="7" rx="3.5" fill="#232838" />
+          <rect x="28" y="85" width="92" height="18" rx="6" fill="#151A26" stroke="#252B3D" />
+          <g>
+            <circle cx="112" cy="30" r="15" fill="#6366F1" fillOpacity="0.14" />
+            <circle cx="112" cy="30" r="15" stroke="#6366F1" strokeOpacity="0.45" />
+            <path d="M112 23.5v13M105.5 30h13" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" />
+          </g>
+        </svg>
+      </div>
+      <h3 className="fc-display text-lg font-semibold tracking-tight text-slate-100">Your canvas is empty</h3>
+      <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
+        Pick an element from the <span className="text-slate-300">Elements</span> panel on the left and it lands
+        here instantly. Select any field to edit its label, placeholder and rules in the Inspector.
+      </p>
+      <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
+        <button
+          type="button"
+          onClick={onStarter}
+          className="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-500/25 outline-none transition duration-150 hover:bg-indigo-400 focus-visible:ring-4 focus-visible:ring-indigo-500/30"
+        >
+          <Sparkles className="h-4 w-4" aria-hidden="true" />
+          Load starter form
+        </button>
+        <button
+          type="button"
+          onClick={() => onAddFirst("text")}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-2.5 text-[13px] font-medium text-slate-300 outline-none transition duration-150 hover:border-slate-700 hover:text-white focus-visible:ring-4 focus-visible:ring-slate-700/40"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Add a text field
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+ * 9. Inspector (right)
+ * ==========================================================================*/
+
+function OptionsEditor({ field, onChange }) {
+  const update = (index, value) => {
+    const next = field.options.slice();
+    next[index] = value;
+    onChange(next);
+  };
+  const remove = (index) => onChange(field.options.filter((_, i) => i !== index));
+  const move = (index, delta) => {
+    const target = index + delta;
+    if (target < 0 || target >= field.options.length) return;
+    const next = field.options.slice();
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item);
+    onChange(next);
+  };
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between">
+        <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Options</span>
+        <span className="fc-mono text-[10px] text-slate-600">{field.options.length}</span>
+      </div>
+      <div className="space-y-1.5">
+        {field.options.map((opt, i) => (
+          <div key={i} className="group flex items-center gap-1">
+            <span className="fc-mono w-5 shrink-0 text-center text-[10px] text-slate-600">{i + 1}</span>
+            <input
+              type="text"
+              value={opt}
+              placeholder="Option label"
+              onChange={(event) => update(i, event.target.value)}
+              className={PANEL_INPUT + " flex-1"}
+            />
+            <div className="flex shrink-0 opacity-0 transition duration-150 focus-within:opacity-100 group-hover:opacity-100">
+              <IconButton icon={ArrowUp} label="Move option up" disabled={i === 0} onClick={() => move(i, -1)} />
+              <IconButton
+                icon={ArrowDown}
+                label="Move option down"
+                disabled={i === field.options.length - 1}
+                onClick={() => move(i, 1)}
+              />
+              <IconButton icon={X} label="Remove option" tone="danger" onClick={() => remove(i)} />
+            </div>
+          </div>
+        ))}
+        {!field.options.length ? (
+          <p className="rounded-lg border border-dashed border-slate-800 px-3 py-2.5 text-[11px] text-slate-600">
+            No options yet.
+          </p>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(field.options.concat("Option " + (field.options.length + 1)))}
+        className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-700 px-3 py-2 text-[12px] font-medium text-slate-400 outline-none transition duration-150 hover:border-indigo-500/60 hover:text-indigo-300 focus-visible:ring-4 focus-visible:ring-indigo-500/10"
+      >
+        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+        Add option
+      </button>
+    </div>
+  );
+}
+
+function FormSettings({ meta, onMeta }) {
+  return (
+    <aside className="flex w-full shrink-0 flex-col border-t border-slate-800/80 bg-[#0E1119] lg:h-full lg:w-[320px] lg:border-l lg:border-t-0">
+      <SectionTitle icon={Settings2}>Form settings</SectionTitle>
+      <div className="fc-scroll flex-1 space-y-4 overflow-y-auto px-5 pb-6">
+        <TextControl
+          id="meta-title"
+          label="Form title"
+          value={meta.title}
+          placeholder="Untitled form"
+          onChange={(value) => onMeta({ title: value })}
+        />
+        <TextControl
+          id="meta-description"
+          label="Description"
+          value={meta.description}
+          placeholder="Shown under the title in the preview."
+          multiline
+          onChange={(value) => onMeta({ description: value })}
+        />
+        <LabeledField label="Theme">
+          <Segmented
+            value={meta.theme}
+            onChange={(value) => onMeta({ theme: value })}
+            options={[
+              { value: "dark", label: "Dark", title: "Dark palette" },
+              { value: "light", label: "Light", title: "Light palette" },
+              { value: "auto", label: "Auto", title: "Light with dark: variants" },
+            ]}
+          />
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            {meta.theme === "auto"
+              ? "Exports light classes plus dark: variants. The preview shows the dark side."
+              : "Drives the preview and the exported classes."}
+          </p>
+        </LabeledField>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+          <p className="fc-display text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Nothing selected
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-slate-500">
+            Click any field on the canvas to edit its label, placeholder, helper text and validation here.
+          </p>
+          <dl className="mt-4 space-y-2 border-t border-slate-800 pt-3 text-[11px]">
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-slate-500">Reorder</dt>
+              <dd className="fc-mono text-slate-400">drag · Alt+↑↓</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-slate-500">Delete selected</dt>
+              <dd className="fc-mono text-slate-400">Del</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-slate-500">Undo</dt>
+              <dd className="fc-mono text-slate-400">Ctrl+Z</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function Inspector({ field, fieldIndex, onUpdate, onDelete, onDeselect }) {
+  const bp = BLUEPRINT_MAP[field.type];
+  const Icon = bp.icon;
+  const isDivider = field.type === "divider";
+  const isHeading = field.type === "heading";
+  const isSubmit = field.type === "submit";
+  const isStatic = STATIC_TYPES.has(field.type);
+
+  return (
+    <aside className="flex w-full shrink-0 flex-col border-t border-slate-800/80 bg-[#0E1119] lg:h-full lg:w-[320px] lg:border-l lg:border-t-0">
+      <SectionTitle
+        icon={Settings2}
+        aside={
+          <button
+            type="button"
+            onClick={onDeselect}
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] text-slate-500 outline-none transition duration-150 hover:text-slate-200 focus-visible:ring-2 focus-visible:ring-slate-600"
+          >
+            <X className="h-3 w-3" aria-hidden="true" />
+            Close
+          </button>
+        }
+      >
+        Inspector
+      </SectionTitle>
+
+      <div
+        key={field.id}
+        className="fc-pop mx-5 mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/25 bg-indigo-500/[0.07] px-3.5 py-3"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-300">
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-[13px] font-medium text-slate-100">
+            {isDivider ? "Divider" : field.label || "Untitled field"}
+          </p>
+          <p className="fc-mono truncate text-[10px] text-indigo-300/70">
+            {bp.name} · #{fieldIndex + 1}
+          </p>
+        </div>
+      </div>
+
+      <div className="fc-scroll flex-1 space-y-4 overflow-y-auto px-5 pb-6">
+        {!NO_LABEL_TYPES.has(field.type) ? (
+          <TextControl
+            id="insp-label"
+            label={isSubmit ? "Button text" : isHeading ? "Heading" : "Field label"}
+            value={field.label}
+            placeholder="Label"
+            onChange={(value) => onUpdate(field.id, { label: value })}
+          />
+        ) : null}
+
+        {!isStatic ? (
+          <TextControl
+            id="insp-key"
+            label="Field key"
+            hint={field.autoKey ? "auto" : "custom"}
+            mono
+            value={field.key}
+            placeholder="field_key"
+            onChange={(value) => onUpdate(field.id, { key: value })}
+          />
+        ) : null}
+
+        {PLACEHOLDER_TYPES.has(field.type) ? (
+          <TextControl
+            id="insp-placeholder"
+            label={field.type === "select" ? "Empty state text" : "Placeholder"}
+            value={field.placeholder}
+            placeholder="Placeholder text"
+            onChange={(value) => onUpdate(field.id, { placeholder: value })}
+          />
+        ) : null}
+
+        {!isDivider && !isSubmit ? (
+          <TextControl
+            id="insp-helper"
+            label={isHeading ? "Subtitle" : "Helper text"}
+            value={field.helper}
+            placeholder={isHeading ? "Optional line under the heading" : "Shown under the field"}
+            multiline
+            onChange={(value) => onUpdate(field.id, { helper: value })}
+          />
+        ) : null}
+
+        {field.type === "range" ? (
+          <div className="grid grid-cols-3 gap-2">
+            <NumberControl
+              id="insp-min"
+              label="Min"
+              value={field.min}
+              onChange={(value) => onUpdate(field.id, { min: value })}
+            />
+            <NumberControl
+              id="insp-max"
+              label="Max"
+              value={field.max}
+              onChange={(value) => onUpdate(field.id, { max: value })}
+            />
+            <NumberControl
+              id="insp-step"
+              label="Step"
+              value={field.step}
+              onChange={(value) => onUpdate(field.id, { step: value })}
+            />
+          </div>
+        ) : null}
+
+        {field.type === "file" ? (
+          <TextControl
+            id="insp-accept"
+            label="Accepted types"
+            hint="accept"
+            mono
+            value={field.accept}
+            placeholder=".pdf,.docx"
+            onChange={(value) => onUpdate(field.id, { accept: value })}
+          />
+        ) : null}
+
+        <LabeledField label="Width">
+          <Segmented
+            value={field.width}
+            onChange={(value) => onUpdate(field.id, { width: value })}
+            options={[
+              { value: "half", label: "Half" },
+              { value: "full", label: "Full" },
+            ]}
+          />
+        </LabeledField>
+
+        {!isStatic ? (
+          <Switch
+            checked={field.required}
+            onChange={(value) => onUpdate(field.id, { required: value })}
+            title="Required field"
+            description="Blocks submit until it has a value"
+          />
+        ) : null}
+
+        {CHOICE_TYPES.has(field.type) ? (
+          <OptionsEditor field={field} onChange={(options) => onUpdate(field.id, { options })} />
+        ) : null}
+
+        {isDivider ? (
+          <p className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 text-xs leading-relaxed text-slate-500">
+            A divider is purely visual — it holds no value and never appears in the submitted payload.
+          </p>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => onDelete(field.id)}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-rose-500/25 bg-rose-500/[0.06] px-3 py-2.5 text-[13px] font-medium text-rose-300 outline-none transition duration-150 hover:border-rose-500/50 hover:bg-rose-500/15 hover:text-rose-200 focus-visible:ring-4 focus-visible:ring-rose-500/15"
+        >
+          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Delete element
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+/* ============================================================================
+ * 10. Live preview (centre, tab B)
+ * ==========================================================================*/
+
+function PreviewPane({ meta, fields, values, errors, onChange, onSubmit, submitted, onReset, s, light }) {
+  const hasSubmit = fields.some((f) => f.type === "submit");
+
+  if (!fields.length) {
+    return (
+      <div className="flex min-h-[420px] flex-col items-center justify-center px-6 py-20 text-center">
+        <Eye className="mb-4 h-7 w-7 text-slate-700" aria-hidden="true" />
+        <p className="text-sm text-slate-500">Nothing to preview yet — add an element on the Canvas tab first.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={"min-h-full px-5 py-8 transition-colors duration-300 sm:px-8 sm:py-12 " + (light ? "bg-slate-100" : "")}>
+      <div className="mx-auto w-full max-w-xl">
+        {submitted ? (
+          <div
+            className={
+              "fc-rise rounded-2xl border p-8 " +
+              (light
+                ? "border-emerald-300 bg-white shadow-xl shadow-slate-900/5"
+                : "border-emerald-500/25 bg-[#12151E] shadow-2xl shadow-black/40")
+            }
+          >
+            <span
+              className={
+                "mb-5 inline-flex h-11 w-11 items-center justify-center rounded-full " +
+                (light ? "bg-emerald-100 text-emerald-600" : "bg-emerald-500/15 text-emerald-400")
+              }
+            >
+              <Check className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <h3 className={"fc-display text-xl font-semibold tracking-tight " + (light ? "text-slate-900" : "text-white")}>
+              Form submitted
+            </h3>
+            <p className={"mt-2 text-sm " + (light ? "text-slate-600" : "text-slate-400")}>
+              This is the payload your <span className="fc-mono">onSubmit</span> handler receives.
+            </p>
+            <pre
+              className={
+                "fc-scroll fc-mono mt-5 max-h-56 overflow-auto rounded-xl border p-4 text-[12px] leading-relaxed " +
+                (light ? "border-slate-200 bg-slate-50 text-emerald-700" : "border-slate-800 bg-[#0A0C12] text-emerald-200/90")
+              }
+            >
+              {JSON.stringify(submitted, null, 2)}
+            </pre>
+            <button
+              type="button"
+              onClick={onReset}
+              className={
+                "mt-5 inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-[13px] font-medium outline-none transition duration-150 focus-visible:ring-4 " +
+                (light
+                  ? "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-900 focus-visible:ring-slate-300/40"
+                  : "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700 hover:text-white focus-visible:ring-slate-700/40")
+              }
+            >
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+              Fill it in again
+            </button>
+          </div>
+        ) : (
+          <form noValidate onSubmit={onSubmit} className={"fc-rise " + s.card}>
+            <header className="mb-8">
+              <h2 className={s.title}>{meta.title || "Untitled form"}</h2>
+              {meta.description ? <p className={s.description}>{meta.description}</p> : null}
+            </header>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              {fields.map((field) => (
+                <div
+                  key={field.id}
+                  className={
+                    (field.type === "submit" || field.type === "heading"
+                      ? "pt-2"
+                      : field.type === "divider"
+                      ? "py-1"
+                      : "min-w-0") + (field.width === "full" ? " sm:col-span-2" : "")
+                  }
+                >
+                  <RenderedField
+                    field={field}
+                    value={values[field.id] === undefined ? emptyValueFor(field) : values[field.id]}
+                    error={errors[field.id]}
+                    onChange={(value) => onChange(field.id, value)}
+                    idPrefix="preview-"
+                    s={s}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {!hasSubmit ? (
+              <p className={"mt-8 border-t pt-4 text-xs " + (light ? "border-slate-200 text-slate-400" : "border-slate-800 text-slate-600")}>
+                No submit button yet — add the Submit Button element to test the full flow.
+              </p>
+            ) : null}
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+ * 11. Code exporter (bottom)
+ * ==========================================================================*/
+
+function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, fieldCount }) {
+  /** "idle" | "copied" | "manual" — "manual" means the clipboard was refused. */
+  const [copyState, setCopyState] = useState("idle");
+  const timer = useRef(null);
+  const codeRef = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(() => {
+    setCopyState("idle");
+    window.clearTimeout(timer.current);
+  }, [mode, theme]);
+
+  const isMac =
+    typeof navigator !== "undefined" && /Mac|iP(hone|ad)/.test(navigator.platform || navigator.userAgent);
+
+  /** Last resort: select the code so the keyboard shortcut is one keystroke away. */
+  const selectCode = () => {
+    const node = codeRef.current;
+    if (!node || typeof window.getSelection !== "function") return;
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  const copy = async () => {
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(code);
+      ok = true;
+    } catch (err) {
+      try {
+        const area = document.createElement("textarea");
+        area.value = code;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        ok = document.execCommand("copy");
+        document.body.removeChild(area);
+      } catch (err2) {
+        ok = false;
+      }
+    }
+    if (!ok) {
+      if (!open) onToggle(true);
+      selectCode();
+      setCopyState("manual");
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => setCopyState("idle"), 4000);
+      return;
+    }
+    setCopyState("copied");
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopyState("idle"), 1800);
+  };
+
+  const copied = copyState === "copied";
+  const manual = copyState === "manual";
+  const copyLabel = copied ? "Copied" : manual ? (isMac ? "Press ⌘C" : "Press Ctrl+C") : "Copy";
+
+  const tabs = [
+    { value: "schema", label: "Form schema", icon: Braces },
+    { value: "react", label: "React + Tailwind", icon: Code2 },
+  ];
+
+  return (
+    <section className="shrink-0 border-t border-slate-800/80 bg-[#0E1119]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
+        <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = mode === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => {
+                  onMode(tab.value);
+                  if (!open) onToggle(true);
+                }}
+                className={
+                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] font-medium outline-none transition duration-150 focus-visible:ring-2 focus-visible:ring-indigo-500/60 " +
+                  (active ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300")
+                }
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {mode === "react" ? (
+          <div className="flex items-center gap-1.5">
+            <Contrast className="h-3.5 w-3.5 text-slate-600" aria-hidden="true" />
+            <div className="w-[168px]">
+              <Segmented
+                size="sm"
+                value={theme}
+                onChange={onTheme}
+                options={[
+                  { value: "dark", label: "Dark" },
+                  { value: "light", label: "Light" },
+                  { value: "auto", label: "Auto" },
+                ]}
+              />
+            </div>
+          </div>
+        ) : null}
+
+        <span className="fc-mono hidden text-[11px] text-slate-500 lg:inline">
+          {fieldCount} {fieldCount === 1 ? "element" : "elements"} · {code.split("\n").length} lines
+        </span>
+
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={copy}
+            aria-live="polite"
+            className={
+              "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-medium outline-none transition duration-200 focus-visible:ring-4 " +
+              (copied
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 focus-visible:ring-emerald-500/20"
+                : manual
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-300 focus-visible:ring-amber-500/20"
+                : "border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700 hover:text-white focus-visible:ring-slate-700/30")
+            }
+          >
+            {copied ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
+            {copyLabel}
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggle(!open)}
+            aria-expanded={open}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium text-slate-400 outline-none transition duration-150 hover:bg-slate-800/60 hover:text-white focus-visible:ring-2 focus-visible:ring-slate-600"
+          >
+            {open ? <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" /> : <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />}
+            {open ? "Hide" : "Show"}
+          </button>
+        </div>
+      </div>
+
+      <div
+        className={
+          "overflow-hidden border-t border-slate-800/70 transition-all duration-300 ease-out " +
+          (open ? "max-h-[34vh] opacity-100" : "max-h-0 border-transparent opacity-0")
+        }
+      >
+        <pre className="fc-scroll fc-mono h-[34vh] overflow-auto bg-[#0A0C12] px-5 py-4 text-[12px] leading-[1.65] text-slate-300 selection:bg-indigo-500/30 selection:text-white">
+          <code ref={codeRef}>{code}</code>
+        </pre>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================================
+ * 12. Root application
+ * ==========================================================================*/
+
+function FormBuilder() {
+  const initial = useRef(null);
+  if (initial.current === null) initial.current = loadDocument();
+
+  const [meta, setMeta] = useState(initial.current.meta);
+  const [fields, setFields] = useState(initial.current.fields);
+  const [selectedId, setSelectedId] = useState(null);
+  const [tab, setTab] = useState("design");
+  const [exportMode, setExportMode] = useState("schema");
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [values, setValues] = useState({});
+  const [errors, setErrors] = useState({});
+  const [submitted, setSubmitted] = useState(null);
+  const [saved, setSaved] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dropIndex, setDropIndex] = useState(null);
+  const [undoState, setUndoState] = useState(null);
+
+  const firstRun = useRef(true);
+  const savedTimer = useRef(null);
+  const undoTimer = useRef(null);
+
+  /**
+   * A live mirror of `fields`, so handlers that need to *read* the current
+   * schema (to mint a unique key) never have to do it inside a state updater.
+   * Updaters must stay pure — React may call them twice in StrictMode, which
+   * would otherwise generate two different ids and desync the selection.
+   */
+  const fieldsRef = useRef(fields);
+  fieldsRef.current = fields;
+  const metaRef = useRef(meta);
+  metaRef.current = meta;
+  const selectedRef = useRef(selectedId);
+  selectedRef.current = selectedId;
+
+  /* ---- persistence ---- */
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: SCHEMA_VERSION, meta, fields }));
+      setSaved(true);
+      window.clearTimeout(savedTimer.current);
+      savedTimer.current = window.setTimeout(() => setSaved(false), 1400);
+    } catch (err) {
+      /* storage unavailable (private mode / quota) — the app keeps working */
+    }
+  }, [meta, fields]);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(savedTimer.current);
+      window.clearTimeout(undoTimer.current);
+    },
+    []
+  );
+
+  /* ---- keep preview values in sync with the schema ---- */
+  useEffect(() => {
+    setValues((prev) => {
+      const next = {};
+      let changed = false;
+      fields.forEach((field) => {
+        if (STATIC_TYPES.has(field.type)) return;
+        if (Object.prototype.hasOwnProperty.call(prev, field.id)) {
+          next[field.id] = prev[field.id];
+        } else {
+          next[field.id] = emptyValueFor(field);
+          changed = true;
+        }
+      });
+      if (!changed && Object.keys(next).length === Object.keys(prev).length) return prev;
+      return next;
+    });
+    setErrors((prev) => {
+      const ids = new Set(fields.map((f) => f.id));
+      const next = {};
+      let changed = false;
+      Object.keys(prev).forEach((id) => {
+        if (ids.has(id)) next[id] = prev[id];
+        else changed = true;
+      });
+      return changed ? next : prev;
+    });
+  }, [fields]);
+
+  /* ---- undo ---- */
+  const snapshot = useCallback((label) => {
+    setUndoState({
+      label,
+      fields: fieldsRef.current,
+      meta: metaRef.current,
+      selectedId: selectedRef.current,
+    });
+    window.clearTimeout(undoTimer.current);
+    undoTimer.current = window.setTimeout(() => setUndoState(null), 8000);
+  }, []);
+
+  const undoRef = useRef(null);
+  undoRef.current = undoState;
+
+  const undo = useCallback(() => {
+    const snap = undoRef.current;
+    if (!snap) return;
+    setFields(snap.fields);
+    setMeta(snap.meta);
+    setSelectedId(snap.selectedId);
+    setSubmitted(null);
+    setUndoState(null);
+    window.clearTimeout(undoTimer.current);
+  }, []);
+
+  /* ---- field mutations ---- */
+  const addField = useCallback((type) => {
+    const field = createField(type, fieldsRef.current);
+    setFields((prev) => prev.concat(field));
+    setSelectedId(field.id);
+    setSubmitted(null);
+    setTab("design");
+  }, []);
+
+  const updateField = useCallback((id, patch) => {
+    setFields((prev) =>
+      prev.map((field) => {
+        if (field.id !== id) return field;
+        const next = { ...field, ...patch };
+        if (patch.key !== undefined) {
+          next.key = uniqueKey(patch.key, prev, id);
+          next.autoKey = false;
+        } else if (patch.label !== undefined && field.autoKey) {
+          next.key = uniqueKey(patch.label, prev, id);
+        }
+        if (patch.min !== undefined) next.min = toNumber(patch.min, field.min);
+        if (patch.max !== undefined) next.max = toNumber(patch.max, field.max);
+        if (patch.step !== undefined) next.step = Math.max(toNumber(patch.step, field.step), 0.0001);
+        return next;
+      })
+    );
+  }, []);
+
+  const deleteField = useCallback(
+    (id) => {
+      const target = fieldsRef.current.find((field) => field.id === id);
+      snapshot(target ? (BLUEPRINT_MAP[target.type] || {}).name + " deleted" : "Element deleted");
+      setFields((prev) => prev.filter((field) => field.id !== id));
+      setSelectedId((prev) => (prev === id ? null : prev));
+      setSubmitted(null);
+    },
+    [snapshot]
+  );
+
+  const duplicateField = useCallback((id) => {
+    const current = fieldsRef.current;
+    const index = current.findIndex((field) => field.id === id);
+    if (index === -1) return;
+    const source = current[index];
+    const clone = { ...source, id: uid(), options: source.options.slice(), autoKey: false };
+    clone.key = uniqueKey(source.key, current, clone.id);
+    setFields((prev) => {
+      const at = prev.findIndex((field) => field.id === id);
+      if (at === -1) return prev;
+      const next = prev.slice();
+      next.splice(at + 1, 0, clone);
+      return next;
+    });
+    setSelectedId(clone.id);
+  }, []);
+
+  const moveField = useCallback((from, delta) => {
+    setFields((prev) => {
+      const to = from + delta;
+      if (to < 0 || to >= prev.length) return prev;
+      const next = prev.slice();
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  }, []);
+
+  const reorder = useCallback((from, to) => {
+    setFields((prev) => {
+      if (from === to || from == null || to == null || from < 0 || from >= prev.length) return prev;
+      const next = prev.slice();
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  }, []);
+
+  const resetCanvas = useCallback(() => {
+    snapshot("Canvas cleared");
+    setFields([]);
+    setMeta((prev) => ({ ...DEFAULT_META, theme: prev.theme }));
+    setSelectedId(null);
+    setValues({});
+    setErrors({});
+    setSubmitted(null);
+    setConfirmReset(false);
+  }, [snapshot]);
+
+  const loadStarter = useCallback(() => {
+    const next = starterFields();
+    setFields(next);
+    setMeta((prev) => ({
+      ...prev,
+      title: "Request a demo",
+      description: "Tell us a little about your team and we will be in touch within one business day.",
+    }));
+    setSelectedId(next[1].id);
+    setSubmitted(null);
+  }, []);
+
+  /* ---- preview behaviour ---- */
+  const handlePreviewChange = useCallback((id, value) => {
+    setValues((prev) => ({ ...prev, [id]: value }));
+    setErrors((prev) => (prev[id] ? { ...prev, [id]: undefined } : prev));
+  }, []);
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const nextErrors = {};
+      fields.forEach((field) => {
+        if (STATIC_TYPES.has(field.type) || !field.required) return;
+        if (isBlank(field, values[field.id])) nextErrors[field.id] = field.label + " is required";
+      });
+      setErrors(nextErrors);
+      if (Object.keys(nextErrors).length > 0) return;
+      const payload = {};
+      fields.forEach((field) => {
+        if (STATIC_TYPES.has(field.type)) return;
+        const raw = values[field.id] === undefined ? emptyValueFor(field) : values[field.id];
+        /* A File has no useful JSON form — show what the handler would receive. */
+        payload[field.key] = raw && typeof File !== "undefined" && raw instanceof File ? raw.name : raw;
+      });
+      setSubmitted(payload);
+    },
+    [fields, values]
+  );
+
+  const resetPreview = useCallback(() => {
+    setSubmitted(null);
+    setErrors({});
+    setValues(() => {
+      const next = {};
+      fields.forEach((field) => {
+        if (!STATIC_TYPES.has(field.type)) next[field.id] = emptyValueFor(field);
+      });
+      return next;
+    });
+  }, [fields]);
+
+  /* ---- keyboard shortcuts ---- */
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      const el = event.target;
+      const typing =
+        el &&
+        (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable);
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
+        if (undoState) {
+          event.preventDefault();
+          undo();
+        }
+        return;
+      }
+      if (event.key === "Escape") {
+        setConfirmReset(false);
+        setSelectedId(null);
+        if (typing && el.blur) el.blur();
+        return;
+      }
+      if (typing) return;
+
+      const id = selectedRef.current;
+      if (!id) return;
+      if (event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+        const index = fieldsRef.current.findIndex((f) => f.id === id);
+        if (index === -1) return;
+        event.preventDefault();
+        moveField(index, event.key === "ArrowUp" ? -1 : 1);
+        return;
+      }
+      if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        deleteField(id);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [deleteField, moveField, undo, undoState]);
+
+  /* ---- derived ---- */
+  const selectedIndex = fields.findIndex((field) => field.id === selectedId);
+  const selectedField = selectedIndex === -1 ? null : fields[selectedIndex];
+  const light = meta.theme === "light";
+  const s = useMemo(() => renderStyles(meta.theme), [meta.theme]);
+
+  const schemaCode = useMemo(() => JSON.stringify(buildSchema(meta, fields), null, 2), [meta, fields]);
+  const reactCode = useMemo(() => generateReactCode(meta, fields), [meta, fields]);
+  const exportCode = exportMode === "schema" ? schemaCode : reactCode;
+
+  const centreTabs = [
+    { value: "design", label: "Canvas", icon: LayoutGrid },
+    { value: "preview", label: "Live preview", icon: Eye },
+  ];
+
+  return (
+    <div className="fc-body flex min-h-screen flex-col bg-[#0A0C12] text-slate-200 antialiased lg:h-screen lg:overflow-hidden">
+      <style>{RUNTIME_STYLES}</style>
+
+      {/* ---------------- Header ---------------- */}
+      <header className="z-20 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-slate-800/80 bg-[#0E1119] px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 shadow-lg shadow-indigo-500/25">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+              <path d="M6 7h12M6 12h7M6 17h4" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+            </svg>
+          </span>
+          <div className="leading-tight">
+            <p className="fc-display text-[13px] font-semibold tracking-tight text-white">Formcraft</p>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Visual builder</p>
+          </div>
+        </div>
+
+        <div className="hidden h-6 w-px bg-slate-800 sm:block" />
+
+        <input
+          type="text"
+          value={meta.title}
+          aria-label="Form title"
+          placeholder="Untitled form"
+          onChange={(event) => setMeta((prev) => ({ ...prev, title: event.target.value }))}
+          className="fc-display min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-[14px] font-medium text-slate-100 outline-none transition duration-150 placeholder:text-slate-600 hover:border-slate-800 hover:bg-slate-950/60 focus:border-indigo-500/60 focus:bg-slate-950 focus:ring-4 focus:ring-indigo-500/10"
+        />
+
+        <div className="ml-auto flex items-center gap-2">
+          <span
+            className={
+              "hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition duration-300 sm:inline-flex " +
+              (saved
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                : "border-slate-800 bg-slate-950/60 text-slate-500")
+            }
+          >
+            <span className={"h-1.5 w-1.5 rounded-full " + (saved ? "bg-emerald-400" : "bg-slate-600")} aria-hidden="true" />
+            {saved ? "Saved" : "Autosave on"}
+          </span>
+          <button
+            type="button"
+            onClick={() => setConfirmReset(true)}
+            disabled={!fields.length}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-1.5 text-[12px] font-medium text-slate-300 outline-none transition duration-150 hover:border-rose-500/40 hover:text-rose-300 focus-visible:ring-4 focus-visible:ring-rose-500/15 disabled:pointer-events-none disabled:opacity-40"
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+            Reset
+          </button>
+        </div>
+      </header>
+
+      {/* ---------------- Workspace ---------------- */}
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <Toolbox onAdd={addField} count={fields.length} />
+
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#0A0C12]">
+          <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-slate-800/80 px-4 py-2.5">
+            <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1">
+              {centreTabs.map((item) => {
+                const Icon = item.icon;
+                const active = tab === item.value;
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setTab(item.value)}
+                    className={
+                      "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium outline-none transition duration-150 focus-visible:ring-2 focus-visible:ring-indigo-500/60 " +
+                      (active ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300")
+                    }
+                  >
+                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="ml-auto truncate text-[11px] text-slate-600">
+              {tab === "design"
+                ? selectedField
+                  ? "Editing " + (selectedField.label || "element")
+                  : "Click an element to edit it"
+                : "Type into the form — it behaves exactly like the export"}
+            </p>
+          </div>
+
+          <div
+            className={"fc-scroll min-h-0 flex-1 overflow-y-auto " + (tab === "design" ? "fc-grid-bg" : "")}
+            onClick={(event) => {
+              if (tab === "design" && event.target === event.currentTarget) setSelectedId(null);
+            }}
+          >
+            {tab === "design" ? (
+              fields.length ? (
+                <div
+                  className="px-5 py-8 sm:px-8"
+                  onClick={(event) => {
+                    if (event.target === event.currentTarget) setSelectedId(null);
+                  }}
+                >
+                  <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+                    {fields.map((field, index) => (
+                      <CanvasCard
+                        key={field.id}
+                        field={field}
+                        index={index}
+                        total={fields.length}
+                        selected={field.id === selectedId}
+                        onSelect={setSelectedId}
+                        onMove={moveField}
+                        onDuplicate={duplicateField}
+                        onDelete={deleteField}
+                        s={s}
+                        lightArtboard={light}
+                        dragging={dragIndex === index}
+                        dropTarget={dropIndex === index && dragIndex !== null}
+                        onDragStart={(i) => {
+                          setDragIndex(i);
+                          setDropIndex(i);
+                        }}
+                        onDragEnter={(i) => setDropIndex(i)}
+                        onDragEnd={() => {
+                          setDragIndex(null);
+                          setDropIndex(null);
+                        }}
+                        onDrop={(i) => {
+                          reorder(dragIndex, i);
+                          setDragIndex(null);
+                          setDropIndex(null);
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <p className="mx-auto mt-6 max-w-3xl text-center text-[11px] text-slate-600">
+                    Drag a card to reorder · Alt+↑↓ to nudge · Del to remove
+                  </p>
+                </div>
+              ) : (
+                <EmptyCanvas onAddFirst={addField} onStarter={loadStarter} />
+              )
+            ) : (
+              <PreviewPane
+                meta={meta}
+                fields={fields}
+                values={values}
+                errors={errors}
+                onChange={handlePreviewChange}
+                onSubmit={handleSubmit}
+                submitted={submitted}
+                onReset={resetPreview}
+                s={s}
+                light={light}
+              />
+            )}
+          </div>
+        </main>
+
+        {selectedField ? (
+          <Inspector
+            field={selectedField}
+            fieldIndex={selectedIndex}
+            onUpdate={updateField}
+            onDelete={deleteField}
+            onDeselect={() => setSelectedId(null)}
+          />
+        ) : (
+          <FormSettings meta={meta} onMeta={(patch) => setMeta((prev) => ({ ...prev, ...patch }))} />
+        )}
+      </div>
+
+      <ExportPanel
+        open={panelOpen}
+        onToggle={setPanelOpen}
+        mode={exportMode}
+        onMode={setExportMode}
+        theme={meta.theme}
+        onTheme={(value) => setMeta((prev) => ({ ...prev, theme: value }))}
+        code={exportCode}
+        fieldCount={fields.length}
+      />
+
+      {/* ---------------- Undo toast ---------------- */}
+      {undoState ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4">
+          <div className="fc-toast pointer-events-auto flex items-center gap-3 rounded-xl border border-slate-700 bg-[#171B26] px-4 py-2.5 shadow-2xl shadow-black/60">
+            <span className="text-[13px] text-slate-200">{undoState.label}</span>
+            <button
+              type="button"
+              onClick={undo}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] font-semibold text-indigo-300 outline-none transition duration-150 hover:bg-slate-700 hover:text-indigo-200 focus-visible:ring-2 focus-visible:ring-indigo-500/60"
+            >
+              <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
+              Undo
+            </button>
+            <button
+              type="button"
+              onClick={() => setUndoState(null)}
+              aria-label="Dismiss"
+              className="rounded-md p-1 text-slate-500 outline-none transition duration-150 hover:text-slate-200 focus-visible:ring-2 focus-visible:ring-slate-600"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ---------------- Reset confirmation ---------------- */}
+      {confirmReset ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reset-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setConfirmReset(false);
+          }}
+        >
+          <div className="fc-pop w-full max-w-sm rounded-2xl border border-slate-800 bg-[#12151E] p-6 shadow-2xl shadow-black/60">
+            <h2 id="reset-title" className="fc-display text-lg font-semibold tracking-tight text-white">
+              Clear the canvas?
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              This removes all {fields.length} {fields.length === 1 ? "element" : "elements"} and the saved copy in
+              this browser. You can still undo it from the toast afterwards.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setConfirmReset(false)}
+                className="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-2 text-[13px] font-medium text-slate-300 outline-none transition duration-150 hover:border-slate-700 hover:text-white focus-visible:ring-4 focus-visible:ring-slate-700/40"
+              >
+                Keep editing
+              </button>
+              <button
+                type="button"
+                onClick={resetCanvas}
+                className="rounded-lg bg-rose-500 px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-rose-500/25 outline-none transition duration-150 hover:bg-rose-400 focus-visible:ring-4 focus-visible:ring-rose-500/30"
+              >
+                Clear everything
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<FormBuilder />);
+</script>

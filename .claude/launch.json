@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "formcraft",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/serve.mjs"
+      ],
+      "port": 5178,
+      "autoPort": true
+    }
+  ]
+}
