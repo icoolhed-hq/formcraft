@@ -8,7 +8,7 @@
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { window, React, t, mount, clipboard, loadFormBuilder, mountGeneratedCode, withLog, stray } from "./env.mjs";
+import { window, React, act, t, mount, clipboard, loadFormBuilder, mountGeneratedCode, withLog, stray } from "./env.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -518,6 +518,169 @@ test("Escape in the search box clears it without deselecting", async () => {
   expect(app.search().value === "", "search not cleared");
   expect(app.c.querySelector('main [aria-current="true"]'), "selection was lost");
   await app.unmount();
+});
+
+/* ---- pointer dragging ---- */
+
+/*
+ * jsdom has no layout, so give the canvas one: every [data-flip-id] item is a
+ * 600×90 row, 100px apart, in a grid whose top-left sits at (300, 100); the
+ * scrolling canvas spans (280, 50)–(1000, 900). Returns a restore function.
+ */
+function fakeCanvasLayout() {
+  const proto = window.HTMLElement.prototype;
+  const saved = {};
+  const isItem = (el) => el.hasAttribute && el.hasAttribute("data-flip-id");
+  const getters = {
+    offsetTop() {
+      return isItem(this) ? Array.from(this.parentNode.children).indexOf(this) * 100 : 0;
+    },
+    offsetLeft: () => 0,
+    offsetWidth() {
+      return isItem(this) ? 600 : 0;
+    },
+    offsetHeight() {
+      return isItem(this) ? 90 : 0;
+    },
+  };
+  Object.keys(getters).forEach((name) => {
+    saved[name] = Object.getOwnPropertyDescriptor(proto, name);
+    Object.defineProperty(proto, name, { configurable: true, get: getters[name] });
+  });
+  const rect = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top });
+  const originalRect = window.Element.prototype.getBoundingClientRect;
+  window.Element.prototype.getBoundingClientRect = function () {
+    if (this.querySelector && this.querySelector(":scope > [data-flip-id]")) return rect(300, 100, 600, 1000);
+    if (this.classList && this.classList.contains("fc-scroll") && this.closest("main")) return rect(280, 50, 720, 850);
+    if (isItem(this)) {
+      const i = Array.from(this.parentNode.children).indexOf(this);
+      return rect(300, 100 + i * 100, 600, 90);
+    }
+    return originalRect.call(this);
+  };
+  return () => {
+    Object.keys(saved).forEach((name) => Object.defineProperty(proto, name, saved[name]));
+    window.Element.prototype.getBoundingClientRect = originalRect;
+  };
+}
+
+const moveTo = (x, y) => t.dispatch(window, new window.PointerEvent("pointermove", { bubbles: true, cancelable: true, clientX: x, clientY: y, buttons: 1 }));
+const release = (x, y, then) =>
+  act(async () => {
+    window.dispatchEvent(new window.PointerEvent("pointerup", { bubbles: true, cancelable: true, clientX: x, clientY: y }));
+    if (then) then();
+  });
+const labels = (app) => (app.saved() ? app.saved().fields.map((f) => f.label) : []);
+
+function fourFields() {
+  const out = [];
+  ["A", "B", "C", "D"].forEach((label) => out.push(field("text", { label, width: "full" }, out)));
+  return out;
+}
+
+test("dragging a card reorders the canvas live and commits one undo step", async () => {
+  const restore = fakeCanvasLayout();
+  try {
+    const app = await open(doc(fourFields()));
+    await t.pointer(app.cards()[0], "pointerdown", { clientX: 320, clientY: 120 });
+    await moveTo(330, 140);
+    expect(window.document.querySelector(".fc-ghost"), "no drag ghost appeared");
+    expect(app.q("main .fc-placeholder"), "the dragged card did not become a placeholder");
+    await moveTo(700, 450);
+    const live = app.cards().map((card) => card.getAttribute("aria-label").split(": ")[1]).join("");
+    expect(live === "BCDA", "canvas did not reflow live, shows " + live);
+    expect(labels(app).join("") === "ABCD", "the document changed before the drop");
+    await release(700, 450);
+    expect(labels(app).join("") === "BCDA", "drop not committed: " + labels(app).join(""));
+    expect(!window.document.querySelector(".fc-ghost"), "ghost left behind after the drop");
+    expect(!app.q("main .fc-placeholder"), "placeholder left behind after the drop");
+    expect(app.q('main [aria-current="true"]').getAttribute("aria-label") === "Short Text: A", "dropped card is not selected");
+    await t.click(app.undoButton());
+    expect(labels(app).join("") === "ABCD", "one undo did not restore the order: " + labels(app).join(""));
+    await app.unmount();
+  } finally {
+    restore();
+  }
+});
+
+test("Escape cancels a card drag and the following click does nothing", async () => {
+  const restore = fakeCanvasLayout();
+  try {
+    const app = await open(doc(fourFields()));
+    await t.pointer(app.cards()[1], "pointerdown", { clientX: 320, clientY: 220 });
+    await moveTo(700, 480);
+    await t.key(window.document.body, "Escape");
+    expect(!window.document.querySelector(".fc-ghost"), "ghost still showing after Escape");
+    const order = app.cards().map((card) => card.getAttribute("aria-label").split(": ")[1]).join("");
+    expect(order === "ABCD", "Escape did not restore the order: " + order);
+    const card = app.cards()[3];
+    await release(700, 480, () => card.dispatchEvent(new window.MouseEvent("click", { bubbles: true, cancelable: true })));
+    expect(labels(app).join("") === "ABCD", "cancelled drag changed the document");
+    expect(!app.q('main [aria-current="true"]'), "the click after a cancelled drag selected a card");
+    await app.unmount();
+  } finally {
+    restore();
+  }
+});
+
+test("a toolbox element dragged onto the canvas lands where it is dropped", async () => {
+  const restore = fakeCanvasLayout();
+  try {
+    const app = await open(doc(fourFields()));
+    const item = app.toolboxItem("Email");
+    await t.pointer(item, "pointerdown", { clientX: 40, clientY: 300 });
+    await moveTo(60, 300);
+    expect(window.document.querySelector(".fc-ghost-chip"), "no chip ghost for a toolbox drag");
+    expect(!app.q("[data-drop-slot]"), "a drop slot showed while off the canvas");
+    /* Row 2 (C) spans y 300–390; left of its centre means "before C". */
+    await moveTo(400, 330);
+    const slot = app.q("[data-drop-slot]");
+    expect(slot && slot.textContent.indexOf("Drop to add Email") !== -1, "no drop slot on the canvas");
+    const before = Array.from(slot.parentNode.children).indexOf(slot);
+    expect(before === 2, "drop slot at position " + before + ", expected 2");
+    await release(400, 330, () => item.dispatchEvent(new window.MouseEvent("click", { bubbles: true, cancelable: true })));
+    expect(app.types().join() === "text,text,email,text,text", "wrong result: " + app.types().join());
+    expect(!app.q("[data-drop-slot]"), "drop slot left behind");
+    expect(!window.document.querySelector(".fc-ghost"), "ghost left behind");
+    await app.unmount();
+  } finally {
+    restore();
+  }
+});
+
+test("a toolbox drag released off the canvas adds nothing, even on an empty canvas", async () => {
+  const restore = fakeCanvasLayout();
+  try {
+    const app = await open();
+    const item = app.toolboxItem("Email");
+    await t.pointer(item, "pointerdown", { clientX: 40, clientY: 300 });
+    await moveTo(500, 400);
+    expect(app.q("[data-drop-slot]"), "empty canvas showed no drop slot");
+    await moveTo(60, 300);
+    expect(!app.q("[data-drop-slot]"), "drop slot stayed after leaving the canvas");
+    await release(60, 300, () => item.dispatchEvent(new window.MouseEvent("click", { bubbles: true, cancelable: true })));
+    expect(app.types().length === 0, "something was added: " + app.types().join());
+    await app.unmount();
+  } finally {
+    restore();
+  }
+});
+
+test("a small wobble on a card is a click, not a drag", async () => {
+  const restore = fakeCanvasLayout();
+  try {
+    const app = await open(doc(fourFields()));
+    const card = app.cards()[2];
+    await t.pointer(card, "pointerdown", { clientX: 320, clientY: 320 });
+    await moveTo(322, 322);
+    expect(!window.document.querySelector(".fc-ghost"), "a 3px wobble started a drag");
+    await release(322, 322);
+    await t.click(card);
+    expect(app.q('main [aria-current="true"]') === card, "click after a wobble did not select");
+    await app.unmount();
+  } finally {
+    restore();
+  }
 });
 
 /* ---------------------------------------------------------------- run ---- */

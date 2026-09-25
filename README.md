@@ -50,7 +50,10 @@ Layout and Advanced — from short text and dropdowns to star ratings, NPS, matr
 boxes, tag inputs, address blocks, signature pads and drop zones. The full catalogue is below.
 
 **Canvas.** Every element renders as its real control. New elements land after the selected one.
-Drag to reorder, or use the card toolbar to move, duplicate, delete or mark as required.
+Drag a card to reorder it: it lifts off the canvas, the other cards slide out of the way as you
+move, and it springs into place when you drop it (Escape cancels). You can also drag an element
+straight from the toolbox to where you want it, or use the card toolbar to move, duplicate, delete
+or mark as required. All motion respects `prefers-reduced-motion`.
 Double-click a card to rename it. Click a field key to copy it.
 
 **Live preview.** The same form, fully interactive, with required and format validation (email,
@@ -125,7 +128,7 @@ element counts, normal and error state); accessibility wiring (labels, `aria-des
 option and setting must survive the export unchanged); the real app's live preview; editing every
 Inspector setting; and zero React warnings throughout.
 
-The **app suite** runs 36 scenarios through the builder UI: search, insertion, undo/redo and its
+The **app suite** runs 41 scenarios through the builder UI: search, insertion, drag and drop, undo/redo and its
 edge cases, keyboard shortcuts and focus management, the command palette, templates, import,
 form checks, the code panel and saved preferences — plus regression tests for every bug found in
 review.

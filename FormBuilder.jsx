@@ -11,7 +11,7 @@
  * -----------------------------------------------------------------------------
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   AlignLeft,
   ArrowDown,
@@ -7454,8 +7454,27 @@ const RUNTIME_STYLES = `
   .fc-pop { animation: fc-pop .2s cubic-bezier(.22,1,.36,1) both; }
   .fc-toast { animation: fc-toast .24s cubic-bezier(.22,1,.36,1) both; }
   .fc-flash { animation: fc-flash .9s ease-out 1; }
+  @keyframes fc-breathe { 0%, 100% { border-color: rgba(129,140,248,.38); } 50% { border-color: rgba(129,140,248,.8); } }
+  @keyframes fc-slot-in { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+  .fc-ghost {
+    border-radius: 12px;
+    transform-origin: 50% 40%;
+    transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .24s ease, opacity .2s ease;
+  }
+  .fc-ghost-lifted { box-shadow: 0 30px 60px -20px rgba(0,0,0,.9), 0 0 0 1px rgba(129,140,248,.55), 0 0 40px -10px rgba(99,102,241,.45); }
+  .fc-ghost-chip { background: #151A26; }
+  .fc-placeholder {
+    border-style: dashed !important;
+    background: rgba(99,102,241,.05) !important;
+    box-shadow: inset 0 0 24px -12px rgba(99,102,241,.5) !important;
+    animation: fc-breathe 1.6s ease-in-out infinite;
+  }
+  .fc-placeholder > * { visibility: hidden; }
+  .fc-slot { animation: fc-slot-in .22s cubic-bezier(.34,1.36,.64,1) both, fc-breathe 1.6s ease-in-out .22s infinite; }
+  body.fc-dragging, body.fc-dragging * { cursor: grabbing !important; user-select: none !important; -webkit-user-select: none !important; }
   @media (prefers-reduced-motion: reduce) {
-    .fc-rise, .fc-pop, .fc-toast, .fc-flash { animation: none !important; }
+    .fc-rise, .fc-pop, .fc-toast, .fc-flash, .fc-placeholder, .fc-slot { animation: none !important; }
+    .fc-ghost { transition: none !important; }
   }
 `;
 
@@ -8220,6 +8239,150 @@ function tokenizeLine(line, mode) {
 }
 
 /* ============================================================================
+ * 10b. Motion — FLIP reflow, pointer dragging, landing and exit animations
+ *
+ * Everything here is progressive: without Element.animate, or with
+ * prefers-reduced-motion, the same interactions happen instantly.
+ * ==========================================================================*/
+
+const EASE_OUT = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+const EASE_SPRING = "cubic-bezier(0.34, 1.36, 0.64, 1)";
+const NEW_SLOT = "__new__";
+
+const reducedMotion = () =>
+  typeof window !== "undefined" && Boolean(window.matchMedia) && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const canAnimate = (el) => Boolean(el) && typeof el.animate === "function" && !reducedMotion();
+
+/**
+ * FLIP: remembers where every [data-flip-id] child of the container sat after
+ * the last render and, when layout moves one, slides it from the old spot to
+ * the new one. Positions come from offsets, which ignore running transforms,
+ * and an interrupted slide continues from wherever it visually is.
+ */
+function useFlip(containerRef) {
+  const last = useRef(new Map());
+  const lastWidth = useRef(0);
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const next = new Map();
+    /* A resized canvas reflows everything at once; that is not a move. */
+    const width = container ? container.offsetWidth : 0;
+    const resized = width !== lastWidth.current;
+    lastWidth.current = width;
+    if (container) {
+      container.querySelectorAll("[data-flip-id]").forEach((el) => {
+        const id = el.getAttribute("data-flip-id");
+        const pos = { x: el.offsetLeft, y: el.offsetTop };
+        next.set(id, pos);
+        const prev = last.current.get(id);
+        if (!prev || resized || !canAnimate(el)) return;
+        let dx = prev.x - pos.x;
+        let dy = prev.y - pos.y;
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+        const running = el.getAnimations ? el.getAnimations().filter((a) => a.id === "fc-flip") : [];
+        if (running.length) {
+          const current = getComputedStyle(el).transform;
+          if (current && current !== "none" && typeof window.DOMMatrixReadOnly === "function") {
+            const m = new window.DOMMatrixReadOnly(current);
+            dx += m.m41;
+            dy += m.m42;
+          }
+          running.forEach((a) => a.cancel());
+        }
+        const anim = el.animate([{ transform: "translate(" + dx + "px, " + dy + "px)" }, { transform: "translate(0, 0)" }], {
+          duration: 300,
+          easing: EASE_OUT,
+        });
+        anim.id = "fc-flip";
+      });
+    }
+    last.current = next;
+  });
+}
+
+/** A visual copy of a node for overlays: no ids, no entrance animations. */
+function overlayClone(node) {
+  const clone = node.cloneNode(true);
+  [clone].concat(Array.from(clone.querySelectorAll("*"))).forEach((el) => {
+    el.removeAttribute("id");
+    if (el.classList) el.classList.remove("fc-rise", "fc-flash", "fc-pop");
+  });
+  return clone;
+}
+
+/** The lifted copy that follows the pointer while dragging. */
+function createDragGhost(source, rect, variant) {
+  const outer = document.createElement("div");
+  outer.setAttribute("aria-hidden", "true");
+  Object.assign(outer.style, {
+    position: "fixed",
+    left: "0px",
+    top: "0px",
+    width: rect.width + "px",
+    zIndex: "60",
+    pointerEvents: "none",
+    willChange: "transform",
+    transform: "translate3d(" + rect.left + "px, " + rect.top + "px, 0)",
+  });
+  const inner = document.createElement("div");
+  inner.className = "fc-ghost" + (variant ? " fc-ghost-" + variant : "");
+  inner.appendChild(overlayClone(source));
+  outer.appendChild(inner);
+  document.body.appendChild(outer);
+  return { outer, inner };
+}
+
+/** A removed card shrinks and fades in place while its neighbours slide up. */
+function animateExit(el) {
+  if (!canAnimate(el)) return;
+  const rect = el.getBoundingClientRect();
+  const clone = overlayClone(el);
+  Object.assign(clone.style, {
+    position: "fixed",
+    left: rect.left + "px",
+    top: rect.top + "px",
+    width: rect.width + "px",
+    height: rect.height + "px",
+    margin: "0",
+    zIndex: "55",
+    pointerEvents: "none",
+  });
+  document.body.appendChild(clone);
+  const anim = clone.animate(
+    [
+      { opacity: 1, transform: "scale(1)" },
+      { opacity: 0, transform: "scale(0.94) translateY(-4px)" },
+    ],
+    { duration: 200, easing: "cubic-bezier(0.4, 0, 1, 1)" }
+  );
+  anim.onfinish = () => clone.remove();
+}
+
+/**
+ * Where does a drop at (x, y) go among `rects` (in reading order)? Before the
+ * first card whose row lies below the pointer, or whose row contains the
+ * pointer and whose centre is to the right of it; otherwise at the end.
+ */
+function insertionIndex(rects, x, y) {
+  for (let i = 0; i < rects.length; i++) {
+    const r = rects[i];
+    if (y < r.top) return i;
+    if (y <= r.bottom && x < r.left + r.width / 2) return i;
+  }
+  return rects.length;
+}
+
+/** Swallows the click that the browser fires after a drag ends on an element. */
+function suppressNextClick() {
+  const stop = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+  };
+  window.addEventListener("click", stop, { capture: true, once: true });
+  window.setTimeout(() => window.removeEventListener("click", stop, { capture: true }), 0);
+}
+
+/* ============================================================================
  * 11. Toolbox (left)
  * ==========================================================================*/
 
@@ -8242,7 +8405,7 @@ function matchesQuery(def, query) {
   return prefixMatch(wordsOf(query), wordsOf([def.name, def.blurb, def.group, def.type].concat(def.keywords).join(" ")));
 }
 
-function Toolbox({ onAdd, count, collapsed, onToggleGroup, searchRef, anchorLabel }) {
+function Toolbox({ onAdd, onDragPointer, count, collapsed, onToggleGroup, searchRef, anchorLabel }) {
   const [query, setQuery] = useState("");
   const term = query.trim().toLowerCase();
   const searching = term.length > 0;
@@ -8310,7 +8473,7 @@ function Toolbox({ onAdd, count, collapsed, onToggleGroup, searchRef, anchorLabe
               Adds after <span className="text-slate-300">{anchorLabel}</span>
             </>
           ) : (
-            "Click an element to add it to the canvas"
+            "Click or drag an element onto the canvas"
           )}
         </p>
       </div>
@@ -8340,13 +8503,21 @@ function Toolbox({ onAdd, count, collapsed, onToggleGroup, searchRef, anchorLabe
                       <button
                         key={def.type}
                         type="button"
-                        onClick={() => onAdd(def.type)}
+                        onClick={(event) => onAdd(def.type, { from: event.currentTarget.querySelector("[data-toolbox-icon]") })}
+                        onPointerDown={(event) => {
+                          /* Mouse and pen can drag an element onto the canvas; touch keeps scrolling the list. */
+                          if (event.button !== 0 || event.pointerType === "touch") return;
+                          onDragPointer(event, def.type, event.currentTarget);
+                        }}
                         className={
                           "group flex w-full items-center gap-3 rounded-xl border px-2.5 py-2 text-left outline-none transition duration-150 hover:border-slate-800 hover:bg-slate-900/70 focus-visible:border-indigo-500/60 focus-visible:ring-4 focus-visible:ring-indigo-500/10 " +
                           (firstMatch === def ? "border-indigo-500/30 bg-indigo-500/[0.06]" : "border-transparent")
                         }
                       >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 text-slate-400 transition duration-150 group-hover:border-indigo-500/40 group-hover:bg-indigo-500/10 group-hover:text-indigo-300">
+                        <span
+                          data-toolbox-icon=""
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 text-slate-400 transition duration-150 group-hover:border-indigo-500/40 group-hover:bg-indigo-500/10 group-hover:text-indigo-300 group-active:scale-90"
+                        >
                           <Icon className="h-4 w-4" aria-hidden="true" />
                         </span>
                         <span className="min-w-0 flex-1">
@@ -8398,12 +8569,8 @@ function CanvasCard({
   onDelete,
   onToggleRequired,
   onCopyKey,
-  dragging,
-  dropTarget,
-  onDragStart,
-  onDragEnter,
-  onDragEnd,
-  onDrop,
+  placeholder,
+  onDragPointer,
   s,
   lightArtboard,
 }) {
@@ -8438,26 +8605,7 @@ function CanvasCard({
   };
 
   return (
-    <div
-      className={"relative min-w-0 " + span}
-      draggable
-      onDragStart={(event) => {
-        event.dataTransfer.effectAllowed = "move";
-        try {
-          event.dataTransfer.setData("text/plain", field.id);
-        } catch (err) {
-          /* Safari guards setData in some contexts */
-        }
-        onDragStart(index);
-      }}
-      onDragEnter={() => onDragEnter(index)}
-      onDragOver={(event) => event.preventDefault()}
-      onDragEnd={onDragEnd}
-      onDrop={(event) => {
-        event.preventDefault();
-        onDrop(index);
-      }}
-    >
+    <div className={"relative min-w-0 " + span} data-flip-id={field.id}>
       <div
         ref={ref}
         role="group"
@@ -8469,6 +8617,12 @@ function CanvasCard({
         aria-label={def.name + (def.common.indexOf("label") !== -1 && field.label ? ": " + field.label : "")}
         onClick={() => onSelect(field.id)}
         onDoubleClick={() => onEdit(field.id)}
+        onPointerDown={(event) => {
+          /* Mouse and pen drag from anywhere on the card; touch only from the grip, so the canvas still scrolls. */
+          if (event.button !== 0 || event.target.closest("button, a, input, textarea, select")) return;
+          if (event.pointerType === "touch" && !event.target.closest("[data-drag-handle]")) return;
+          onDragPointer(event, field.id, ref.current);
+        }}
         onKeyDown={(event) => {
           if (event.target !== event.currentTarget) return;
           /* Enter on a selected card edits it; Enter/Space otherwise select. */
@@ -8481,16 +8635,16 @@ function CanvasCard({
           }
         }}
         className={
-          "fc-rise group relative cursor-pointer rounded-xl border bg-[#12151E] p-4 outline-none transition duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/60 " +
-          (selected
+          "fc-rise group relative cursor-pointer select-none rounded-xl border bg-[#12151E] p-4 outline-none transition-[border-color,box-shadow,background-color] duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/60 " +
+          (placeholder
+            ? "fc-placeholder border-indigo-400/50"
+            : selected
             ? "border-indigo-500/80 shadow-[0_0_0_1px_rgba(99,102,241,0.5),0_12px_30px_-12px_rgba(99,102,241,0.55)]"
             : "border-slate-800 hover:border-slate-700 hover:shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)]") +
-          (dragging ? " opacity-40" : "") +
-          (dropTarget && !dragging ? " border-indigo-400/70 ring-4 ring-indigo-500/10" : "") +
           (flash ? " fc-flash" : "")
         }
       >
-        {selected ? (
+        {selected && !placeholder ? (
           <span className="fc-pop fc-display absolute -top-2.5 left-3 z-10 rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg shadow-indigo-500/30">
             Selected
           </span>
@@ -8498,7 +8652,9 @@ function CanvasCard({
 
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            <GripVertical className="h-3.5 w-3.5 shrink-0 cursor-grab text-slate-700 transition group-hover:text-slate-500" aria-hidden="true" />
+            <span data-drag-handle="" className="-m-1.5 flex shrink-0 cursor-grab touch-none items-center p-1.5 active:cursor-grabbing" title="Drag to reorder">
+              <GripVertical className="h-3.5 w-3.5 text-slate-700 transition group-hover:text-slate-500" aria-hidden="true" />
+            </span>
             <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden="true" />
             <span className="fc-display truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{def.name}</span>
             {field.required ? (
@@ -8547,6 +8703,22 @@ function CanvasCard({
             {field.width === "full" ? "Full width" : "Half width"}
           </span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Where a dragged toolbox element will land, shown while it hovers the canvas. */
+function DropSlot({ type }) {
+  const def = defOf(type);
+  const Icon = def.icon;
+  return (
+    <div data-flip-id={NEW_SLOT} data-drop-slot="" className={"relative min-w-0 " + (def.defaults.width === "full" ? "sm:col-span-2" : "")}>
+      <div className="fc-slot flex min-h-[112px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-indigo-400/50 bg-indigo-500/[0.06] p-4 text-center">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-indigo-500/40 bg-indigo-500/15 text-indigo-300">
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <span className="text-[12px] font-medium text-indigo-200">Drop to add {def.name}</span>
       </div>
     </div>
   );
@@ -9725,8 +9897,8 @@ export default function FormBuilder() {
   const [submitted, setSubmitted] = useState(null);
   const [saved, setSaved] = useState(false);
   const [dialog, setDialog] = useState(null);
-  const [dragIndex, setDragIndex] = useState(null);
-  const [dropIndex, setDropIndex] = useState(null);
+  /* null, { kind: "move", id, order } or { kind: "new", type, index } — index null while off the canvas. */
+  const [drag, setDrag] = useState(null);
   const [flashId, setFlashId] = useState(null);
   const [toasts, setToasts] = useState([]);
   const [, setHistoryTick] = useState(0);
@@ -9737,6 +9909,11 @@ export default function FormBuilder() {
   const toastTimers = useRef({});
   const labelRef = useRef(null);
   const searchRef = useRef(null);
+  const scrollRef = useRef(null);
+  const gridRef = useRef(null);
+  /* A card that should arrive with motion on the next commit: { id, mode, rect, tilt, ghost }. */
+  const landingRef = useRef(null);
+  useFlip(gridRef);
 
   /**
    * Live mirrors of state, so handlers that need to *read* the current value
@@ -9929,21 +10106,36 @@ export default function FormBuilder() {
     flashTimer.current = window.setTimeout(() => setFlashId(null), 1000);
   }, []);
 
+  /**
+   * Adds after the selected element, or at `opts.index` (a drop). `opts.from`
+   * is the element it came from, so the new card can fly in from there;
+   * `opts.landing` hands over a drag ghost to settle into the new slot.
+   */
   const addField = useCallback(
-    (type) => {
+    (type, opts) => {
+      const options = opts && typeof opts === "object" && !opts.nativeEvent ? opts : {};
       const anchorId = selectedRef.current;
       const field = createField(type, fieldsRef.current);
       setFields((prev) => {
+        const next = prev.slice();
+        if (typeof options.index === "number") {
+          next.splice(Math.max(0, Math.min(options.index, prev.length)), 0, field);
+          return next;
+        }
         const at = prev.findIndex((f) => f.id === anchorId);
         if (at === -1) return prev.concat(field);
-        const next = prev.slice();
         next.splice(at + 1, 0, field);
         return next;
       });
+      if (options.landing) landingRef.current = { ...options.landing, id: field.id };
+      else if (options.from && options.from.getBoundingClientRect)
+        landingRef.current = { id: field.id, mode: "fly", rect: options.from.getBoundingClientRect() };
+      else landingRef.current = { id: field.id, mode: "pop" };
       setSelectedId(field.id);
       setSubmitted(null);
       setTab("design");
       flash(field.id);
+      return field.id;
     },
     [flash]
   );
@@ -9975,6 +10167,7 @@ export default function FormBuilder() {
       const index = current.findIndex((field) => field.id === id);
       if (index === -1) return;
       const target = current[index];
+      if (gridRef.current) animateExit(gridRef.current.querySelector('[data-canvas-card][data-field-id="' + id + '"]'));
       setFields((prev) => prev.filter((field) => field.id !== id));
       if (selectedRef.current === id) {
         const neighbour = current[index + 1] || current[index - 1];
@@ -10004,6 +10197,8 @@ export default function FormBuilder() {
         next.splice(at + 1, 0, clone);
         return next;
       });
+      const sourceCard = gridRef.current && gridRef.current.querySelector('[data-canvas-card][data-field-id="' + id + '"]');
+      landingRef.current = sourceCard ? { id: clone.id, mode: "slide", rect: sourceCard.getBoundingClientRect() } : { id: clone.id, mode: "pop" };
       setSelectedId(clone.id);
       flash(clone.id);
     },
@@ -10035,6 +10230,317 @@ export default function FormBuilder() {
     const field = fieldsRef.current.find((f) => f.id === id);
     if (field) updateField(id, { required: !field.required });
   }, [updateField]);
+
+  /*
+   * ---- arrivals ----
+   * A card that was dropped, added or duplicated settles into its slot from
+   * wherever it visually came from: the drag ghost, the toolbox icon, or the
+   * card it was copied from.
+   */
+  useLayoutEffect(() => {
+    const landing = landingRef.current;
+    if (!landing) return;
+    landingRef.current = null;
+    const card = gridRef.current && gridRef.current.querySelector('[data-canvas-card][data-field-id="' + landing.id + '"]');
+    if (landing.ghost) landing.ghost.remove();
+    if (!card || !canAnimate(card)) return;
+    const scroller = scrollRef.current;
+    let to = card.getBoundingClientRect();
+    if (scroller && landing.mode !== "drop") {
+      const view = scroller.getBoundingClientRect();
+      if (to.top < view.top || to.bottom > view.bottom) {
+        card.scrollIntoView({ block: "nearest" });
+        to = card.getBoundingClientRect();
+      }
+    }
+    if (!to.width || !to.height) return;
+    const from = landing.rect;
+    const dx = from ? from.left + from.width / 2 - (to.left + to.width / 2) : 0;
+    const dy = from ? from.top + from.height / 2 - (to.top + to.height / 2) : 0;
+    if (landing.mode === "drop" && from) {
+      card.animate(
+        [
+          {
+            transform: "translate(" + dx + "px, " + dy + "px) scale(" + from.width / to.width + ") rotate(" + (landing.tilt || 0) + "deg)",
+            boxShadow: "0 30px 60px -20px rgba(0,0,0,0.9), 0 0 0 1px rgba(129,140,248,0.55)",
+            opacity: landing.chip ? 0.35 : 1,
+          },
+          { transform: "none", opacity: 1 },
+        ],
+        { duration: 440, easing: EASE_SPRING }
+      );
+    } else if (landing.mode === "fly" && from) {
+      const sx = Math.max(from.width / to.width, 0.08);
+      const sy = Math.max(from.height / to.height, 0.08);
+      card.animate(
+        [
+          { transform: "translate(" + dx + "px, " + dy + "px) scale(" + sx + ", " + sy + ")", opacity: 0 },
+          { opacity: 1, offset: 0.3 },
+          { transform: "none", opacity: 1 },
+        ],
+        { duration: 560, easing: EASE_SPRING }
+      );
+    } else if (landing.mode === "slide" && from) {
+      card.animate(
+        [
+          { transform: "translate(" + (from.left - to.left) + "px, " + (from.top - to.top) + "px)", opacity: 0.4 },
+          { transform: "none", opacity: 1 },
+        ],
+        { duration: 420, easing: EASE_SPRING }
+      );
+    } else {
+      card.animate([{ transform: "scale(0.92)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 380, easing: EASE_SPRING });
+    }
+  });
+
+  /*
+   * ---- pointer dragging ----
+   * One controller for both drags: a card being reordered ("move") and a
+   * toolbox element being placed ("new"). The dragged thing lifts into a
+   * ghost that follows the pointer; the canvas reflows live underneath it and
+   * the drop is committed as a single history step.
+   */
+  const dragSession = useRef(null);
+
+  const startDrag = useCallback(
+    (event, payload, sourceEl) => {
+      if (dragSession.current || !sourceEl) return;
+      const session = {
+        ...payload,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        x: event.clientX,
+        y: event.clientY,
+        lastX: event.clientX,
+        tilt: 0,
+        active: false,
+        cancelled: false,
+        ghost: null,
+        offsetX: 0,
+        offsetY: 0,
+        order: null,
+        prevOrder: null,
+        switchedAt: 0,
+        index: null,
+        raf: 0,
+      };
+      dragSession.current = session;
+
+      const inside = (r) => session.x >= r.left && session.x <= r.right && session.y >= r.top && session.y <= r.bottom;
+      const layoutRect = (grid, el) => {
+        const g = grid.getBoundingClientRect();
+        const left = g.left + el.offsetLeft;
+        const top = g.top + el.offsetTop;
+        return { left, top, width: el.offsetWidth, height: el.offsetHeight, right: left + el.offsetWidth, bottom: top + el.offsetHeight };
+      };
+
+      const paintGhost = () => {
+        if (!session.ghost) return;
+        session.ghost.outer.style.transform = "translate3d(" + (session.x - session.offsetX) + "px, " + (session.y - session.offsetY) + "px, 0)";
+        session.ghost.inner.style.transform = "scale(1.04) rotate(" + (-1 + session.tilt).toFixed(2) + "deg)";
+      };
+
+      const hitTest = () => {
+        const grid = gridRef.current;
+        if (session.kind === "new") {
+          const scroller = scrollRef.current;
+          let index = null;
+          if (scroller && inside(scroller.getBoundingClientRect())) {
+            if (!grid) index = 0;
+            else {
+              const slot = grid.querySelector("[data-drop-slot]");
+              if (slot && inside(layoutRect(grid, slot))) return;
+              const cards = Array.from(grid.querySelectorAll("[data-flip-id]")).filter((el) => el !== slot);
+              index = insertionIndex(cards.map((el) => layoutRect(grid, el)), session.x, session.y);
+            }
+          }
+          if (index !== session.index) {
+            session.index = index;
+            setDrag({ kind: "new", type: session.type, index });
+          }
+          return;
+        }
+        if (!grid) return;
+        const els = Array.from(grid.querySelectorAll("[data-flip-id]"));
+        const self = els.find((el) => el.getAttribute("data-flip-id") === session.id);
+        /* Over its own placeholder nothing changes — this is what stops two cards trading places forever. */
+        if (self && inside(layoutRect(grid, self))) return;
+        const others = els.filter((el) => el !== self);
+        const ids = others.map((el) => el.getAttribute("data-flip-id"));
+        ids.splice(insertionIndex(others.map((el) => layoutRect(grid, el)), session.x, session.y), 0, session.id);
+        const key = ids.join("|");
+        if (key === session.order.join("|")) return;
+        const now = Date.now();
+        if (session.prevOrder && key === session.prevOrder.join("|") && now - session.switchedAt < 150) return;
+        session.prevOrder = session.order;
+        session.order = ids;
+        session.switchedAt = now;
+        setDrag({ kind: "move", id: session.id, order: ids });
+      };
+
+      const frame = () => {
+        session.raf = 0;
+        if (!session.active || session.cancelled) return;
+        session.tilt *= 0.86;
+        const scroller = scrollRef.current;
+        if (scroller) {
+          const r = scroller.getBoundingClientRect();
+          const edge = Math.min(72, r.height / 4);
+          let speed = 0;
+          if (session.x >= r.left && session.x <= r.right) {
+            if (session.y < r.top + edge) speed = -Math.min(1, (r.top + edge - session.y) / edge);
+            else if (session.y > r.bottom - edge) speed = Math.min(1, (session.y - (r.bottom - edge)) / edge);
+          }
+          if (speed && (session.kind === "move" || session.index !== null)) {
+            scroller.scrollTop += speed * 16;
+            hitTest();
+          }
+        }
+        paintGhost();
+        session.raf = window.requestAnimationFrame(frame);
+      };
+
+      const activate = () => {
+        session.active = true;
+        const rect = sourceEl.getBoundingClientRect();
+        session.offsetX = session.startX - rect.left;
+        session.offsetY = session.startY - rect.top;
+        session.ghost = createDragGhost(sourceEl, rect, session.kind === "new" ? "chip" : null);
+        document.body.classList.add("fc-dragging");
+        if (session.kind === "move") {
+          session.order = fieldsRef.current.map((f) => f.id);
+          setDrag({ kind: "move", id: session.id, order: session.order });
+        } else {
+          if (tabRef.current !== "design") setTab("design");
+          setDrag({ kind: "new", type: session.type, index: null });
+        }
+        /* Lift: commit the resting style first so the transition has somewhere to start from. */
+        session.ghost.inner.getBoundingClientRect();
+        session.ghost.inner.classList.add("fc-ghost-lifted");
+        paintGhost();
+        if (window.requestAnimationFrame) session.raf = window.requestAnimationFrame(frame);
+      };
+
+      const finish = () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onCancel);
+        window.removeEventListener("keydown", onKey, true);
+        if (session.raf && window.cancelAnimationFrame) window.cancelAnimationFrame(session.raf);
+        document.body.classList.remove("fc-dragging");
+        if (dragSession.current === session) dragSession.current = null;
+      };
+
+      /* Sends a toolbox ghost home: back to where it was picked up, fading out. */
+      const returnGhost = () => {
+        const ghost = session.ghost;
+        session.ghost = null;
+        if (!ghost) return;
+        const home = sourceEl.getBoundingClientRect();
+        if (!canAnimate(ghost.outer) || !sourceEl.isConnected) return ghost.outer.remove();
+        const anim = ghost.outer.animate(
+          [
+            { transform: ghost.outer.style.transform, opacity: 1 },
+            { transform: "translate3d(" + home.left + "px, " + home.top + "px, 0)", opacity: 0 },
+          ],
+          { duration: 260, easing: EASE_OUT, fill: "forwards" }
+        );
+        anim.onfinish = () => ghost.outer.remove();
+      };
+
+      /* Hands the ghost to the landing animation, which removes it on the next commit. */
+      const handOver = () => {
+        const ghost = session.ghost;
+        session.ghost = null;
+        return { mode: "drop", rect: ghost.inner.getBoundingClientRect(), tilt: -1 + session.tilt, ghost: ghost.outer, chip: session.kind === "new" };
+      };
+
+      const drop = () => {
+        if (session.kind === "move") {
+          const from = fieldsRef.current.findIndex((f) => f.id === session.id);
+          const to = session.order.indexOf(session.id);
+          landingRef.current = { id: session.id, ...handOver() };
+          reorder(from, to);
+          setDrag(null);
+          setSelectedId(session.id);
+          if (from !== to) flash(session.id);
+        } else if (session.index !== null) {
+          const index = session.index;
+          const landing = handOver();
+          setDrag(null);
+          addField(session.type, { index, landing });
+        } else {
+          returnGhost();
+          setDrag(null);
+        }
+      };
+
+      const cancel = () => {
+        session.cancelled = true;
+        if (session.kind === "move" && session.ghost) landingRef.current = { id: session.id, ...handOver() };
+        else returnGhost();
+        setDrag(null);
+        document.body.classList.remove("fc-dragging");
+      };
+
+      function onMove(e) {
+        if (e.pointerId !== session.pointerId || session.cancelled) return;
+        session.x = e.clientX;
+        session.y = e.clientY;
+        if (!session.active) {
+          if (Math.hypot(session.x - session.startX, session.y - session.startY) < 5) return;
+          activate();
+        }
+        e.preventDefault();
+        session.tilt = Math.max(-6, Math.min(6, session.tilt * 0.6 + (session.x - session.lastX) * 0.3));
+        session.lastX = session.x;
+        paintGhost();
+        hitTest();
+      }
+
+      function onUp(e) {
+        if (e.pointerId !== session.pointerId) return;
+        /* The click that follows a drag must not select, add or toggle anything. */
+        if (session.active) suppressNextClick();
+        if (session.active && !session.cancelled) drop();
+        finish();
+      }
+
+      function onCancel(e) {
+        if (e.pointerId !== session.pointerId) return;
+        if (session.active && !session.cancelled) cancel();
+        finish();
+      }
+
+      function onKey(e) {
+        if (e.key !== "Escape" || !session.active || session.cancelled) return;
+        e.preventDefault();
+        e.stopPropagation();
+        cancel();
+      }
+
+      session.dispose = () => {
+        if (session.ghost) session.ghost.outer.remove();
+        finish();
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onCancel);
+      window.addEventListener("keydown", onKey, true);
+    },
+    [addField, flash, reorder]
+  );
+
+  useEffect(
+    () => () => {
+      if (dragSession.current) dragSession.current.dispose();
+    },
+    []
+  );
+
+  const startCardDrag = useCallback((event, id, el) => startDrag(event, { kind: "move", id }, el), [startDrag]);
+  const startToolboxDrag = useCallback((event, type, el) => startDrag(event, { kind: "new", type }, el), [startDrag]);
 
   const replaceDocument = useCallback(
     (doc, message) => {
@@ -10170,6 +10676,16 @@ export default function FormBuilder() {
   /* ---- derived ---- */
   const selectedIndex = fields.findIndex((field) => field.id === selectedId);
   const selectedField = selectedIndex === -1 ? null : fields[selectedIndex];
+  /* While a card is dragged the canvas shows the live order; a toolbox drag adds a drop slot. */
+  const canvasFields = useMemo(() => {
+    if (!drag || drag.kind !== "move") return fields;
+    const byId = new Map(fields.map((field) => [field.id, field]));
+    const ordered = drag.order.map((id) => byId.get(id)).filter(Boolean);
+    return ordered.length === fields.length ? ordered : fields;
+  }, [drag, fields]);
+  const slotIndex = drag && drag.kind === "new" && drag.index !== null ? Math.min(drag.index, canvasFields.length) : -1;
+  const canvasItems = canvasFields.map((field, index) => ({ field, index }));
+  if (slotIndex !== -1) canvasItems.splice(slotIndex, 0, NEW_SLOT);
   const light = meta.theme === "light";
   const s = useMemo(() => renderStyles(meta.theme), [meta.theme]);
   const issues = useMemo(() => lintDocument(meta, fields), [meta, fields]);
@@ -10396,6 +10912,7 @@ export default function FormBuilder() {
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <Toolbox
           onAdd={addField}
+          onDragPointer={startToolboxDrag}
           count={fields.length}
           collapsed={collapsed}
           searchRef={searchRef}
@@ -10439,55 +10956,46 @@ export default function FormBuilder() {
           </div>
 
           <div
+            ref={scrollRef}
             className={"fc-scroll min-h-0 flex-1 overflow-y-auto " + (tab === "design" ? "fc-grid-bg" : "")}
             onClick={(event) => {
               if (tab === "design" && event.target === event.currentTarget) setSelectedId(null);
             }}
           >
             {tab === "design" ? (
-              fields.length ? (
+              canvasFields.length || slotIndex !== -1 ? (
                 <div
                   className="px-5 py-8 sm:px-8"
                   onClick={(event) => {
                     if (event.target === event.currentTarget) setSelectedId(null);
                   }}
                 >
-                  <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
-                    {fields.map((field, index) => (
-                      <CanvasCard
-                        key={field.id}
-                        field={field}
-                        index={index}
-                        total={fields.length}
-                        selected={field.id === selectedId}
-                        flash={field.id === flashId}
-                        onSelect={setSelectedId}
-                        onEdit={editField}
-                        onMove={moveField}
-                        onDuplicate={duplicateField}
-                        onDelete={deleteField}
-                        onToggleRequired={toggleRequired}
-                        onCopyKey={copyKey}
-                        s={s}
-                        lightArtboard={light}
-                        dragging={dragIndex === index}
-                        dropTarget={dropIndex === index && dragIndex !== null}
-                        onDragStart={(i) => {
-                          setDragIndex(i);
-                          setDropIndex(i);
-                        }}
-                        onDragEnter={(i) => setDropIndex(i)}
-                        onDragEnd={() => {
-                          setDragIndex(null);
-                          setDropIndex(null);
-                        }}
-                        onDrop={(i) => {
-                          reorder(dragIndex, i);
-                          setDragIndex(null);
-                          setDropIndex(null);
-                        }}
-                      />
-                    ))}
+                  <div ref={gridRef} className="relative mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+                    {canvasItems.map((item) =>
+                      item === NEW_SLOT ? (
+                        <DropSlot key={NEW_SLOT} type={drag.type} />
+                      ) : (
+                        <CanvasCard
+                          key={item.field.id}
+                          field={item.field}
+                          index={item.index}
+                          total={canvasFields.length}
+                          selected={item.field.id === selectedId}
+                          flash={item.field.id === flashId}
+                          onSelect={setSelectedId}
+                          onEdit={editField}
+                          onMove={moveField}
+                          onDuplicate={duplicateField}
+                          onDelete={deleteField}
+                          onToggleRequired={toggleRequired}
+                          onCopyKey={copyKey}
+                          placeholder={Boolean(drag && drag.kind === "move" && drag.id === item.field.id)}
+                          onDragPointer={startCardDrag}
+                          s={s}
+                          lightArtboard={light}
+                        />
+                      )
+                    )}
                   </div>
                 </div>
               ) : (
