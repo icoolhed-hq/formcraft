@@ -9,11 +9,15 @@ React + Tailwind component in dark, light or auto theme.
 ## Overview
 
 <!-- OVERVIEW:START -->
-Formcraft is a single-file React application (`FormBuilder.jsx`) for building forms visually and
-exporting them as JSON schemas or standalone React + Tailwind components. It ships 68 element
-types in nine groups, a live preview that behaves exactly like the export, undo/redo, a command
-palette, templates, schema import and document checks. Every element is one self-contained
-definition in a registry, verified by a headless test suite.
+Formcraft is a single-file React application (`FormBuilder.jsx`) for building forms visually and exporting them as JSON schemas or standalone React + Tailwind components. It ships 68 element types in nine groups, a live preview that behaves exactly like the export, undo/redo, a command palette, templates, schema import and document checks. Every element is one self-contained definition in a registry, verified by a headless test suite.
+
+The repository includes:
+- **FormBuilder.jsx** — the main application (single file, ~6K lines)
+- **tools/** — build scripts (`assemble.mjs` maintains icon imports, `build-preview.mjs` generates `preview.html`, `serve.mjs` runs a dev server)
+- **tools/test/** — headless test runner (`run.mjs`) with spec files covering all element categories (text, choice, numbers, scales, contact)
+- **preview.html** — standalone demo built from the main file
+
+Run `npm install` in `tools/`, then `node tools/serve.mjs` to launch the dev server. The test suite runs via `node tools/test/run.mjs`.
 <!-- OVERVIEW:END -->
 
 ## Quick start
@@ -252,5 +256,6 @@ review.
 ## Changelog
 
 <!-- CHANGELOG:START -->
+- **2026-09-25** — Add 68-element registry across nine categories (Text, Choice, Numbers, Scales, Contact, Files, Structure, Display, Actions), headless test suites for all input groups, command palette, templates, schema import/export, and builder quality-of-life features
 - **2026-09-11** — Add visual form builder with 18 element types, drag reorder, live preview, theme-aware export, and undo/autosave
 <!-- CHANGELOG:END -->
