@@ -18,4 +18,4 @@ http
     res.writeHead(200, { "content-type": types[path.extname(file)] || "application/octet-stream", "cache-control": "no-store" });
     fs.createReadStream(file).pipe(res);
   })
-  .listen(Number(process.env.PORT) || 5178, () => console.log("formcraft preview on port " + (process.env.PORT || 5178)));
+  .listen(Number(process.env.PORT) || 5178, "127.0.0.1", () => console.log("formcraft preview on port " + (process.env.PORT || 5178)));
