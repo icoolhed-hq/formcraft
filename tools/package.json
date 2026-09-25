@@ -1,0 +1,18 @@
+{
+  "name": "formcraft-tools",
+  "private": true,
+  "description": "Build + test tooling for Formcraft. Kept out of the repo root so Vercel's zero-build static deploy is unaffected.",
+  "type": "module",
+  "scripts": {
+    "test": "node test/run.mjs",
+    "build": "node build-preview.mjs"
+  },
+  "devDependencies": {
+    "@babel/standalone": "7.29.9",
+    "jsdom": "30.1.1",
+    "lucide": "1.48.0",
+    "lucide-react": "1.48.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

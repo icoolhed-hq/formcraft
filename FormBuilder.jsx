@@ -5,46 +5,121 @@
  *
  * Dependencies: react, tailwindcss, lucide-react
  * Usage:  import FormBuilder from "./FormBuilder";  <FormBuilder />
+ *
+ * The lucide-react import list below is maintained by tools/assemble.mjs —
+ * it is recomputed from the icons the file actually uses.
  * -----------------------------------------------------------------------------
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   AlignLeft,
   ArrowDown,
+  ArrowRight,
   ArrowUp,
+  Asterisk,
+  AtSign,
+  Banknote,
   Braces,
+  Briefcase,
+  Bug,
+  Calendar1,
+  CalendarCheck,
+  CalendarClock,
   CalendarDays,
+  CalendarFold,
+  CalendarRange,
+  ChartNoAxesColumn,
   Check,
   ChevronDown,
+  ChevronRight,
   ChevronUp,
+  CircleAlert,
+  CircleCheck,
   CircleDot,
   Clock,
+  CloudUpload,
   Code2,
+  Columns2,
+  Command,
   Contrast,
   Copy,
+  Diff,
+  Download,
+  Earth,
+  Eraser,
   Eye,
+  EyeOff,
+  FileBraces,
+  FileCheck,
+  FileText,
+  FileUp,
+  Files,
+  Gauge,
+  Globe,
+  Grid3x3,
   GripVertical,
   Hash,
   Heading,
+  ImageIcon,
+  ImagePlus,
+  Import,
+  Info,
   KeyRound,
+  Keyboard,
+  Languages,
   LayoutGrid,
+  LayoutPanelTop,
+  LayoutTemplate,
+  Link,
   Link2,
   ListChecks,
+  ListFilter,
+  ListOrdered,
+  LockKeyhole,
   Mail,
+  MapPin,
+  MessageSquareWarning,
+  MessagesSquare,
   Minus,
+  MoveHorizontal,
+  MoveVertical,
+  OctagonAlert,
+  Palette,
+  PanelBottom,
+  PartyPopper,
+  Percent,
   Phone,
+  Pilcrow,
+  Pipette,
   Plus,
+  RectangleEllipsis,
+  Redo2,
   RotateCcw,
+  Ruler,
+  Search,
+  SearchX,
   Send,
   Settings2,
+  Signature,
   SlidersHorizontal,
+  Smartphone,
+  Smile,
   Sparkles,
+  Star,
+  Tags,
+  TextCursorInput,
+  TextSearch,
+  ThumbsUp,
+  Timer,
   ToggleRight,
   Trash2,
+  TriangleAlert,
   Type,
   Undo2,
   Upload,
+  UserPlus,
+  UserRound,
   X,
 } from "lucide-react";
 
@@ -58,6 +133,8 @@ import {
  *   auto   -> base + light + every dark class prefixed with `dark:`
  * The live preview renders with the same strings the exporter emits, so the
  * generated component is a faithful match of what you see on screen.
+ *
+ * Element definitions may contribute their own tokens (see defineType).
  * ==========================================================================*/
 
 const TOKENS = {
@@ -79,23 +156,68 @@ const TOKENS = {
     light: "border-rose-400 bg-rose-50 text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15",
     dark: "border-rose-500/80 bg-rose-950/20 text-slate-100 placeholder-slate-500 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/15",
   },
+  /* Input group: a bordered row holding addons and a borderless input. */
+  inputGroup: {
+    base: "flex w-full items-stretch overflow-hidden rounded-lg border shadow-sm transition duration-150",
+    light:
+      "border-slate-300 bg-white hover:border-slate-400 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/15",
+    dark:
+      "border-slate-700/80 bg-slate-900/70 hover:border-slate-600 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/15",
+  },
+  inputGroupError: {
+    base: "flex w-full items-stretch overflow-hidden rounded-lg border shadow-sm transition duration-150",
+    light: "border-rose-400 bg-rose-50 focus-within:border-rose-500 focus-within:ring-4 focus-within:ring-rose-500/15",
+    dark: "border-rose-500/80 bg-rose-950/20 focus-within:border-rose-400 focus-within:ring-4 focus-within:ring-rose-500/15",
+  },
+  addon: {
+    base: "flex shrink-0 select-none items-center gap-1.5 px-3 text-sm",
+    light: "bg-slate-50 text-slate-500",
+    dark: "bg-slate-800/60 text-slate-400",
+  },
+  bare: {
+    base: "min-w-0 flex-1 bg-transparent px-3.5 py-2.5 text-sm outline-none",
+    light: "text-slate-900 placeholder-slate-400",
+    dark: "text-slate-100 placeholder-slate-500",
+  },
+  subLabel: {
+    base: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider",
+    light: "text-slate-500",
+    dark: "text-slate-400",
+  },
+  muted: { base: "text-xs", light: "text-slate-500", dark: "text-slate-400" },
   helper: { base: "mt-2 text-xs leading-relaxed", light: "text-slate-500", dark: "text-slate-400" },
   error: { base: "mt-2 text-xs font-medium", light: "text-rose-600", dark: "text-rose-400" },
   choice: {
-    base: "flex cursor-pointer select-none items-center gap-3 rounded-lg border px-3.5 py-2.5 text-sm transition duration-150",
+    base: "flex cursor-pointer select-none items-center gap-3 rounded-lg border px-3.5 py-2.5 text-sm transition duration-150 has-[:focus-visible]:ring-2",
+    light: "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 has-[:focus-visible]:ring-indigo-500",
+    dark: "border-slate-700/70 bg-slate-900/50 text-slate-200 hover:border-slate-600 hover:bg-slate-900 has-[:focus-visible]:ring-indigo-400",
+  },
+  choiceActive: {
+    base: "flex cursor-pointer select-none items-center gap-3 rounded-lg border px-3.5 py-2.5 text-sm transition duration-150 has-[:focus-visible]:ring-2",
+    light: "border-indigo-500 bg-indigo-50 text-indigo-900 has-[:focus-visible]:ring-indigo-500",
+    dark: "border-indigo-500/70 bg-indigo-500/10 text-white has-[:focus-visible]:ring-indigo-400",
+  },
+  /* Button-shaped choices (segmented controls, chips, scales). */
+  option: {
+    base:
+      "inline-flex items-center justify-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20",
     light: "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50",
     dark: "border-slate-700/70 bg-slate-900/50 text-slate-200 hover:border-slate-600 hover:bg-slate-900",
   },
-  choiceActive: {
-    base: "flex cursor-pointer select-none items-center gap-3 rounded-lg border px-3.5 py-2.5 text-sm transition duration-150",
-    light: "border-indigo-500 bg-indigo-50 text-indigo-900",
-    dark: "border-indigo-500/70 bg-indigo-500/10 text-white",
+  optionActive: {
+    base:
+      "inline-flex items-center justify-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20",
+    light: "border-indigo-600 bg-indigo-600 text-white",
+    dark: "border-indigo-500 bg-indigo-500 text-white",
   },
   mark: { base: "flex shrink-0 items-center justify-center border-2 transition-colors", light: "border-slate-400", dark: "border-slate-600" },
   markActive: { base: "flex shrink-0 items-center justify-center border-2 transition-colors", light: "border-indigo-600", dark: "border-indigo-400" },
   markDot: { base: "rounded-full", light: "bg-indigo-600", dark: "bg-indigo-400" },
-  markCheck: { base: "", light: "text-white", dark: "text-white" },
-  markFill: { base: "flex shrink-0 items-center justify-center rounded border-2 transition-colors", light: "border-indigo-600 bg-indigo-600", dark: "border-indigo-400 bg-indigo-400" },
+  markFill: {
+    base: "flex shrink-0 items-center justify-center rounded border-2 text-white transition-colors",
+    light: "border-indigo-600 bg-indigo-600",
+    dark: "border-indigo-400 bg-indigo-400",
+  },
   switchOn: { base: "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-200", light: "bg-indigo-600", dark: "bg-indigo-500" },
   switchOff: { base: "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-200", light: "bg-slate-300", dark: "bg-slate-700" },
   switchKnob: { base: "absolute top-0.5 h-4 w-4 rounded-full shadow transition-all duration-200", light: "bg-white", dark: "bg-white" },
@@ -117,13 +239,14 @@ const TOKENS = {
     dark: "bg-slate-800 accent-indigo-400",
   },
   rangeValue: {
-    base: "fc-mono shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+    base: "shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] font-medium tabular-nums",
     light: "bg-slate-100 text-slate-700",
     dark: "bg-slate-800 text-slate-200",
   },
-  rangeBound: { base: "fc-mono text-[10px] tabular-nums", light: "text-slate-400", dark: "text-slate-500" },
+  rangeBound: { base: "font-mono text-[10px] tabular-nums", light: "text-slate-400", dark: "text-slate-500" },
   /** Tells the browser how to paint native date/time pickers and their icons. */
   dateScheme: { base: "", light: "[color-scheme:light]", dark: "[color-scheme:dark]" },
+  chevron: { base: "", light: "text-slate-500", dark: "text-slate-400" },
   heading: { base: "text-base font-semibold tracking-tight", light: "text-slate-900", dark: "text-white" },
   headingNote: { base: "mt-1 text-xs leading-relaxed", light: "text-slate-500", dark: "text-slate-400" },
   divider: { base: "border-0 border-t", light: "border-slate-200", dark: "border-slate-800" },
@@ -160,225 +283,6692 @@ function buildStyles(mode) {
   return out;
 }
 
+/* ============================================================================
+ * 2. Element registry
+ *
+ * Every element on the canvas is a definition registered with defineType().
+ * A definition owns everything about its element: how it renders in the
+ * builder (render), how it is written into the exported component (emit),
+ * what it stores (empty/literal), how it validates, and which settings the
+ * Inspector shows. The rest of the app never switches on `type`.
+ *
+ *   defineType({
+ *     type:     "rating",                 // camelCase, unique
+ *     name:     "Star Rating",            // toolbox + inspector title
+ *     blurb:    "1 to 5 stars",           // toolbox subtitle
+ *     group:    "Scales",                 // one of GROUPS
+ *     icon:     Star,                     // lucide-react component
+ *     keywords: ["stars", "review"],      // extra toolbox search terms
+ *     kind:     "input",                  // "input" | "static" | "action"
+ *     labelMode: "group",                 // input: "outer" | "group" | "inline" | "none"
+ *     defaults: { label, helper, width, required },
+ *     settings: [S.number("max", "Stars", 5, { min: 3, max: 10 })],
+ *     empty:    (f) => null,              // initial value (JSON-serialisable)
+ *     literal:  (f) => "null",            // optional: source code of the initial value
+ *     alwaysFilled: false,                // true when the value can never be blank
+ *     blank:    { test(f, v), code(ctx) },          // optional custom emptiness
+ *     validate: { test(f, v), code(ctx), message(f), when(f) },  // optional format rule;
+ *                                         // when(f) → false switches it off for that field
+ *     sanitize: (f) => f,                 // optional: repair invariants after edits
+ *     requiredText: (f) => "Choose a rating",  // optional: message when required and blank
+ *     cell:     "pt-2",                   // optional grid-cell class
+ *     tokens:   { ratingStar: { base, light, dark } },
+ *     inspect:  { label: "Heading", helper: "Subtitle" },  // relabel common controls
+ *     common:   ["label", "width"],       // static only: which common controls apply
+ *     render(ctx) { return <jsx/> },
+ *     emit(ctx)  { ctx.line("<jsx/>") },
+ *   })
+ *
+ * render(ctx) — input kinds receive:
+ *   f, value, set(v), error, id, labelId, describedBy, s (styles), cls, clsOf(ok, err)
+ * static/action kinds receive: f, s, reset()
+ *
+ * emit(ctx) — input kinds receive:
+ *   f, s, key, v ("values.key"), line(text, depthOffset), set(expr), onChange(expr),
+ *   idAttr, nameAttr, describedAttr, labelledAttr, clsValue(extra, ok, err),
+ *   hasError, q, qa, jsxText, use(helper), hook(name), icon(name)
+ *   (q() quotes JS strings; qa() writes a JSX attribute value; jsxText() a JSX child)
+ * static/action kinds receive: f, s, line, q, jsxText, use, hook, icon
+ *
+ * render and emit must produce the same markup and classes — the test suite in
+ * tools/test compares them for every element, in every theme.
+ * ==========================================================================*/
+
+const GROUPS = ["Text", "Contact", "Numbers", "Choice", "Scales", "Date & time", "Files & media", "Layout", "Advanced"];
+const KINDS = ["input", "static", "action"];
+const LABEL_MODES = ["outer", "group", "inline", "none"];
+const CONTROLS = ["text", "textarea", "number", "toggle", "select", "options"];
+const COMMON_PROPS = ["id", "type", "key", "autoKey", "label", "helper", "required", "width"];
+
+const TYPES = Object.create(null);
+const TYPE_ORDER = [];
+
+/** Setting descriptor factories — each one becomes an Inspector control. */
+const S = {
+  text: (prop, label, value = "", extra) => ({ prop, label, control: "text", default: value, ...extra }),
+  textarea: (prop, label, value = "", extra) => ({ prop, label, control: "textarea", default: value, ...extra }),
+  number: (prop, label, value = 0, extra) => ({ prop, label, control: "number", default: value, ...extra }),
+  toggle: (prop, label, value = false, extra) => ({ prop, label, control: "toggle", default: value, ...extra }),
+  select: (prop, label, value, choices, extra) => ({ prop, label, control: "select", default: value, choices, ...extra }),
+  options: (prop, label, value = [], extra) => ({ prop, label, control: "options", default: value, ...extra }),
+  placeholder: (value = "") => ({ prop: "placeholder", label: "Placeholder", control: "text", default: value }),
+};
+
+const cloneValue = (value) => (Array.isArray(value) ? value.slice() : value && typeof value === "object" ? { ...value } : value);
+
+/** Coerce an untrusted value into what a setting accepts. */
+function coerceSetting(setting, raw) {
+  switch (setting.control) {
+    case "text":
+    case "textarea":
+      return typeof raw === "string" ? raw : cloneValue(setting.default);
+    case "number": {
+      if (setting.optional && (raw === null || raw === "")) return null;
+      const n = typeof raw === "number" ? raw : raw == null || raw === "" ? NaN : Number(raw);
+      if (!Number.isFinite(n)) return cloneValue(setting.default);
+      let out = n;
+      if (typeof setting.min === "number") out = Math.max(setting.min, out);
+      if (typeof setting.max === "number") out = Math.min(setting.max, out);
+      return setting.integer ? Math.round(out) : out;
+    }
+    case "toggle":
+      return typeof raw === "boolean" ? raw : cloneValue(setting.default);
+    case "select":
+      return setting.choices.some((c) => c.value === raw) ? raw : cloneValue(setting.default);
+    case "options":
+      return Array.isArray(raw) ? raw.filter((o) => typeof o === "string") : cloneValue(setting.default);
+    default:
+      return cloneValue(setting.default);
+  }
+}
+
+function defineType(def) {
+  const fail = (message) => {
+    throw new Error('defineType("' + (def && def.type) + '"): ' + message);
+  };
+  if (!def || typeof def.type !== "string" || !/^[a-z][a-zA-Z0-9]*$/.test(def.type)) fail("type must be a camelCase string");
+  if (TYPES[def.type]) fail("duplicate type");
+  if (!def.name || typeof def.name !== "string") fail("name is required");
+  if (GROUPS.indexOf(def.group) === -1) fail("unknown group '" + def.group + "'");
+  if (!def.icon || (typeof def.icon !== "function" && typeof def.icon !== "object")) {
+    fail("icon must be a lucide-react component (is it imported?)");
+  }
+  const kind = def.kind || "input";
+  if (KINDS.indexOf(kind) === -1) fail("unknown kind '" + kind + "'");
+  if (typeof def.render !== "function") fail("render(ctx) is required");
+  if (typeof def.emit !== "function") fail("emit(ctx) is required");
+  const labelMode = kind === "input" ? def.labelMode || "outer" : "none";
+  if (LABEL_MODES.indexOf(labelMode) === -1) fail("unknown labelMode '" + labelMode + "'");
+
+  const seen = new Set();
+  const settings = (def.settings || []).map((raw) => {
+    const setting = { ...raw };
+    if (!setting.prop || typeof setting.prop !== "string") fail("every setting needs a prop");
+    if (COMMON_PROPS.indexOf(setting.prop) !== -1) fail("setting '" + setting.prop + "' collides with a common property");
+    if (seen.has(setting.prop)) fail("setting '" + setting.prop + "' is declared twice");
+    seen.add(setting.prop);
+    if (CONTROLS.indexOf(setting.control) === -1) fail("setting '" + setting.prop + "' has unknown control");
+    if (setting.control === "select" && (!Array.isArray(setting.choices) || !setting.choices.length)) {
+      fail("select setting '" + setting.prop + "' needs choices");
+    }
+    return setting;
+  });
+
+  if (def.tokens) {
+    Object.keys(def.tokens).forEach((name) => {
+      if (TOKENS[name]) fail("token '" + name + "' already exists");
+      const t = def.tokens[name];
+      if (!t || typeof t.base !== "string" || typeof t.light !== "string" || typeof t.dark !== "string") {
+        fail("token '" + name + "' needs base, light and dark strings");
+      }
+      TOKENS[name] = t;
+    });
+  }
+
+  const common =
+    kind === "input"
+      ? ["label", "key", "helper", "required", "width"].filter(
+          (c) => !(c === "required" && def.alwaysFilled) && !(c === "helper" && labelMode === "none")
+        )
+      : kind === "action"
+      ? ["label", "width"]
+      : def.common || ["width"];
+
+  TYPES[def.type] = {
+    ...def,
+    kind,
+    labelMode,
+    settings,
+    common,
+    defaults: def.defaults || {},
+    keywords: def.keywords || [],
+    inspect: def.inspect || {},
+    blurb: def.blurb || "",
+  };
+  TYPE_ORDER.push(def.type);
+}
+
+/* ============================================================================
+ * 3. Shared building blocks for element definitions
+ * ==========================================================================*/
+
+/** Is a value empty? Mirrored exactly by the `isBlank` helper in exported code. */
+function isBlankValue(value) {
+  if (value == null || value === false) return true;
+  if (typeof value === "string") return value.trim() === "";
+  if (typeof value === "number") return Number.isNaN(value);
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof Blob !== "undefined" && value instanceof Blob) return false;
+  if (typeof value === "object") return Object.keys(value).every((k) => isBlankValue(value[k]));
+  return false;
+}
+
+/** Validation patterns shared by the preview and the exported code. */
+const PATTERNS = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  url: /^https?:\/\/[^\s/$.?#][^\s]*\.[^\s]{2,}$/i,
+  phone: /^\+?[\d\s().-]{6,}$/,
+};
+
+/**
+ * Helpers the exported component can pull in. `module` helpers sit above the
+ * component, `component` helpers inside it (they may use values/setField).
+ */
+const CODE_HELPERS = Object.create(null);
+
+function defineHelper(name, spec) {
+  if (CODE_HELPERS[name]) throw new Error("defineHelper: '" + name + "' already exists");
+  if (spec.scope !== "module" && spec.scope !== "component") throw new Error("defineHelper: bad scope for " + name);
+  CODE_HELPERS[name] = { requires: [], hooks: [], ...spec };
+}
+
+defineHelper("isBlank", {
+  scope: "module",
+  lines: [
+    "const isBlank = (value) => {",
+    "  if (value == null || value === false) return true;",
+    '  if (typeof value === "string") return value.trim() === "";',
+    '  if (typeof value === "number") return Number.isNaN(value);',
+    "  if (Array.isArray(value)) return value.length === 0;",
+    "  if (value instanceof Blob) return false;",
+    '  if (typeof value === "object") return Object.values(value).every(isBlank);',
+    "  return false;",
+    "};",
+  ],
+});
+
+defineHelper("EMAIL_PATTERN", { scope: "module", lines: ["const EMAIL_PATTERN = " + PATTERNS.email.toString() + ";"] });
+defineHelper("URL_PATTERN", { scope: "module", lines: ["const URL_PATTERN = " + PATTERNS.url.toString() + ";"] });
+defineHelper("PHONE_PATTERN", { scope: "module", lines: ["const PHONE_PATTERN = " + PATTERNS.phone.toString() + ";"] });
+
+defineHelper("toggleOption", {
+  scope: "component",
+  lines: [
+    "const toggleOption = (key, option) => {",
+    "  const current = values[key];",
+    "  setField(key, current.includes(option) ? current.filter((item) => item !== option) : current.concat(option));",
+    "};",
+  ],
+});
+
+defineHelper("resetForm", {
+  scope: "component",
+  lines: ["const resetForm = () => {", "  setValues(initialValues);", "  setErrors({});", "};"],
+});
+
+const q = (value) => JSON.stringify(String(value == null ? "" : value));
+/**
+ * User text as a JSX child. Plain text stays readable; anything JSX would
+ * reinterpret (markup, braces, HTML entities, line breaks, edge whitespace)
+ * becomes an expression container, so it renders exactly as typed.
+ */
+const jsxText = (value) => {
+  const text = String(value == null ? "" : value);
+  return /[<>{}&\r\n]|^\s|\s$/.test(text) ? "{" + q(text) + "}" : text;
+};
+
+/**
+ * User text as a JSX attribute value. JSX attribute strings have no escape
+ * syntax and decode HTML entities, so quotes, backslashes, ampersands and
+ * control characters go through an expression container: placeholder={"Say \"hi\""}.
+ */
+const qa = (value) => {
+  const text = String(value == null ? "" : value);
+  return /["\\&\u0000-\u001f]/.test(text) ? "{" + q(text) + "}" : '"' + text + '"';
+};
+const pad = (depth) => "  ".repeat(depth);
+
+/**
+ * A single text-like <input>, optionally wrapped in an input group with a
+ * prefix/suffix addon (text or icon). Covers text, email, number, date, …
+ *
+ *   textInput({
+ *     htmlType: "email", inputMode, autoComplete, spellCheck,
+ *     prefix, suffix,            // static addon text
+ *     prefixProp, suffixProp,    // addon text read from a field setting
+ *     icon, iconName,            // leading icon: the component + its name
+ *     scheme: true,              // add the date/time colour-scheme token
+ *     extra: " font-mono",       // extra classes on the input
+ *     transform, transformCode,  // normalise typed text (app fn + code fn)
+ *     attrs: { maxLength: 6 },   // static extra attributes (numbers/strings)
+ *   })
+ */
+function textInput(opts = {}) {
+  const htmlType = opts.htmlType || "text";
+  const addonText = (f, which) => {
+    const fromProp = which === "prefix" ? opts.prefixProp : opts.suffixProp;
+    if (fromProp) return f[fromProp] || "";
+    return (which === "prefix" ? opts.prefix : opts.suffix) || "";
+  };
+  const extraClass = (s) => (opts.scheme ? " " + s.dateScheme : "") + (opts.extra || "");
+  const attrs = opts.attrs || {};
+
+  return {
+    render(ctx) {
+      const { f, value, set, s } = ctx;
+      const prefix = addonText(f, "prefix");
+      const suffix = addonText(f, "suffix");
+      const grouped = Boolean(prefix || suffix || opts.icon);
+      const Icon = opts.icon;
+      const input = (
+        <input
+          id={ctx.id}
+          name={f.key}
+          type={htmlType}
+          inputMode={opts.inputMode}
+          autoComplete={opts.autoComplete}
+          spellCheck={opts.spellCheck}
+          aria-describedby={ctx.describedBy}
+          value={value == null ? "" : value}
+          placeholder={f.placeholder || undefined}
+          onChange={(event) => set(opts.transform ? opts.transform(event.target.value) : event.target.value)}
+          className={(grouped ? s.bare : ctx.cls) + extraClass(s)}
+          {...attrs}
+        />
+      );
+      if (!grouped) return input;
+      return (
+        <div className={ctx.clsOf("inputGroup", "inputGroupError")}>
+          {Icon || prefix ? (
+            <span className={s.addon}>
+              {Icon ? <Icon className="h-4 w-4" aria-hidden="true" /> : null}
+              {prefix || null}
+            </span>
+          ) : null}
+          {input}
+          {suffix ? <span className={s.addon}>{suffix}</span> : null}
+        </div>
+      );
+    },
+    emit(ctx) {
+      const { f, s } = ctx;
+      const prefix = addonText(f, "prefix");
+      const suffix = addonText(f, "suffix");
+      const grouped = Boolean(prefix || suffix || opts.icon);
+      const o = grouped ? 1 : 0;
+      if (grouped) {
+        ctx.line("<div className=" + ctx.clsValue("", "inputGroup", "inputGroupError") + ">");
+        if (opts.icon || prefix) {
+          ctx.line("<span className=" + q(s.addon) + ">", 1);
+          if (opts.icon) ctx.line("<" + ctx.icon(opts.iconName) + ' className="h-4 w-4" aria-hidden="true" />', 2);
+          if (prefix) ctx.line(jsxText(prefix), 2);
+          ctx.line("</span>", 1);
+        }
+      }
+      ctx.line("<input", o);
+      ctx.line(ctx.idAttr, o + 1);
+      ctx.line(ctx.nameAttr, o + 1);
+      ctx.line("type=" + q(htmlType), o + 1);
+      if (opts.inputMode) ctx.line("inputMode=" + q(opts.inputMode), o + 1);
+      if (opts.autoComplete) ctx.line("autoComplete=" + q(opts.autoComplete), o + 1);
+      if (opts.spellCheck === false) ctx.line("spellCheck={false}", o + 1);
+      if (ctx.describedAttr) ctx.line(ctx.describedAttr, o + 1);
+      ctx.line("value={" + ctx.v + "}", o + 1);
+      if (f.placeholder) ctx.line("placeholder=" + qa(f.placeholder), o + 1);
+      ctx.line(ctx.onChange(opts.transformCode ? opts.transformCode("event.target.value", ctx) : "event.target.value"), o + 1);
+      if (grouped) ctx.line("className=" + q(s.bare + extraClass(s)), o + 1);
+      else ctx.line("className=" + ctx.clsValue(extraClass(s)), o + 1);
+      Object.keys(attrs).forEach((name) => {
+        const val = attrs[name];
+        ctx.line(name + "=" + (typeof val === "string" ? q(val) : "{" + JSON.stringify(val) + "}"), o + 1);
+      });
+      ctx.line("/>", o);
+      if (grouped) {
+        if (suffix) ctx.line("<span className=" + q(s.addon) + ">" + jsxText(suffix) + "</span>", 1);
+        ctx.line("</div>");
+      }
+    },
+  };
+}
+
+/** Native <select>, single or multiple, with options from `f.options`. */
+function selectInput(opts = {}) {
+  const multiple = Boolean(opts.multiple);
+  return {
+    render(ctx) {
+      const { f, value, set, s } = ctx;
+      if (multiple) {
+        return (
+          <select
+            id={ctx.id}
+            name={f.key}
+            multiple
+            size={Math.min(Math.max(f.options.length, 3), 8)}
+            aria-describedby={ctx.describedBy}
+            value={Array.isArray(value) ? value : []}
+            onChange={(event) => set(Array.from(event.target.selectedOptions, (o) => o.value))}
+            className={ctx.cls}
+          >
+            {f.options.map((opt, i) => (
+              <option key={opt + i} value={opt} className="rounded px-2 py-1">
+                {opt}
+              </option>
+            ))}
+          </select>
+        );
+      }
+      return (
+        <div className="relative">
+          <select
+            id={ctx.id}
+            name={f.key}
+            aria-describedby={ctx.describedBy}
+            value={value == null ? "" : value}
+            onChange={(event) => set(event.target.value)}
+            className={ctx.cls + " cursor-pointer appearance-none pr-10"}
+          >
+            <option value="">{f.placeholder || "Select an option"}</option>
+            {f.options.map((opt, i) => (
+              <option key={opt + i} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className={"pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 " + s.chevron}
+            aria-hidden="true"
+          />
+        </div>
+      );
+    },
+    emit(ctx) {
+      const { f } = ctx;
+      if (multiple) {
+        ctx.line("<select");
+        ctx.line(ctx.idAttr, 1);
+        ctx.line(ctx.nameAttr, 1);
+        ctx.line("multiple", 1);
+        ctx.line("size={" + Math.min(Math.max(f.options.length, 3), 8) + "}", 1);
+        if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+        ctx.line("value={" + ctx.v + "}", 1);
+        ctx.line(ctx.onChange("Array.from(event.target.selectedOptions, (o) => o.value)"), 1);
+        ctx.line("className=" + ctx.clsValue(), 1);
+        ctx.line(">");
+        f.options.forEach((opt) => {
+          ctx.line("<option value=" + qa(opt) + ' className="rounded px-2 py-1">' + jsxText(opt) + "</option>", 1);
+        });
+        ctx.line("</select>");
+        return;
+      }
+      ctx.line('<div className="relative">');
+      ctx.line("<select", 1);
+      ctx.line(ctx.idAttr, 2);
+      ctx.line(ctx.nameAttr, 2);
+      if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+      ctx.line("value={" + ctx.v + "}", 2);
+      ctx.line(ctx.onChange("event.target.value"), 2);
+      ctx.line("className=" + ctx.clsValue(" cursor-pointer appearance-none pr-10"), 2);
+      ctx.line(">", 1);
+      ctx.line('<option value="">' + jsxText(f.placeholder || "Select an option") + "</option>", 2);
+      f.options.forEach((opt) => ctx.line("<option value=" + qa(opt) + ">" + jsxText(opt) + "</option>", 2));
+      ctx.line("</select>", 1);
+      ctx.line(
+        "<" +
+          ctx.icon("ChevronDown") +
+          " className=" + q("pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 " + ctx.s.chevron) + ' aria-hidden="true" />',
+        1
+      );
+      ctx.line("</div>");
+    },
+  };
+}
+
+/** Radio (single) or checkbox (multi) list, one bordered row per option. */
+function choiceList(opts = {}) {
+  const multi = Boolean(opts.multi);
+  const markClass = (s, active) =>
+    multi
+      ? active
+        ? s.markFill + " h-4 w-4"
+        : s.mark + " h-4 w-4 rounded"
+      : active
+      ? s.markActive + " h-4 w-4 rounded-full"
+      : s.mark + " h-4 w-4 rounded-full";
+
+  return {
+    render(ctx) {
+      const { f, value, set, s } = ctx;
+      if (!f.options.length) {
+        return <p className={s.muted + " rounded-lg border border-dashed border-slate-500/40 px-3.5 py-3"}>No options yet.</p>;
+      }
+      const list = Array.isArray(value) ? value : [];
+      return (
+        <div role={multi ? "group" : "radiogroup"} aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className="grid gap-2">
+          {f.options.map((opt, i) => {
+            const active = multi ? list.indexOf(opt) !== -1 : value === opt;
+            return (
+              <label key={opt + i} className={active ? s.choiceActive : s.choice}>
+                <input
+                  type={multi ? "checkbox" : "radio"}
+                  name={ctx.id}
+                  value={opt}
+                  checked={active}
+                  onChange={() => (multi ? set(active ? list.filter((v) => v !== opt) : list.concat(opt)) : set(opt))}
+                  className="sr-only"
+                />
+                <span className={markClass(s, active)}>
+                  {active ? (
+                    multi ? (
+                      <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden="true" />
+                    ) : (
+                      <span className={s.markDot + " h-1.5 w-1.5"} />
+                    )
+                  ) : null}
+                </span>
+                {opt}
+              </label>
+            );
+          })}
+        </div>
+      );
+    },
+    emit(ctx) {
+      const { f, s } = ctx;
+      if (!f.options.length) {
+        ctx.line("<p className=" + q(s.muted + " rounded-lg border border-dashed border-slate-500/40 px-3.5 py-3") + ">No options yet.</p>");
+        return;
+      }
+      if (multi) ctx.use("toggleOption");
+      const check = multi ? ctx.icon("Check") : null;
+      ctx.line(
+        "<div role=" + q(multi ? "group" : "radiogroup") + " " + ctx.labelledAttr + (ctx.describedAttr ? " " + ctx.describedAttr : "") + ' className="grid gap-2">'
+      );
+      f.options.forEach((opt) => {
+        const match = multi ? ctx.v + ".includes(" + q(opt) + ")" : ctx.v + " === " + q(opt);
+        ctx.line("<label className={" + match + " ? " + q(s.choiceActive) + " : " + q(s.choice) + "}>", 1);
+        ctx.line("<input", 2);
+        ctx.line("type=" + q(multi ? "checkbox" : "radio"), 3);
+        ctx.line("name=" + q(ctx.key), 3);
+        ctx.line("value=" + qa(opt), 3);
+        ctx.line("checked={" + match + "}", 3);
+        ctx.line(
+          multi
+            ? "onChange={() => toggleOption(" + q(ctx.key) + ", " + q(opt) + ")}"
+            : "onChange={() => " + ctx.set(q(opt)) + "}",
+          3
+        );
+        ctx.line('className="sr-only"', 3);
+        ctx.line("/>", 2);
+        ctx.line("<span className={" + match + " ? " + q(markClass(s, true)) + " : " + q(markClass(s, false)) + "}>", 2);
+        if (multi) ctx.line("{" + match + " && <" + check + ' className="h-2.5 w-2.5" strokeWidth={3} aria-hidden="true" />}', 3);
+        else ctx.line("{" + match + " && <span className=" + q(s.markDot + " h-1.5 w-1.5") + " />}", 3);
+        ctx.line("</span>", 2);
+        ctx.line(jsxText(opt), 2);
+        ctx.line("</label>", 1);
+      });
+      ctx.line("</div>");
+    },
+  };
+}
+
+const EMAIL_RULE = {
+  test: (f, v) => PATTERNS.email.test(String(v).trim()),
+  code: (ctx) => (ctx.use("EMAIL_PATTERN"), "!EMAIL_PATTERN.test(String(" + ctx.v + ").trim())"),
+  message: (f) => "Enter a valid email address",
+};
+const URL_RULE = {
+  test: (f, v) => PATTERNS.url.test(String(v).trim()),
+  code: (ctx) => (ctx.use("URL_PATTERN"), "!URL_PATTERN.test(String(" + ctx.v + ").trim())"),
+  message: () => "Enter a full URL, starting with https://",
+};
+const PHONE_RULE = {
+  test: (f, v) => PATTERNS.phone.test(String(v).trim()),
+  code: (ctx) => (ctx.use("PHONE_PATTERN"), "!PHONE_PATTERN.test(String(" + ctx.v + ").trim())"),
+  message: () => "Enter a valid phone number",
+};
+
+/* ============================================================================
+ * 4. Element definitions
+ * ==========================================================================*/
+
+/* ---- Text ---------------------------------------------------------------- */
+
+defineType({
+  type: "text",
+  name: "Short Text",
+  blurb: "Single-line input",
+  group: "Text",
+  icon: Type,
+  keywords: ["input", "string", "name", "line"],
+  defaults: { label: "Full name" },
+  settings: [S.placeholder("Jane Cooper")],
+  ...textInput({ htmlType: "text" }),
+});
+
+defineType({
+  type: "textarea",
+  name: "Long Text",
+  blurb: "Multi-line textarea",
+  group: "Text",
+  icon: AlignLeft,
+  keywords: ["paragraph", "message", "comment", "multiline", "textarea"],
+  defaults: { label: "Tell us more", width: "full" },
+  settings: [S.placeholder("Share the details…"), S.number("rows", "Rows", 4, { min: 2, max: 20, integer: true })],
+  render(ctx) {
+    const { f, value, set } = ctx;
+    return (
+      <textarea
+        id={ctx.id}
+        name={f.key}
+        rows={f.rows}
+        aria-describedby={ctx.describedBy}
+        value={value == null ? "" : value}
+        placeholder={f.placeholder || undefined}
+        onChange={(event) => set(event.target.value)}
+        className={ctx.cls + " resize-y"}
+      />
+    );
+  },
+  emit(ctx) {
+    const { f } = ctx;
+    ctx.line("<textarea");
+    ctx.line(ctx.idAttr, 1);
+    ctx.line(ctx.nameAttr, 1);
+    ctx.line("rows={" + f.rows + "}", 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line("value={" + ctx.v + "}", 1);
+    if (f.placeholder) ctx.line("placeholder=" + qa(f.placeholder), 1);
+    ctx.line(ctx.onChange("event.target.value"), 1);
+    ctx.line("className=" + ctx.clsValue(" resize-y"), 1);
+    ctx.line("/>");
+  },
+});
+
+defineType({
+  type: "password",
+  name: "Password",
+  blurb: "Masked input",
+  group: "Text",
+  icon: KeyRound,
+  keywords: ["secret", "login", "credentials"],
+  defaults: { label: "Password", helper: "At least 8 characters." },
+  settings: [S.placeholder("••••••••"), S.number("minLength", "Minimum length", 8, { min: 1, max: 128 })],
+  validate: {
+    test: (f, v) => String(v).length >= f.minLength,
+    code: (ctx) => "String(" + ctx.v + ").length < " + ctx.f.minLength,
+    message: (f) => "Use at least " + f.minLength + " characters",
+  },
+  ...textInput({ htmlType: "password", autoComplete: "new-password" }),
+});
+
+/* ---- Contact ------------------------------------------------------------- */
+
+defineType({
+  type: "email",
+  name: "Email",
+  blurb: "Validated address",
+  group: "Contact",
+  icon: Mail,
+  keywords: ["mail", "address", "contact"],
+  defaults: { label: "Work email", helper: "We never share this." },
+  settings: [S.placeholder("jane@company.com")],
+  validate: EMAIL_RULE,
+  ...textInput({ htmlType: "email", autoComplete: "email", spellCheck: false }),
+});
+
+defineType({
+  type: "tel",
+  name: "Phone",
+  blurb: "Telephone number",
+  group: "Contact",
+  icon: Phone,
+  keywords: ["telephone", "mobile", "cell", "number"],
+  defaults: { label: "Phone" },
+  settings: [S.placeholder("+46 70 123 45 67")],
+  validate: PHONE_RULE,
+  ...textInput({ htmlType: "tel", inputMode: "tel", autoComplete: "tel" }),
+});
+
+defineType({
+  type: "url",
+  name: "Website",
+  blurb: "Link input",
+  group: "Contact",
+  icon: Link2,
+  keywords: ["link", "url", "homepage", "web"],
+  defaults: { label: "Website" },
+  settings: [S.placeholder("https://example.com")],
+  validate: URL_RULE,
+  ...textInput({ htmlType: "url", inputMode: "url", autoComplete: "url", spellCheck: false }),
+});
+
+/* ---- Numbers ------------------------------------------------------------- */
+
+defineType({
+  type: "number",
+  name: "Number",
+  blurb: "Numeric input",
+  group: "Numbers",
+  icon: Hash,
+  keywords: ["integer", "count", "amount", "quantity"],
+  defaults: { label: "Team size" },
+  settings: [
+    S.placeholder("12"),
+    S.number("min", "Minimum", null, { optional: true, hint: "optional" }),
+    S.number("max", "Maximum", null, { optional: true, hint: "optional" }),
+  ],
+  validate: {
+    test: (f, v) => {
+      const n = Number(v);
+      return Number.isFinite(n) && (f.min == null || n >= f.min) && (f.max == null || n <= f.max);
+    },
+    code: (ctx) => {
+      const { f, v } = ctx;
+      const parts = ["!Number.isFinite(Number(" + v + "))"];
+      if (f.min != null) parts.push("Number(" + v + ") < " + f.min);
+      if (f.max != null) parts.push("Number(" + v + ") > " + f.max);
+      return parts.join(" || ");
+    },
+    message: (f) =>
+      f.min != null && f.max != null
+        ? "Enter a number from " + f.min + " to " + f.max
+        : f.min != null
+        ? "Enter a number of at least " + f.min
+        : f.max != null
+        ? "Enter a number no greater than " + f.max
+        : "Enter a number",
+  },
+  ...textInput({ htmlType: "number", inputMode: "decimal" }),
+});
+
+defineType({
+  type: "range",
+  name: "Slider",
+  blurb: "Bounded number",
+  group: "Numbers",
+  icon: SlidersHorizontal,
+  keywords: ["range", "scale", "budget", "slider"],
+  defaults: { label: "Monthly budget", width: "full" },
+  settings: [S.number("min", "Minimum", 0), S.number("max", "Maximum", 100), S.number("step", "Step", 5, { min: 0.0001 })],
+  alwaysFilled: true,
+  sanitize: (f) => (f.max > f.min ? f : { ...f, max: f.min + f.step }),
+  empty: (f) => f.min,
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    return (
+      <div>
+        <div className="flex items-center gap-3">
+          <input
+            id={ctx.id}
+            name={f.key}
+            type="range"
+            aria-describedby={ctx.describedBy}
+            min={f.min}
+            max={f.max}
+            step={f.step}
+            value={value}
+            onChange={(event) => set(Number(event.target.value))}
+            className={s.range}
+          />
+          <span className={s.rangeValue}>{value}</span>
+        </div>
+        <div className="mt-1 flex justify-between">
+          <span className={s.rangeBound}>{f.min}</span>
+          <span className={s.rangeBound}>{f.max}</span>
+        </div>
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    ctx.line("<div>");
+    ctx.line('<div className="flex items-center gap-3">', 1);
+    ctx.line("<input", 2);
+    ctx.line(ctx.idAttr, 3);
+    ctx.line(ctx.nameAttr, 3);
+    ctx.line('type="range"', 3);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 3);
+    ctx.line("min={" + f.min + "}", 3);
+    ctx.line("max={" + f.max + "}", 3);
+    ctx.line("step={" + f.step + "}", 3);
+    ctx.line("value={" + ctx.v + "}", 3);
+    ctx.line(ctx.onChange("Number(event.target.value)"), 3);
+    ctx.line("className=" + q(s.range), 3);
+    ctx.line("/>", 2);
+    ctx.line("<span className=" + q(s.rangeValue) + ">{" + ctx.v + "}</span>", 2);
+    ctx.line("</div>", 1);
+    ctx.line('<div className="mt-1 flex justify-between">', 1);
+    ctx.line("<span className=" + q(s.rangeBound) + ">" + f.min + "</span>", 2);
+    ctx.line("<span className=" + q(s.rangeBound) + ">" + f.max + "</span>", 2);
+    ctx.line("</div>", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Choice -------------------------------------------------------------- */
+
+defineType({
+  type: "select",
+  name: "Dropdown",
+  blurb: "Single choice list",
+  group: "Choice",
+  icon: ChevronDown,
+  keywords: ["select", "picker", "menu", "options"],
+  defaults: { label: "Plan" },
+  settings: [S.text("placeholder", "Empty state text", "Choose a plan"), S.options("options", "Options", ["Starter", "Growth", "Enterprise"])],
+  ...selectInput(),
+});
+
+defineType({
+  type: "radio",
+  name: "Radio Group",
+  blurb: "One of many",
+  group: "Choice",
+  icon: CircleDot,
+  keywords: ["single choice", "options", "pick one"],
+  labelMode: "group",
+  defaults: { label: "How did you hear about us?", width: "full" },
+  settings: [S.options("options", "Options", ["Search", "A friend", "Conference"])],
+  ...choiceList({ multi: false }),
+});
+
+defineType({
+  type: "checkboxes",
+  name: "Checkbox Group",
+  blurb: "Many of many",
+  group: "Choice",
+  icon: ListChecks,
+  keywords: ["multiple choice", "multi", "tick", "options"],
+  labelMode: "group",
+  defaults: { label: "What should we cover?", width: "full" },
+  settings: [S.options("options", "Options", ["Pricing", "Security review", "Migration"])],
+  empty: () => [],
+  ...choiceList({ multi: true }),
+});
+
+defineType({
+  type: "checkbox",
+  name: "Toggle",
+  blurb: "Single boolean",
+  group: "Choice",
+  icon: ToggleRight,
+  keywords: ["switch", "boolean", "checkbox", "yes"],
+  labelMode: "inline",
+  defaults: { label: "Subscribe to the product newsletter", width: "full" },
+  empty: () => false,
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const on = value === true;
+    return (
+      <label className={s.choice}>
+        <input
+          type="checkbox"
+          id={ctx.id}
+          name={f.key}
+          checked={on}
+          aria-describedby={ctx.describedBy}
+          onChange={(event) => set(event.target.checked)}
+          className="sr-only"
+        />
+        <span className={on ? s.switchOn : s.switchOff}>
+          <span className={s.switchKnob + (on ? " left-[18px]" : " left-0.5")} />
+        </span>
+        <span>
+          {f.label}
+          {f.required ? <span className={s.required}>*</span> : null}
+        </span>
+      </label>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    const on = ctx.v;
+    ctx.line("<label className=" + q(s.choice) + ">");
+    ctx.line("<input", 1);
+    ctx.line('type="checkbox"', 2);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    ctx.line("checked={" + on + "}", 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line(ctx.onChange("event.target.checked"), 2);
+    ctx.line('className="sr-only"', 2);
+    ctx.line("/>", 1);
+    ctx.line("<span className={" + on + " ? " + q(s.switchOn) + " : " + q(s.switchOff) + "}>", 1);
+    ctx.line("<span className={" + on + " ? " + q(s.switchKnob + " left-[18px]") + " : " + q(s.switchKnob + " left-0.5") + "} />", 2);
+    ctx.line("</span>", 1);
+    ctx.line("<span>", 1);
+    ctx.line(ctx.jsxText(f.label), 2);
+    if (f.required) ctx.line("<span className=" + q(s.required) + ">*</span>", 2);
+    ctx.line("</span>", 1);
+    ctx.line("</label>");
+  },
+});
+
+/* ---- Date & time --------------------------------------------------------- */
+
+defineType({
+  type: "date",
+  name: "Date",
+  blurb: "Calendar value",
+  group: "Date & time",
+  icon: CalendarDays,
+  keywords: ["day", "calendar", "birthday", "deadline"],
+  defaults: { label: "Preferred start date" },
+  ...textInput({ htmlType: "date", scheme: true }),
+});
+
+defineType({
+  type: "time",
+  name: "Time",
+  blurb: "Clock value",
+  group: "Date & time",
+  icon: Clock,
+  keywords: ["hour", "clock", "appointment"],
+  defaults: { label: "Preferred time" },
+  ...textInput({ htmlType: "time", scheme: true }),
+});
+
+/* ---- Files & media ------------------------------------------------------- */
+
+defineType({
+  type: "file",
+  name: "File Upload",
+  blurb: "Attachment picker",
+  group: "Files & media",
+  icon: Upload,
+  keywords: ["attachment", "document", "upload", "pdf"],
+  defaults: { label: "Attach a brief", helper: "PDF or DOCX, up to 10 MB.", width: "full" },
+  settings: [S.text("accept", "Accepted types", ".pdf,.docx", { mono: true, hint: "accept" })],
+  empty: () => null,
+  render(ctx) {
+    const { f, set, s } = ctx;
+    return (
+      <input
+        id={ctx.id}
+        name={f.key}
+        type="file"
+        accept={f.accept || undefined}
+        aria-describedby={ctx.describedBy}
+        onChange={(event) => set(event.target.files && event.target.files[0] ? event.target.files[0] : null)}
+        className={s.file}
+      />
+    );
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    ctx.line("<input");
+    ctx.line(ctx.idAttr, 1);
+    ctx.line(ctx.nameAttr, 1);
+    ctx.line('type="file"', 1);
+    if (f.accept) ctx.line("accept=" + qa(f.accept), 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line(ctx.onChange("event.target.files[0] || null"), 1);
+    ctx.line("className=" + q(s.file), 1);
+    ctx.line("/>");
+  },
+});
+
+/* ---- Layout -------------------------------------------------------------- */
+
+defineType({
+  type: "heading",
+  name: "Section Heading",
+  blurb: "Groups the fields below",
+  group: "Layout",
+  icon: Heading,
+  keywords: ["title", "section", "header"],
+  kind: "static",
+  common: ["label", "helper", "width"],
+  inspect: { label: "Heading", helper: "Subtitle" },
+  cell: "pt-2",
+  defaults: { label: "About your team", width: "full" },
+  render({ f, s }) {
+    return (
+      <>
+        <h3 className={s.heading}>{f.label}</h3>
+        {f.helper ? <p className={s.headingNote}>{f.helper}</p> : null}
+      </>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, jsxText } = ctx;
+    ctx.line("<h3 className=" + q(s.heading) + ">" + jsxText(f.label) + "</h3>");
+    if (f.helper) ctx.line("<p className=" + q(s.headingNote) + ">" + jsxText(f.helper) + "</p>");
+  },
+});
+
+defineType({
+  type: "divider",
+  name: "Divider",
+  blurb: "Horizontal rule",
+  group: "Layout",
+  icon: Minus,
+  keywords: ["separator", "rule", "line", "hr"],
+  kind: "static",
+  cell: "py-1",
+  defaults: { label: "Divider", width: "full" },
+  render({ s }) {
+    return <hr className={s.divider} />;
+  },
+  emit(ctx) {
+    ctx.line("<hr className=" + ctx.q(ctx.s.divider) + " />");
+  },
+});
+
+defineType({
+  type: "submit",
+  name: "Submit Button",
+  blurb: "Ends the form",
+  group: "Layout",
+  icon: Send,
+  keywords: ["button", "send", "save", "action"],
+  kind: "action",
+  inspect: { label: "Button text" },
+  cell: "pt-2",
+  defaults: { label: "Send request", width: "full" },
+  render({ f, s }) {
+    return (
+      <button type="submit" className={s.submit}>
+        {f.label}
+        <Send className="h-4 w-4" aria-hidden="true" />
+      </button>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, jsxText } = ctx;
+    ctx.line('<button type="submit" className=' + q(s.submit) + ">");
+    ctx.line(jsxText(f.label), 1);
+    ctx.line("<" + ctx.icon("Send") + ' className="h-4 w-4" aria-hidden="true" />', 1);
+    ctx.line("</button>");
+  },
+});
+
+/* ---- Text inputs family: search, username, slug, counted, code, otp, tags ---- */
+
+/**
+ * A JSX attribute for user-provided text. q() output is only valid as a plain
+ * attribute string while the text has no quote, backslash, entity-like "&" or
+ * control character (`placeholder="Say \"hi\""` does not parse, and "\n" stays
+ * a literal backslash-n) — otherwise the value goes in an expression container.
+ */
+function textFamilyAttr(name, value) {
+  const text = String(value == null ? "" : value);
+  return name + "=" + (/["\\&]|[\u0000-\u001f]/.test(text) ? "{" + q(text) + "}" : q(text));
+}
+
+/**
+ * JSX child text for user-provided text. jsxText() leaves "&amp;"-style
+ * entities (JSX decodes them) and edge whitespace (JSX trims it) as bare text.
+ */
+function textFamilyText(value) {
+  const text = String(value == null ? "" : value);
+  return /[<>{}&]|[\u0000-\u001f]/.test(text) || text !== text.trim() ? "{" + q(text) + "}" : text;
+}
+
+/**
+ * textInput(), with its placeholder attribute and prefix addon text written
+ * through textFamilyAttr / textFamilyText, and the input's className moved
+ * after any extra `attrs`, so it stays the last attribute like in the
+ * hand-written built-ins.
+ */
+function textFamilyInput(opts) {
+  const base = textInput(opts);
+  return {
+    render: base.render,
+    emit(ctx) {
+      const { f } = ctx;
+      const plain = f.placeholder ? "placeholder=" + q(f.placeholder) : null;
+      const prefix = opts.prefixProp ? f[opts.prefixProp] : opts.prefix;
+      const rewrite = (text, depth) => {
+        if (plain && text === plain) return textFamilyAttr("placeholder", f.placeholder);
+        if (prefix && depth === 2 && text === jsxText(prefix)) return textFamilyText(prefix);
+        return text;
+      };
+      const lines = [];
+      base.emit({
+        ...ctx,
+        line: (text, depth) => lines.push([rewrite(text, depth), depth]),
+      });
+      const open = lines.findIndex(([text]) => text === "<input");
+      const close = lines.findIndex(([text], i) => i > open && text === "/>");
+      const cls = lines.findIndex(([text], i) => i > open && i < close && text.indexOf("className=") === 0);
+      if (open !== -1 && cls !== -1 && cls < close - 1) lines.splice(close - 1, 0, lines.splice(cls, 1)[0]);
+      lines.forEach(([text, depth]) => ctx.line(text, depth));
+    },
+  };
+}
+
+/** Integer settings: the Inspector clamps numbers but does not round them. */
+function textFamilyRound(f, props) {
+  const fixes = {};
+  props.forEach((prop) => {
+    if (typeof f[prop] === "number" && !Number.isInteger(f[prop])) fixes[prop] = Math.round(f[prop]);
+  });
+  return Object.keys(fixes).length ? { ...f, ...fixes } : f;
+}
+
+/* ---- Search ------------------------------------------------------------- */
+
+defineType({
+  type: "search",
+  name: "Search",
+  blurb: "Search box with icon",
+  group: "Text",
+  icon: Search,
+  keywords: ["find", "lookup", "query", "filter"],
+  defaults: { label: "Search" },
+  settings: [S.placeholder("Search the help center…")],
+  /* scheme: the native clear (×) button follows the theme's colour scheme, like the date/time pickers. */
+  ...textFamilyInput({ htmlType: "search", icon: Search, iconName: "Search", scheme: true }),
+});
+
+/* ---- Username ----------------------------------------------------------- */
+
+const USERNAME_PATTERN = /^[A-Za-z0-9._]{3,30}$/;
+
+defineHelper("USERNAME_PATTERN", { scope: "module", lines: ["const USERNAME_PATTERN = " + USERNAME_PATTERN.toString() + ";"] });
+
+defineType({
+  type: "username",
+  name: "Username",
+  blurb: "Handle with @ prefix",
+  group: "Text",
+  icon: AtSign,
+  keywords: ["handle", "user", "account", "nickname", "screen name"],
+  defaults: { label: "Username", helper: "3–30 letters, numbers, dots or underscores." },
+  settings: [S.text("prefix", "Prefix", "@"), S.placeholder("janecooper")],
+  validate: {
+    test: (f, v) => USERNAME_PATTERN.test(String(v)),
+    code: (ctx) => (ctx.use("USERNAME_PATTERN"), "!USERNAME_PATTERN.test(" + ctx.v + ")"),
+    message: () => "Use 3–30 letters, numbers, dots or underscores",
+  },
+  ...textFamilyInput({
+    htmlType: "text",
+    autoComplete: "username",
+    spellCheck: false,
+    prefixProp: "prefix",
+    attrs: { autoCapitalize: "none" },
+  }),
+});
+
+/* ---- URL slug ----------------------------------------------------------- */
+
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** Normalises as you type. Mirrored line for line by the slugifyInput helper. */
+const slugifyInput = (value) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+/, "");
+
+defineHelper("SLUG_PATTERN", { scope: "module", lines: ["const SLUG_PATTERN = " + SLUG_PATTERN.toString() + ";"] });
+
+defineHelper("slugifyInput", {
+  scope: "module",
+  lines: [
+    "// Lowercases, strips accents and turns every run of other characters into one hyphen.",
+    "const slugifyInput = (value) =>",
+    "  value",
+    "    .toLowerCase()",
+    '    .normalize("NFD")',
+    '    .replace(/[\\u0300-\\u036f]/g, "")',
+    '    .replace(/[^a-z0-9]+/g, "-")',
+    '    .replace(/^-+/, "");',
+  ],
+});
+
+defineType({
+  type: "slug",
+  name: "URL Slug",
+  blurb: "Lowercase web address",
+  group: "Text",
+  icon: Link,
+  keywords: ["permalink", "path", "url", "address", "handle"],
+  defaults: { label: "Page address", helper: "Lowercase letters, numbers and hyphens.", width: "full" },
+  settings: [S.text("prefix", "Prefix", "formcraft.app/"), S.placeholder("spring-launch")],
+  validate: {
+    test: (f, v) => SLUG_PATTERN.test(String(v)),
+    code: (ctx) => (ctx.use("SLUG_PATTERN"), "!SLUG_PATTERN.test(" + ctx.v + ")"),
+    message: () => "Use lowercase letters, numbers and hyphens, with no hyphen at the end",
+  },
+  ...textFamilyInput({
+    htmlType: "text",
+    autoComplete: "off",
+    spellCheck: false,
+    prefixProp: "prefix",
+    transform: slugifyInput,
+    transformCode: (expr, ctx) => (ctx.use("slugifyInput"), "slugifyInput(" + expr + ")"),
+    attrs: { autoCapitalize: "none" },
+  }),
+});
+
+/* ---- Limited text (character counter) ------------------------------------ */
+
+/** The counter turns amber from 90 % of the limit and rose at the limit. */
+const countedWarnAt = (max) => Math.ceil(max * 0.9);
+const COUNTED_COUNTER = " mt-1.5 text-right tabular-nums";
+const countedCounterClass = (s, count, max) =>
+  (count >= max ? s.countedLimit : count >= countedWarnAt(max) ? s.countedNear : s.muted) + COUNTED_COUNTER;
+
+defineType({
+  type: "counted",
+  name: "Limited Text",
+  blurb: "Textarea with a counter",
+  group: "Text",
+  icon: TextCursorInput,
+  keywords: ["character limit", "counter", "max length", "bio", "summary"],
+  defaults: { label: "Short bio", width: "full" },
+  settings: [
+    S.placeholder("A sentence or two about what you do…"),
+    S.number("rows", "Rows", 3, { min: 2, max: 20, step: 1 }),
+    S.number("maxLength", "Character limit", 280, { min: 10, max: 5000, step: 1 }),
+  ],
+  sanitize: (f) => textFamilyRound(f, ["rows", "maxLength"]),
+  tokens: {
+    /* amber-700 in light: amber-600 is only ~3.2:1 on white, too faint for 12px text. */
+    countedNear: { base: "text-xs", light: "text-amber-700", dark: "text-amber-400" },
+    countedLimit: { base: "text-xs font-medium", light: "text-rose-600", dark: "text-rose-400" },
+  },
+  /* maxLength stops typing at the limit; this catches values that were already longer when the limit dropped. */
+  validate: {
+    test: (f, v) => String(v).length <= f.maxLength,
+    code: (ctx) => ctx.v + ".length > " + ctx.f.maxLength,
+    message: (f) => "Keep it to " + f.maxLength + " characters or fewer",
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const text = typeof value === "string" ? value : "";
+    const countId = ctx.id + "-count";
+    return (
+      <>
+        <textarea
+          id={ctx.id}
+          name={f.key}
+          rows={f.rows}
+          maxLength={f.maxLength}
+          aria-describedby={ctx.describedBy ? ctx.describedBy + " " + countId : countId}
+          value={text}
+          placeholder={f.placeholder || undefined}
+          onChange={(event) => set(event.target.value)}
+          className={ctx.cls + " block resize-y"}
+        />
+        <p id={countId} className={countedCounterClass(s, text.length, f.maxLength)}>
+          {text.length} / {f.maxLength}
+        </p>
+      </>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    const countId = ctx.key + "-count";
+    const max = f.maxLength;
+    ctx.line("<textarea");
+    ctx.line(ctx.idAttr, 1);
+    ctx.line(ctx.nameAttr, 1);
+    ctx.line("rows={" + f.rows + "}", 1);
+    ctx.line("maxLength={" + max + "}", 1);
+    ctx.line("aria-describedby=" + q((f.helper ? ctx.key + "-help " : "") + countId), 1);
+    ctx.line("value={" + v + "}", 1);
+    if (f.placeholder) ctx.line(textFamilyAttr("placeholder", f.placeholder), 1);
+    ctx.line(ctx.onChange("event.target.value"), 1);
+    ctx.line("className=" + ctx.clsValue(" block resize-y"), 1);
+    ctx.line("/>");
+    ctx.line("<p");
+    ctx.line("id=" + q(countId), 1);
+    ctx.line("className={", 1);
+    ctx.line(v + ".length >= " + max, 2);
+    ctx.line("? " + q(s.countedLimit + COUNTED_COUNTER), 3);
+    ctx.line(": " + v + ".length >= " + countedWarnAt(max), 3);
+    ctx.line("? " + q(s.countedNear + COUNTED_COUNTER), 3);
+    ctx.line(": " + q(s.muted + COUNTED_COUNTER), 3);
+    ctx.line("}", 1);
+    ctx.line(">");
+    ctx.line("{" + v + ".length} / " + max, 1);
+    ctx.line("</p>");
+  },
+});
+
+/* ---- Code / JSON --------------------------------------------------------- */
+
+const codeIsJson = (text) => {
+  try {
+    JSON.parse(text);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
+
+defineHelper("isValidJson", {
+  scope: "module",
+  lines: [
+    "const isValidJson = (text) => {",
+    "  try {",
+    "    JSON.parse(text);",
+    "    return true;",
+    "  } catch {",
+    "    return false;",
+    "  }",
+    "};",
+  ],
+});
+
+const CODE_CLASSES = " block resize-y font-mono leading-relaxed [tab-size:2]";
+
+defineType({
+  type: "code",
+  name: "Code / JSON",
+  blurb: "Monospace snippet input",
+  group: "Text",
+  icon: FileBraces,
+  keywords: ["json", "snippet", "payload", "config", "monospace"],
+  defaults: { label: "Webhook payload", helper: "Paste the JSON body we should send.", width: "full" },
+  settings: [
+    S.select("language", "Language", "json", [
+      { value: "json", label: "JSON" },
+      { value: "plain", label: "Plain text" },
+    ]),
+    S.number("rows", "Rows", 6, { min: 3, max: 30, step: 1 }),
+    S.textarea("placeholder", "Placeholder", '{\n  "event": "invoice.paid",\n  "retries": 3\n}'),
+  ],
+  sanitize: (f) => textFamilyRound(f, ["rows"]),
+  validate: {
+    test: (f, v) => f.language !== "json" || codeIsJson(String(v)),
+    /* Plain text has no format rule; the core always emits the check, so it reads `false`. */
+    when: (f) => f.language === "json",
+    code: (ctx) => (ctx.use("isValidJson"), "!isValidJson(" + ctx.v + ")"),
+    message: () => "Enter valid JSON",
+  },
+  render(ctx) {
+    const { f, value, set } = ctx;
+    return (
+      <textarea
+        id={ctx.id}
+        name={f.key}
+        rows={f.rows}
+        spellCheck={false}
+        autoCapitalize="off"
+        autoCorrect="off"
+        aria-describedby={ctx.describedBy}
+        value={value == null ? "" : value}
+        placeholder={f.placeholder || undefined}
+        onChange={(event) => set(event.target.value)}
+        className={ctx.cls + CODE_CLASSES}
+      />
+    );
+  },
+  emit(ctx) {
+    const { f } = ctx;
+    ctx.line("<textarea");
+    ctx.line(ctx.idAttr, 1);
+    ctx.line(ctx.nameAttr, 1);
+    ctx.line("rows={" + f.rows + "}", 1);
+    ctx.line("spellCheck={false}", 1);
+    ctx.line('autoCapitalize="off"', 1);
+    ctx.line('autoCorrect="off"', 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line("value={" + ctx.v + "}", 1);
+    if (f.placeholder) ctx.line(textFamilyAttr("placeholder", f.placeholder), 1);
+    ctx.line(ctx.onChange("event.target.value"), 1);
+    ctx.line("className=" + ctx.clsValue(CODE_CLASSES), 1);
+    ctx.line("/>");
+  },
+});
+
+/* ---- Verification code (OTP) -------------------------------------------- */
+
+/**
+ * One box per digit. The value is the digits typed so far, in order: typing
+ * writes at the first free box at most, so the string never has gaps.
+ * Mirrored line for line by the OtpInput helper below (apart from the
+ * builder-only effect that trims the value when Digits is lowered).
+ */
+function OtpInputField({ length, value, onChange, boxClassName, ...groupProps }) {
+  const inputs = useRef([]);
+  const code = typeof value === "string" ? value : "";
+
+  /* Builder only (not mirrored): lowering Digits in the Inspector must not leave hidden extra digits in the value. */
+  useEffect(() => {
+    if (code.length > length) onChange(code.slice(0, length));
+  }, [code, length, onChange]);
+
+  const focusBox = (index) => {
+    const box = inputs.current[Math.max(0, Math.min(index, length - 1))];
+    if (box) box.focus();
+  };
+
+  const enterDigits = (index, text) => {
+    const digits = text.replace(/\D/g, "");
+    if (!digits) return;
+    const start = Math.min(index, code.length);
+    onChange((code.slice(0, start) + digits + code.slice(start + digits.length)).slice(0, length));
+    focusBox(start + digits.length);
+  };
+
+  const handleKeyDown = (event, index) => {
+    if (/^\d$/.test(event.key) && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      enterDigits(index, event.key);
+    } else if (event.key === "Backspace" && !code[index] && index > 0) {
+      /* An empty box always sits after the last digit: delete that digit and move onto it. */
+      event.preventDefault();
+      if (code) onChange(code.slice(0, -1));
+      focusBox(code.length - 1);
+    } else if (event.key === "ArrowLeft" && index > 0) {
+      event.preventDefault();
+      focusBox(index - 1);
+    } else if (event.key === "ArrowRight" && index < length - 1) {
+      event.preventDefault();
+      focusBox(index + 1);
+    }
+  };
+
+  const handlePaste = (event) => {
+    event.preventDefault();
+    const digits = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, length);
+    if (!digits) return;
+    onChange(digits);
+    focusBox(digits.length);
+  };
+
+  return (
+    <div role="group" className="flex gap-2" {...groupProps}>
+      {Array.from({ length }, (_, index) => (
+        <input
+          key={index}
+          ref={(node) => {
+            inputs.current[index] = node;
+          }}
+          type="text"
+          inputMode="numeric"
+          autoComplete={index === 0 ? "one-time-code" : "off"}
+          maxLength={1}
+          aria-label={"Digit " + (index + 1) + " of " + length}
+          value={code[index] || ""}
+          onFocus={(event) => event.target.select()}
+          onChange={(event) => {
+            if (event.target.value === "") onChange(code.slice(0, index) + code.slice(index + 1));
+            else enterDigits(index, event.target.value);
+          }}
+          onKeyDown={(event) => handleKeyDown(event, index)}
+          onPaste={handlePaste}
+          className={boxClassName}
+        />
+      ))}
+    </div>
+  );
+}
+
+defineHelper("OtpInput", {
+  scope: "module",
+  hooks: ["useRef"],
+  lines: [
+    "// One box per digit. `value` holds the digits typed so far, in order.",
+    "function OtpInput({ length, value, onChange, boxClassName, ...groupProps }) {",
+    "  const inputs = useRef([]);",
+    "",
+    "  const focusBox = (index) => {",
+    "    const box = inputs.current[Math.max(0, Math.min(index, length - 1))];",
+    "    if (box) box.focus();",
+    "  };",
+    "",
+    "  // Writes digits from `index` (never past the first empty box) and moves focus after them.",
+    "  const enterDigits = (index, text) => {",
+    '    const digits = text.replace(/\\D/g, "");',
+    "    if (!digits) return;",
+    "    const start = Math.min(index, value.length);",
+    "    onChange((value.slice(0, start) + digits + value.slice(start + digits.length)).slice(0, length));",
+    "    focusBox(start + digits.length);",
+    "  };",
+    "",
+    "  const handleKeyDown = (event, index) => {",
+    "    if (/^\\d$/.test(event.key) && !event.ctrlKey && !event.metaKey && !event.altKey) {",
+    "      event.preventDefault();",
+    "      enterDigits(index, event.key);",
+    '    } else if (event.key === "Backspace" && !value[index] && index > 0) {',
+    "      // An empty box always sits after the last digit: delete that digit and move onto it.",
+    "      event.preventDefault();",
+    "      if (value) onChange(value.slice(0, -1));",
+    "      focusBox(value.length - 1);",
+    '    } else if (event.key === "ArrowLeft" && index > 0) {',
+    "      event.preventDefault();",
+    "      focusBox(index - 1);",
+    '    } else if (event.key === "ArrowRight" && index < length - 1) {',
+    "      event.preventDefault();",
+    "      focusBox(index + 1);",
+    "    }",
+    "  };",
+    "",
+    "  const handlePaste = (event) => {",
+    "    event.preventDefault();",
+    '    const digits = event.clipboardData.getData("text").replace(/\\D/g, "").slice(0, length);',
+    "    if (!digits) return;",
+    "    onChange(digits);",
+    "    focusBox(digits.length);",
+    "  };",
+    "",
+    "  return (",
+    '    <div role="group" className="flex gap-2" {...groupProps}>',
+    "      {Array.from({ length }, (_, index) => (",
+    "        <input",
+    "          key={index}",
+    "          ref={(node) => {",
+    "            inputs.current[index] = node;",
+    "          }}",
+    '          type="text"',
+    '          inputMode="numeric"',
+    '          autoComplete={index === 0 ? "one-time-code" : "off"}',
+    "          maxLength={1}",
+    "          aria-label={`Digit ${index + 1} of ${length}`}",
+    '          value={value[index] || ""}',
+    "          onFocus={(event) => event.target.select()}",
+    "          onChange={(event) => {",
+    '            if (event.target.value === "") onChange(value.slice(0, index) + value.slice(index + 1));',
+    "            else enterDigits(index, event.target.value);",
+    "          }}",
+    "          onKeyDown={(event) => handleKeyDown(event, index)}",
+    "          onPaste={handlePaste}",
+    "          className={boxClassName}",
+    "        />",
+    "      ))}",
+    "    </div>",
+    "  );",
+    "}",
+  ],
+});
+
+defineType({
+  type: "otp",
+  requiredText: (f) => "Enter all " + f.length + " digits",
+  name: "Verification Code",
+  blurb: "One-time code boxes",
+  group: "Text",
+  icon: RectangleEllipsis,
+  keywords: ["otp", "2fa", "pin", "one-time", "sms code", "passcode"],
+  labelMode: "group",
+  defaults: { label: "Verification code", helper: "Enter the code we sent to your email." },
+  settings: [S.number("length", "Digits", 6, { min: 4, max: 8, step: 1 })],
+  sanitize: (f) => textFamilyRound(f, ["length"]),
+  tokens: {
+    otpBox: {
+      base: "h-12 w-11 min-w-0 rounded-lg border text-center text-lg font-semibold tabular-nums shadow-sm outline-none transition duration-150",
+      light: "border-slate-300 bg-white text-slate-900 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15",
+      dark:
+        "border-slate-700/80 bg-slate-900/70 text-slate-100 hover:border-slate-600 focus:border-indigo-500 focus:bg-slate-900 focus:ring-4 focus:ring-indigo-500/15",
+    },
+    otpBoxError: {
+      base: "h-12 w-11 min-w-0 rounded-lg border text-center text-lg font-semibold tabular-nums shadow-sm outline-none transition duration-150",
+      light: "border-rose-400 bg-rose-50 text-slate-900 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15",
+      dark: "border-rose-500/80 bg-rose-950/20 text-slate-100 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/15",
+    },
+  },
+  /* Required means every box is filled. */
+  blank: {
+    test: (f, v) => typeof v !== "string" || v.length < f.length,
+    code: (ctx) => ctx.v + ".length < " + ctx.f.length,
+  },
+  render(ctx) {
+    return (
+      <OtpInputField
+        length={ctx.f.length}
+        value={ctx.value}
+        onChange={ctx.set}
+        aria-labelledby={ctx.labelId}
+        aria-describedby={ctx.describedBy}
+        boxClassName={ctx.clsOf("otpBox", "otpBoxError")}
+      />
+    );
+  },
+  emit(ctx) {
+    ctx.use("OtpInput");
+    ctx.line("<OtpInput");
+    ctx.line("length={" + ctx.f.length + "}", 1);
+    ctx.line("value={" + ctx.v + "}", 1);
+    ctx.line("onChange={(code) => " + ctx.set("code") + "}", 1);
+    ctx.line(ctx.labelledAttr, 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line("boxClassName=" + ctx.clsValue("", "otpBox", "otpBoxError"), 1);
+    ctx.line("/>");
+  },
+});
+
+/* ---- Tag input ----------------------------------------------------------- */
+
+/**
+ * Chips plus a draft input. Enter or a comma adds the draft (trimmed, no
+ * case-insensitive duplicates, up to maxTags); Backspace on an empty draft
+ * removes the last chip; leaving the field commits an unfinished draft as a
+ * tag, so text still in the box is never silently dropped on submit.
+ * Mirrored line for line by the TagsInput helper below.
+ */
+function TagsInputField({ value, onChange, maxTags, placeholder, className, chipClassName, removeClassName, inputClassName, ...inputProps }) {
+  const [draft, setDraft] = useState("");
+  const draftInput = useRef(null);
+  const tags = Array.isArray(value) ? value : [];
+  const full = maxTags != null && tags.length >= maxTags;
+
+  const addTags = (texts) => {
+    const next = tags.slice();
+    texts.forEach((text) => {
+      const tag = text.trim();
+      const taken = next.some((item) => item.toLowerCase() === tag.toLowerCase());
+      if (tag && !taken && (maxTags == null || next.length < maxTags)) next.push(tag);
+    });
+    if (next.length > tags.length) onChange(next);
+    return next;
+  };
+
+  const handleChange = (event) => {
+    const parts = event.target.value.split(",");
+    const rest = parts.pop();
+    const next = parts.length ? addTags(parts) : tags;
+    setDraft(maxTags != null && next.length >= maxTags ? "" : rest);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && draft.trim() && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      addTags([draft]);
+      setDraft("");
+    } else if (event.key === "Backspace" && draft === "" && tags.length) {
+      onChange(tags.slice(0, -1));
+    }
+  };
+
+  const handleBlur = () => {
+    if (!draft.trim()) return;
+    addTags([draft]);
+    setDraft("");
+  };
+
+  /* The × button disappears with its chip, so keep keyboard focus in the field. */
+  const removeTag = (tag) => {
+    onChange(tags.filter((item) => item !== tag));
+    if (draftInput.current) draftInput.current.focus();
+  };
+
+  return (
+    <div className={className}>
+      {tags.map((tag) => (
+        <span key={tag} className={chipClassName}>
+          <span className="truncate">{tag}</span>
+          <button
+            type="button"
+            aria-label={"Remove " + tag}
+            onClick={() => removeTag(tag)}
+            className={removeClassName}
+          >
+            <X className="h-3 w-3" aria-hidden="true" />
+          </button>
+        </span>
+      ))}
+      <input
+        {...inputProps}
+        ref={draftInput}
+        type="text"
+        autoComplete="off"
+        value={draft}
+        placeholder={full ? "Tag limit reached" : placeholder}
+        readOnly={full}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+        className={inputClassName}
+      />
+    </div>
+  );
+}
+
+defineHelper("TagsInput", {
+  scope: "module",
+  hooks: ["useRef", "useState"],
+  lines: [
+    "// Enter or a comma adds a tag; Backspace on an empty draft removes the last one.",
+    "function TagsInput({",
+    "  value,",
+    "  onChange,",
+    "  maxTags,",
+    "  placeholder,",
+    "  className,",
+    "  chipClassName,",
+    "  removeClassName,",
+    "  inputClassName,",
+    "  ...inputProps",
+    "}) {",
+    '  const [draft, setDraft] = useState("");',
+    "  const draftInput = useRef(null);",
+    "  const full = maxTags != null && value.length >= maxTags;",
+    "",
+    "  // Adds each trimmed, not-yet-present tag (case-insensitive) up to the limit.",
+    "  const addTags = (texts) => {",
+    "    const next = value.slice();",
+    "    texts.forEach((text) => {",
+    "      const tag = text.trim();",
+    "      const taken = next.some((item) => item.toLowerCase() === tag.toLowerCase());",
+    "      if (tag && !taken && (maxTags == null || next.length < maxTags)) next.push(tag);",
+    "    });",
+    "    if (next.length > value.length) onChange(next);",
+    "    return next;",
+    "  };",
+    "",
+    "  const handleChange = (event) => {",
+    '    const parts = event.target.value.split(",");',
+    "    const rest = parts.pop();",
+    "    const next = parts.length ? addTags(parts) : value;",
+    '    setDraft(maxTags != null && next.length >= maxTags ? "" : rest);',
+    "  };",
+    "",
+    "  const handleKeyDown = (event) => {",
+    '    if (event.key === "Enter" && draft.trim() && !event.nativeEvent.isComposing) {',
+    "      event.preventDefault();",
+    "      addTags([draft]);",
+    '      setDraft("");',
+    '    } else if (event.key === "Backspace" && draft === "" && value.length) {',
+    "      onChange(value.slice(0, -1));",
+    "    }",
+    "  };",
+    "",
+    "  const handleBlur = () => {",
+    "    if (!draft.trim()) return;",
+    "    addTags([draft]);",
+    '    setDraft("");',
+    "  };",
+    "",
+    "  // The × button disappears with its chip, so keep keyboard focus in the field.",
+    "  const removeTag = (tag) => {",
+    "    onChange(value.filter((item) => item !== tag));",
+    "    if (draftInput.current) draftInput.current.focus();",
+    "  };",
+    "",
+    "  return (",
+    "    <div className={className}>",
+    "      {value.map((tag) => (",
+    "        <span key={tag} className={chipClassName}>",
+    '          <span className="truncate">{tag}</span>',
+    "          <button",
+    '            type="button"',
+    "            aria-label={`Remove ${tag}`}",
+    "            onClick={() => removeTag(tag)}",
+    "            className={removeClassName}",
+    "          >",
+    '            <X className="h-3 w-3" aria-hidden="true" />',
+    "          </button>",
+    "        </span>",
+    "      ))}",
+    "      <input",
+    "        {...inputProps}",
+    "        ref={draftInput}",
+    '        type="text"',
+    '        autoComplete="off"',
+    "        value={draft}",
+    '        placeholder={full ? "Tag limit reached" : placeholder}',
+    "        readOnly={full}",
+    "        onChange={handleChange}",
+    "        onKeyDown={handleKeyDown}",
+    "        onBlur={handleBlur}",
+    "        className={inputClassName}",
+    "      />",
+    "    </div>",
+    "  );",
+    "}",
+  ],
+});
+
+defineType({
+  type: "tags",
+  name: "Tag Input",
+  blurb: "Free-form list of tags",
+  group: "Text",
+  icon: Tags,
+  keywords: ["chips", "keywords", "labels", "topics", "multiple"],
+  defaults: { label: "Tech stack", width: "full" },
+  settings: [
+    S.placeholder("Add a tag and press Enter"),
+    S.number("maxTags", "Max tags", null, { optional: true, hint: "optional", min: 1, max: 50, step: 1 }),
+  ],
+  empty: () => [],
+  sanitize: (f) => textFamilyRound(f, ["maxTags"]),
+  tokens: {
+    tagsBox: {
+      base: "flex w-full flex-wrap items-center gap-1.5 rounded-lg border px-2 py-1 shadow-sm transition duration-150",
+      light:
+        "border-slate-300 bg-white hover:border-slate-400 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/15",
+      dark:
+        "border-slate-700/80 bg-slate-900/70 hover:border-slate-600 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/15",
+    },
+    tagsBoxError: {
+      base: "flex w-full flex-wrap items-center gap-1.5 rounded-lg border px-2 py-1 shadow-sm transition duration-150",
+      light: "border-rose-400 bg-rose-50 focus-within:border-rose-500 focus-within:ring-4 focus-within:ring-rose-500/15",
+      dark: "border-rose-500/80 bg-rose-950/20 focus-within:border-rose-400 focus-within:ring-4 focus-within:ring-rose-500/15",
+    },
+    tagsChip: {
+      base: "inline-flex max-w-full items-center gap-0.5 rounded-md py-0.5 pl-2 pr-0.5 text-xs font-medium ring-1 ring-inset",
+      light: "bg-indigo-50 text-indigo-700 ring-indigo-200",
+      dark: "bg-indigo-500/15 text-indigo-200 ring-indigo-400/30",
+    },
+    tagsRemove: {
+      base: "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded outline-none transition duration-150 focus-visible:ring-2",
+      light: "text-indigo-500 hover:bg-indigo-100 hover:text-indigo-700 focus-visible:ring-indigo-500",
+      dark: "text-indigo-300 hover:bg-indigo-500/20 hover:text-white focus-visible:ring-indigo-400",
+    },
+    tagsDraft: {
+      base: "min-w-[8rem] flex-1 bg-transparent px-1.5 py-1.5 text-sm outline-none",
+      light: "text-slate-900 placeholder-slate-400",
+      dark: "text-slate-100 placeholder-slate-500",
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    return (
+      <TagsInputField
+        id={ctx.id}
+        aria-describedby={ctx.describedBy}
+        value={value}
+        onChange={set}
+        placeholder={f.placeholder || undefined}
+        maxTags={f.maxTags}
+        className={ctx.clsOf("tagsBox", "tagsBoxError")}
+        chipClassName={s.tagsChip}
+        removeClassName={s.tagsRemove}
+        inputClassName={s.tagsDraft}
+      />
+    );
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    ctx.use("TagsInput");
+    ctx.icon("X");
+    ctx.line("<TagsInput");
+    ctx.line(ctx.idAttr, 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line("value={" + ctx.v + "}", 1);
+    ctx.line("onChange={(tags) => " + ctx.set("tags") + "}", 1);
+    if (f.placeholder) ctx.line(textFamilyAttr("placeholder", f.placeholder), 1);
+    if (f.maxTags != null) ctx.line("maxTags={" + f.maxTags + "}", 1);
+    ctx.line("className=" + ctx.clsValue("", "tagsBox", "tagsBoxError"), 1);
+    ctx.line("chipClassName=" + q(s.tagsChip), 1);
+    ctx.line("removeClassName=" + q(s.tagsRemove), 1);
+    ctx.line("inputClassName=" + q(s.tagsDraft), 1);
+    ctx.line("/>");
+  },
+});
+
+/* ---- Contact & identity ---------------------------------------------------
+ * Full name, postal address, phone with country code, and country, language
+ * and time zone pickers.
+ * ------------------------------------------------------------------------- */
+
+/**
+ * A sub-label or other setting text, trimmed, falling back to its default when
+ * cleared. Trimmed because JSX drops the edge whitespace of a text line, so the
+ * preview and the export would otherwise disagree.
+ */
+const contactText = (value, fallback) => (typeof value === "string" && value.trim() ? value.trim() : fallback);
+
+/**
+ * Live preview only: settle(f, value) returns a corrected value (or undefined)
+ * when an Inspector change leaves the stored value out of step with what the
+ * export would hold — e.g. text left in an address line that is now hidden.
+ */
+function useContactSettle(settle, f, value, set) {
+  const next = settle ? settle(f, value) : undefined;
+  useEffect(() => {
+    if (next !== undefined) set(next);
+  }, [next, set]);
+}
+
+/**
+ * JSX-safe user text. JSX string attributes have no escapes — q() output with
+ * any backslash (from `"`, `\`, a tab or another control character) would
+ * either not compile or show the escape literally — and both attributes and
+ * text children decode HTML entities, so such text goes into an expression
+ * container instead.
+ */
+const contactAttr = (name, value) => {
+  const quoted = q(value);
+  return name + "=" + (/[\\&]/.test(quoted) ? "{" + quoted + "}" : quoted);
+};
+const contactJsxText = (value) => (/&/.test(String(value)) ? "{" + q(value) + "}" : jsxText(value));
+
+/** Splits a list into rows for readable exported source. */
+const contactRows = (items, sameRow) =>
+  items.reduce((rows, item) => {
+    const row = rows[rows.length - 1];
+    if (row && sameRow(row, item)) row.push(item);
+    else rows.push([item]);
+    return rows;
+  }, []);
+
+/** [{ value, label }] named in English by Intl.DisplayNames and sorted by name. */
+function contactNamedOptions(codes, type) {
+  const names = new Intl.DisplayNames(["en"], { type });
+  return codes
+    .map((code) => ({ value: code, label: names.of(code) }))
+    .sort((a, b) => a.label.localeCompare(b.label, "en"));
+}
+
+/** Module-level export helper: a code list turned into sorted { value, label } options. */
+function contactNamedHelper(name, namesConst, type, doc, rows) {
+  return {
+    scope: "module",
+    lines: [
+      "const " + namesConst + ' = new Intl.DisplayNames(["en"], { type: ' + q(type) + " });",
+      "",
+      "/** " + doc + " */",
+      "const " + name + " = `",
+      ...rows.map((row) => "  " + row.join(" ")),
+      "`",
+      "  .trim()",
+      "  .split(/\\s+/)",
+      "  .map((code) => ({ value: code, label: " + namesConst + ".of(code) }))",
+      '  .sort((a, b) => a.label.localeCompare(b.label, "en"));',
+    ],
+  };
+}
+
+/* ---- multi-part text widget (full name, address) ---- */
+
+const CONTACT_PARTS_GRID = "grid grid-cols-1 gap-x-3 gap-y-4 min-[400px]:grid-cols-2";
+
+/**
+ * A labelled group of text inputs writing one object value, e.g. { first, last }.
+ * partsOf(f) → [{ part, label, placeholder, autoComplete, autoCapitalize, wide, required }]
+ * Parts marked `required` turn red on a required-field error while they are blank.
+ */
+function contactParts(partsOf, settle) {
+  const wrapClass = (p) => (p.wide ? "min-w-0 min-[400px]:col-span-2" : "min-w-0");
+  return {
+    render(ctx) {
+      const { f, value, set, s } = ctx;
+      const current = value && typeof value === "object" ? value : {};
+      useContactSettle(settle, f, current, set);
+      return (
+        <div role="group" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className={CONTACT_PARTS_GRID}>
+          {partsOf(f).map((p) => {
+            const id = ctx.id + "-" + p.part;
+            const text = typeof current[p.part] === "string" ? current[p.part] : "";
+            return (
+              <div key={p.part} className={wrapClass(p)}>
+                <label htmlFor={id} className={s.subLabel}>
+                  {p.label}
+                </label>
+                <input
+                  id={id}
+                  type="text"
+                  autoComplete={p.autoComplete}
+                  autoCapitalize={p.autoCapitalize}
+                  spellCheck={false}
+                  value={text}
+                  placeholder={p.placeholder || undefined}
+                  onChange={(event) => set({ ...current, [p.part]: event.target.value })}
+                  className={ctx.error && p.required && isBlankValue(text) ? s.inputError : s.input}
+                />
+              </div>
+            );
+          })}
+        </div>
+      );
+    },
+    emit(ctx) {
+      const { f, s, q, v } = ctx;
+      ctx.line("<div");
+      ctx.line('role="group"', 1);
+      ctx.line(ctx.labelledAttr, 1);
+      if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+      ctx.line("className=" + q(CONTACT_PARTS_GRID), 1);
+      ctx.line(">");
+      partsOf(f).forEach((p) => {
+        const id = ctx.key + "-" + p.part;
+        const partValue = v + "." + p.part;
+        ctx.line("<div className=" + q(wrapClass(p)) + ">", 1);
+        ctx.line("<label htmlFor=" + q(id) + " className=" + q(s.subLabel) + ">", 2);
+        ctx.line(contactJsxText(p.label), 3);
+        ctx.line("</label>", 2);
+        ctx.line("<input", 2);
+        ctx.line("id=" + q(id), 3);
+        ctx.line('type="text"', 3);
+        ctx.line("autoComplete=" + q(p.autoComplete), 3);
+        if (p.autoCapitalize) ctx.line("autoCapitalize=" + q(p.autoCapitalize), 3);
+        ctx.line("spellCheck={false}", 3);
+        ctx.line("value={" + partValue + "}", 3);
+        if (p.placeholder) ctx.line(contactAttr("placeholder", p.placeholder), 3);
+        ctx.line(ctx.onChange("{ ..." + v + ", " + p.part + ": event.target.value }"), 3);
+        ctx.line(
+          "className=" +
+            (ctx.hasError && p.required
+              ? "{errors." + ctx.key + " && !" + partValue + ".trim() ? " + q(s.inputError) + " : " + q(s.input) + "}"
+              : q(s.input)),
+          3
+        );
+        ctx.line("/>", 2);
+        ctx.line("</div>", 1);
+      });
+      ctx.line("</div>");
+    },
+  };
+}
+
+/* ---- single select over a fixed, module-level option list ---- */
+
+/**
+ * Like the built-in Dropdown, but its options come from a list built once at
+ * module level (app) and from the matching module helper (export).
+ */
+function contactListSelect({ options, helper, item, autoComplete, fallback, showPlaceholder = () => true, settle }) {
+  const extra = (s) => " " + s.dateScheme + " cursor-pointer appearance-none pr-10";
+  /* Themed via `muted` rather than currentColor, so it stays visible on any page colour. */
+  const chevron = (s) => "pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 " + s.muted;
+  return {
+    render(ctx) {
+      const { f, value, set, s } = ctx;
+      useContactSettle(settle, f, value, set);
+      return (
+        <div className="relative">
+          <select
+            id={ctx.id}
+            name={f.key}
+            autoComplete={autoComplete}
+            aria-describedby={ctx.describedBy}
+            value={value == null ? "" : value}
+            onChange={(event) => set(event.target.value)}
+            className={ctx.cls + extra(s)}
+          >
+            {showPlaceholder(f) ? <option value="">{contactText(f.placeholder, fallback)}</option> : null}
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className={chevron(s)} aria-hidden="true" />
+        </div>
+      );
+    },
+    emit(ctx) {
+      const { f, s, q } = ctx;
+      ctx.use(helper);
+      ctx.line('<div className="relative">');
+      ctx.line("<select", 1);
+      ctx.line(ctx.idAttr, 2);
+      ctx.line(ctx.nameAttr, 2);
+      if (autoComplete) ctx.line("autoComplete=" + q(autoComplete), 2);
+      if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+      ctx.line("value={" + ctx.v + "}", 2);
+      ctx.line(ctx.onChange("event.target.value"), 2);
+      ctx.line("className=" + ctx.clsValue(extra(s)), 2);
+      ctx.line(">", 1);
+      if (showPlaceholder(f)) ctx.line('<option value="">' + contactJsxText(contactText(f.placeholder, fallback)) + "</option>", 2);
+      ctx.line("{" + helper + ".map((" + item + ") => (", 2);
+      ctx.line("<option key={" + item + ".value} value={" + item + ".value}>", 3);
+      ctx.line("{" + item + ".label}", 4);
+      ctx.line("</option>", 3);
+      ctx.line("))}", 2);
+      ctx.line("</select>", 1);
+      ctx.line("<" + ctx.icon("ChevronDown") + " className=" + q(chevron(s)) + ' aria-hidden="true" />', 1);
+      ctx.line("</div>");
+    },
+  };
+}
+
+/* ---- Full name ------------------------------------------------------------ */
+
+const FULLNAME_TEXT = { firstLabel: "First name", lastLabel: "Last name" };
+
+defineType({
+  type: "fullname",
+  name: "Full Name",
+  blurb: "First and last name",
+  group: "Contact",
+  icon: UserRound,
+  keywords: ["name", "first name", "last name", "surname", "given name"],
+  labelMode: "group",
+  defaults: { label: "Full name", width: "full" },
+  settings: [
+    S.text("firstLabel", "First name label", FULLNAME_TEXT.firstLabel),
+    S.text("firstPlaceholder", "First placeholder", "Jane"),
+    S.text("lastLabel", "Last name label", FULLNAME_TEXT.lastLabel),
+    S.text("lastPlaceholder", "Last placeholder", "Cooper"),
+  ],
+  empty: () => ({ first: "", last: "" }),
+  blank: {
+    test: (f, v) => !v || isBlankValue(v.first) || isBlankValue(v.last),
+    code: (ctx) => "!" + ctx.v + ".first.trim() || !" + ctx.v + ".last.trim()",
+  },
+  ...contactParts((f) => [
+    {
+      part: "first",
+      label: contactText(f.firstLabel, FULLNAME_TEXT.firstLabel),
+      placeholder: f.firstPlaceholder,
+      autoComplete: "given-name",
+      autoCapitalize: "words",
+      required: true,
+    },
+    {
+      part: "last",
+      label: contactText(f.lastLabel, FULLNAME_TEXT.lastLabel),
+      placeholder: f.lastPlaceholder,
+      autoComplete: "family-name",
+      autoCapitalize: "words",
+      required: true,
+    },
+  ]),
+});
+
+/* ---- Address -------------------------------------------------------------- */
+
+const ADDRESS_TEXT = {
+  streetLabel: "Street address",
+  line2Label: "Apartment, suite, etc.",
+  cityLabel: "City",
+  postalLabel: "Postal code",
+  countryLabel: "Country",
+};
+
+defineType({
+  type: "address",
+  name: "Address",
+  blurb: "Postal address block",
+  group: "Contact",
+  icon: MapPin,
+  keywords: ["street", "city", "zip", "postcode", "shipping", "billing"],
+  labelMode: "group",
+  defaults: { label: "Postal address", width: "full" },
+  settings: [
+    S.toggle("includeLine2", "Apartment, suite line", false, { hint: "Adds an optional second street line" }),
+    S.text("streetLabel", "Street label", ADDRESS_TEXT.streetLabel),
+    S.text("line2Label", "Line 2 label", ADDRESS_TEXT.line2Label),
+    S.text("cityLabel", "City label", ADDRESS_TEXT.cityLabel),
+    S.text("postalLabel", "Postal code label", ADDRESS_TEXT.postalLabel),
+    S.text("countryLabel", "Country label", ADDRESS_TEXT.countryLabel),
+    S.text("countryPlaceholder", "Country placeholder", "Sweden"),
+  ],
+  empty: () => ({ street: "", line2: "", city: "", postal: "", country: "" }),
+  blank: {
+    test: (f, v) => !v || isBlankValue(v.street) || isBlankValue(v.city) || isBlankValue(v.postal),
+    code: (ctx) => ["street", "city", "postal"].map((part) => "!" + ctx.v + "." + part + ".trim()").join(" || "),
+  },
+  ...contactParts((f) =>
+    [
+      {
+        part: "street",
+        label: contactText(f.streetLabel, ADDRESS_TEXT.streetLabel),
+        autoComplete: f.includeLine2 ? "address-line1" : "street-address",
+        autoCapitalize: "words",
+        wide: true,
+        required: true,
+      },
+      f.includeLine2
+        ? {
+            part: "line2",
+            label: contactText(f.line2Label, ADDRESS_TEXT.line2Label),
+            autoComplete: "address-line2",
+            autoCapitalize: "words",
+            wide: true,
+          }
+        : null,
+      {
+        part: "city",
+        label: contactText(f.cityLabel, ADDRESS_TEXT.cityLabel),
+        autoComplete: "address-level2",
+        autoCapitalize: "words",
+        required: true,
+      },
+      {
+        part: "postal",
+        label: contactText(f.postalLabel, ADDRESS_TEXT.postalLabel),
+        autoComplete: "postal-code",
+        autoCapitalize: "characters",
+        required: true,
+      },
+      {
+        part: "country",
+        label: contactText(f.countryLabel, ADDRESS_TEXT.countryLabel),
+        placeholder: f.countryPlaceholder,
+        autoComplete: "country-name",
+        autoCapitalize: "words",
+        wide: true,
+      },
+    ].filter(Boolean),
+    /* A hidden line 2 is always "" (as in the export), even if it held text before it was switched off. */
+    (f, v) => (!f.includeLine2 && v.line2 ? { ...v, line2: "" } : undefined)
+  ),
+});
+
+/* ---- Phone + country code ------------------------------------------------- */
+
+/** Regional-indicator flag emoji for an ISO 3166-1 alpha-2 code ("SE" → 🇸🇪). */
+const phoneIntlFlag = (country) => String.fromCodePoint(...Array.from(country, (c) => 127397 + c.charCodeAt(0)));
+
+/** Common dial codes, in dial-code order. ITU codes are prefix-free, so "+46…" matches one entry. */
+const PHONE_INTL_CODES = [
+  ["US", "+1"], ["ZA", "+27"], ["NL", "+31"], ["BE", "+32"], ["FR", "+33"], ["ES", "+34"],
+  ["IT", "+39"], ["CH", "+41"], ["AT", "+43"], ["GB", "+44"], ["DK", "+45"], ["SE", "+46"],
+  ["NO", "+47"], ["PL", "+48"], ["DE", "+49"], ["BR", "+55"], ["AU", "+61"], ["JP", "+81"],
+  ["CN", "+86"], ["IN", "+91"], ["IE", "+353"], ["FI", "+358"],
+].map(([country, code]) => ({ country, code, label: phoneIntlFlag(country) + " " + code }));
+
+/** 5–15 digits; spaces, dashes and parentheses allowed anywhere. */
+const PHONE_INTL_PATTERN = /^(?:[\s()-]*\d){5,15}[\s()-]*$/;
+
+/** Typing or pasting "+46 70 123 45 67" moves the "+46" into the code picker. */
+function phoneIntlSplit(phone, text) {
+  const match = PHONE_INTL_CODES.find((option) => text.trim().startsWith(option.code));
+  if (!match) return { ...phone, number: text };
+  return { code: match.code, number: text.trim().slice(match.code.length).trim() };
+}
+
+defineHelper("PHONE_INTL_CODES", {
+  scope: "module",
+  lines: [
+    "const PHONE_INTL_CODES = [",
+    ...PHONE_INTL_CODES.map((option) => "  { code: " + q(option.code) + ", label: " + q(option.label) + " },"),
+    "];",
+  ],
+});
+
+defineHelper("PHONE_INTL_PATTERN", {
+  scope: "module",
+  lines: ["const PHONE_INTL_PATTERN = " + PHONE_INTL_PATTERN.toString() + ";"],
+});
+
+defineHelper("phoneIntlSplit", {
+  scope: "module",
+  requires: ["PHONE_INTL_CODES"],
+  lines: [
+    '/** Typing or pasting "+46 70 123 45 67" moves the "+46" into the code picker. */',
+    "const phoneIntlSplit = (phone, text) => {",
+    "  const match = PHONE_INTL_CODES.find((option) => text.trim().startsWith(option.code));",
+    "  if (!match) return { ...phone, number: text };",
+    "  return { code: match.code, number: text.trim().slice(match.code.length).trim() };",
+    "};",
+  ],
+});
+
+const phoneIntlRegions = new Intl.DisplayNames(["en"], { type: "region" });
+const phoneIntlChevron = (s) => "pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 " + s.muted;
+
+defineType({
+  type: "phoneIntl",
+  name: "Phone + Country Code",
+  blurb: "Dial code and number",
+  group: "Contact",
+  icon: Smartphone,
+  keywords: ["telephone", "mobile", "international", "dial code", "country code"],
+  defaults: { label: "Phone number" },
+  settings: [
+    S.select(
+      "defaultCode",
+      "Default code",
+      "+46",
+      PHONE_INTL_CODES.map((option) => ({
+        value: option.code,
+        label: phoneIntlRegions.of(option.country) + " (" + option.code + ")",
+      })).sort((a, b) => a.label.localeCompare(b.label, "en"))
+    ),
+    S.placeholder("70 123 45 67"),
+  ],
+  tokens: {
+    phoneIntlCode: {
+      base:
+        "h-full cursor-pointer appearance-none border-r py-2.5 pl-3 pr-7 text-sm outline-none transition duration-150 focus-visible:ring-2 focus-visible:ring-inset",
+      light:
+        "border-slate-200 bg-slate-50 text-slate-700 [color-scheme:light] hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:ring-indigo-500/40",
+      dark: "border-slate-700/80 bg-slate-800/60 text-slate-200 [color-scheme:dark] hover:bg-slate-800 focus-visible:bg-slate-800 focus-visible:ring-indigo-400/50",
+    },
+  },
+  empty: (f) => ({ code: f.defaultCode, number: "" }),
+  blank: {
+    test: (f, v) => !v || isBlankValue(v.number),
+    code: (ctx) => "!" + ctx.v + ".number.trim()",
+  },
+  validate: {
+    test: (f, v) => PHONE_INTL_PATTERN.test(String(v.number)),
+    code: (ctx) => (ctx.use("PHONE_INTL_PATTERN"), "!PHONE_INTL_PATTERN.test(" + ctx.v + ".number)"),
+    message: () => "Enter 5–15 digits, without the country code",
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const phone = value && typeof value === "object" ? value : { code: f.defaultCode, number: "" };
+    return (
+      <div className={ctx.clsOf("inputGroup", "inputGroupError")}>
+        <div className="relative flex shrink-0">
+          <select
+            aria-label="Country code"
+            autoComplete="tel-country-code"
+            value={phone.code}
+            onChange={(event) => set({ ...phone, code: event.target.value })}
+            className={s.phoneIntlCode}
+          >
+            {PHONE_INTL_CODES.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className={phoneIntlChevron(s)} aria-hidden="true" />
+        </div>
+        <input
+          id={ctx.id}
+          name={f.key}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel-national"
+          aria-describedby={ctx.describedBy}
+          value={phone.number}
+          placeholder={f.placeholder || undefined}
+          onChange={(event) => set(phoneIntlSplit(phone, event.target.value))}
+          className={s.bare}
+        />
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.use("PHONE_INTL_CODES");
+    ctx.use("phoneIntlSplit");
+    ctx.line("<div className=" + ctx.clsValue("", "inputGroup", "inputGroupError") + ">");
+    ctx.line('<div className="relative flex shrink-0">', 1);
+    ctx.line("<select", 2);
+    ctx.line('aria-label="Country code"', 3);
+    ctx.line('autoComplete="tel-country-code"', 3);
+    ctx.line("value={" + v + ".code}", 3);
+    ctx.line(ctx.onChange("{ ..." + v + ", code: event.target.value }"), 3);
+    ctx.line("className=" + q(s.phoneIntlCode), 3);
+    ctx.line(">", 2);
+    ctx.line("{PHONE_INTL_CODES.map((option) => (", 3);
+    ctx.line("<option key={option.code} value={option.code}>", 4);
+    ctx.line("{option.label}", 5);
+    ctx.line("</option>", 4);
+    ctx.line("))}", 3);
+    ctx.line("</select>", 2);
+    ctx.line("<" + ctx.icon("ChevronDown") + " className=" + q(phoneIntlChevron(s)) + ' aria-hidden="true" />', 2);
+    ctx.line("</div>", 1);
+    ctx.line("<input", 1);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    ctx.line('type="tel"', 2);
+    ctx.line('inputMode="tel"', 2);
+    ctx.line('autoComplete="tel-national"', 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line("value={" + v + ".number}", 2);
+    if (f.placeholder) ctx.line(contactAttr("placeholder", f.placeholder), 2);
+    ctx.line(ctx.onChange("phoneIntlSplit(" + v + ", event.target.value)"), 2);
+    ctx.line("className=" + q(s.bare), 2);
+    ctx.line("/>", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Country -------------------------------------------------------------- */
+
+/** ISO 3166-1 alpha-2, all 249 officially assigned codes. */
+const COUNTRY_CODES = `
+  AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS
+  BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE
+  EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM
+  HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC
+  LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA
+  NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW
+  SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO
+  TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW
+`
+  .trim()
+  .split(/\s+/);
+
+const COUNTRY_OPTIONS = contactNamedOptions(COUNTRY_CODES, "region");
+
+defineHelper(
+  "COUNTRY_OPTIONS",
+  contactNamedHelper(
+    "COUNTRY_OPTIONS",
+    "countryNames",
+    "region",
+    "ISO 3166-1 alpha-2 country codes, named and sorted in English.",
+    contactRows(COUNTRY_CODES, (row, code) => row[0][0] === code[0])
+  )
+);
+
+defineType({
+  type: "country",
+  name: "Country",
+  blurb: "All 249 countries, A–Z",
+  group: "Contact",
+  icon: Globe,
+  keywords: ["nation", "region", "location", "iso"],
+  defaults: { label: "Country" },
+  settings: [
+    S.text("placeholder", "Empty state text", "Select a country"),
+    S.select("defaultCountry", "Preselected", "", [{ value: "", label: "None" }].concat(COUNTRY_OPTIONS)),
+  ],
+  empty: (f) => f.defaultCountry,
+  ...contactListSelect({
+    options: COUNTRY_OPTIONS,
+    helper: "COUNTRY_OPTIONS",
+    item: "country",
+    autoComplete: "country",
+    fallback: "Select a country",
+  }),
+});
+
+/* ---- Language ------------------------------------------------------------- */
+
+/** Common BCP 47 language subtags. */
+const LANGUAGE_CODES = `
+  ar bg bn cs da de el en es et fa fi fil fr he
+  hi hr hu id is it ja ko lt lv ms nb nl pl pt
+  ro ru sk sl sr sv sw th tr uk ur vi zh
+`
+  .trim()
+  .split(/\s+/);
+
+const LANGUAGE_OPTIONS = contactNamedOptions(LANGUAGE_CODES, "language");
+
+defineHelper(
+  "LANGUAGE_OPTIONS",
+  contactNamedHelper(
+    "LANGUAGE_OPTIONS",
+    "languageNames",
+    "language",
+    "Common BCP 47 language codes, named and sorted in English.",
+    contactRows(LANGUAGE_CODES, (row) => row.length < 15)
+  )
+);
+
+defineType({
+  type: "language",
+  name: "Language",
+  blurb: "Preferred language",
+  group: "Contact",
+  icon: Languages,
+  keywords: ["locale", "preferred language", "translation", "i18n"],
+  defaults: { label: "Preferred language" },
+  settings: [
+    S.text("placeholder", "Empty state text", "Select a language"),
+    S.select("defaultLanguage", "Preselected", "", [{ value: "", label: "None" }].concat(LANGUAGE_OPTIONS)),
+  ],
+  empty: (f) => f.defaultLanguage,
+  ...contactListSelect({
+    options: LANGUAGE_OPTIONS,
+    helper: "LANGUAGE_OPTIONS",
+    item: "language",
+    autoComplete: "language",
+    fallback: "Select a language",
+  }),
+});
+
+/* ---- Time zone ------------------------------------------------------------ */
+
+/** Used only where Intl.supportedValuesOf is missing (Safari < 15.4). */
+const TIMEZONE_FALLBACK = [
+  "Pacific/Honolulu", "America/Anchorage", "America/Los_Angeles", "America/Denver",
+  "America/Chicago", "America/New_York", "America/Sao_Paulo", "Europe/London",
+  "Europe/Paris", "Europe/Berlin", "Europe/Stockholm", "Europe/Helsinki",
+  "Africa/Cairo", "Africa/Johannesburg", "Europe/Moscow", "Asia/Dubai",
+  "Asia/Kolkata", "Asia/Singapore", "Asia/Shanghai", "Asia/Tokyo",
+  "Australia/Sydney", "Pacific/Auckland",
+];
+
+const TIMEZONE_DETECT = "Intl.DateTimeFormat().resolvedOptions().timeZone";
+const TIMEZONE_LOCAL = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+/** Every IANA zone the browser knows, plus UTC and the visitor's own zone. */
+const TIMEZONE_OPTIONS = [
+  ...new Set([
+    ...(typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : TIMEZONE_FALLBACK),
+    "UTC",
+    TIMEZONE_LOCAL,
+  ]),
+]
+  .sort()
+  .map((zone) => ({ value: zone, label: zone.replace(/_/g, " ") }));
+
+defineHelper("TIMEZONE_FALLBACK", {
+  scope: "module",
+  lines: [
+    "/** Used only where Intl.supportedValuesOf is missing (Safari < 15.4). */",
+    "const TIMEZONE_FALLBACK = [",
+    ...contactRows(TIMEZONE_FALLBACK, (row) => row.length < 4).map((row) => "  " + row.map(q).join(", ") + ","),
+    "];",
+  ],
+});
+
+defineHelper("TIMEZONE_OPTIONS", {
+  scope: "module",
+  requires: ["TIMEZONE_FALLBACK"],
+  lines: [
+    "/** Every IANA zone the browser knows, plus UTC and the visitor's own zone. */",
+    "const TIMEZONE_OPTIONS = [",
+    "  ...new Set([",
+    '    ...(typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : TIMEZONE_FALLBACK),',
+    '    "UTC",',
+    "    " + TIMEZONE_DETECT + ",",
+    "  ]),",
+    "]",
+    "  .sort()",
+    '  .map((zone) => ({ value: zone, label: zone.replace(/_/g, " ") }));',
+  ],
+});
+
+/**
+ * Preselecting only applies to optional fields: a required zone is one the
+ * visitor must confirm, so it starts empty like every other required field.
+ */
+const timezonePreselects = (f) => f.detectZone && !f.required;
+
+defineType({
+  type: "timezone",
+  name: "Time Zone",
+  blurb: "Auto-detected local zone",
+  group: "Contact",
+  icon: Earth,
+  keywords: ["timezone", "tz", "utc", "offset", "schedule"],
+  defaults: { label: "Time zone", helper: "We use it to schedule calls in your local time." },
+  settings: [
+    S.toggle("detectZone", "Preselect the visitor's zone", true, { hint: "Optional fields only; required ones start empty" }),
+    S.text("placeholder", "Empty state text", "Select a time zone"),
+  ],
+  empty: (f) => (timezonePreselects(f) ? TIMEZONE_LOCAL : ""),
+  literal: (f) => (timezonePreselects(f) ? TIMEZONE_DETECT : '""'),
+  ...contactListSelect({
+    options: TIMEZONE_OPTIONS,
+    helper: "TIMEZONE_OPTIONS",
+    item: "zone",
+    fallback: "Select a time zone",
+    showPlaceholder: (f) => !timezonePreselects(f),
+    /* Without a placeholder option a blank value would display as the first zone, so fill in the detected one. */
+    settle: (f, v) => (timezonePreselects(f) && !v ? TIMEZONE_LOCAL : undefined),
+  }),
+});
+
+/* ---- Numbers & advanced --------------------------------------------------
+ * Money, percentages, quantity steppers, measurements, number ranges, colour,
+ * hidden tracking values and a password + confirmation pair.
+ * ------------------------------------------------------------------------ */
+
+/** JSX decodes HTML entities in attribute strings and text, so "&amp;" would lose its literal form. */
+const NUMBERS_ENTITY = /&#?[a-zA-Z0-9]+;/;
+
+/**
+ * A JSX attribute for user-provided text. JSX attribute strings have no escapes,
+ * so text that JSON would escape (quotes, backslashes) or that holds an HTML
+ * entity becomes an expression.
+ */
+const numbersAttr = (text) => {
+  const quoted = q(text);
+  return quoted === '"' + text + '"' && !NUMBERS_ENTITY.test(text) ? quoted : "{" + quoted + "}";
+};
+
+/** JSX text for user-provided text: jsxText, plus entity-looking text kept literal. */
+const numbersText = (text) => (NUMBERS_ENTITY.test(String(text == null ? "" : text)) ? "{" + q(text) + "}" : jsxText(text));
+
+/**
+ * iOS numeric/decimal keypads have no minus key, so fields that accept negatives
+ * (a negative minimum, or no minimum at all) use the default number keyboard.
+ */
+const numbersInputMode = (min, decimal) => (min == null || min < 0 ? undefined : decimal ? "decimal" : "numeric");
+
+/* ---- Money amount ---- */
+
+/** 1250, 1,250.00 or 1 250.5 — non-negative, at most two decimals. */
+const CURRENCY_PATTERN = /^(?:\d{1,3}(?:[,\s]\d{3})+|\d+)(?:\.\d{1,2})?$/;
+
+defineHelper("CURRENCY_PATTERN", { scope: "module", lines: ["const CURRENCY_PATTERN = " + CURRENCY_PATTERN.toString() + ";"] });
+
+defineType({
+  type: "currency",
+  name: "Money Amount",
+  blurb: "Amount with currency",
+  group: "Numbers",
+  icon: Banknote,
+  keywords: ["money", "price", "currency", "payment", "cost", "budget"],
+  defaults: { label: "Budget" },
+  settings: [S.placeholder("0.00"), S.text("symbol", "Symbol", "$", { hint: "prefix" }), S.text("code", "Currency code", "USD", { hint: "suffix" })],
+  validate: {
+    test: (f, v) => CURRENCY_PATTERN.test(String(v).trim()),
+    code: (ctx) => (ctx.use("CURRENCY_PATTERN"), "!CURRENCY_PATTERN.test(" + ctx.v + ".trim())"),
+    message: () => "Enter an amount like 1,250.00",
+  },
+  /* Same markup as the core textInput, written out so the placeholder and addons survive quotes and entities. */
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const grouped = Boolean(f.symbol || f.code);
+    const input = (
+      <input
+        id={ctx.id}
+        name={f.key}
+        type="text"
+        inputMode="decimal"
+        autoComplete="transaction-amount"
+        aria-describedby={ctx.describedBy}
+        value={value == null ? "" : value}
+        placeholder={f.placeholder || undefined}
+        onChange={(event) => set(event.target.value)}
+        className={(grouped ? s.bare : ctx.cls) + " tabular-nums"}
+      />
+    );
+    if (!grouped) return input;
+    return (
+      <div className={ctx.clsOf("inputGroup", "inputGroupError")}>
+        {f.symbol ? <span className={s.addon}>{f.symbol}</span> : null}
+        {input}
+        {f.code ? <span className={s.addon}>{f.code}</span> : null}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    const grouped = Boolean(f.symbol || f.code);
+    const o = grouped ? 1 : 0;
+    if (grouped) {
+      ctx.line("<div className=" + ctx.clsValue("", "inputGroup", "inputGroupError") + ">");
+      if (f.symbol) ctx.line("<span className=" + q(s.addon) + ">" + numbersText(f.symbol) + "</span>", 1);
+    }
+    ctx.line("<input", o);
+    ctx.line(ctx.idAttr, o + 1);
+    ctx.line(ctx.nameAttr, o + 1);
+    ctx.line('type="text"', o + 1);
+    ctx.line('inputMode="decimal"', o + 1);
+    ctx.line('autoComplete="transaction-amount"', o + 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, o + 1);
+    ctx.line("value={" + ctx.v + "}", o + 1);
+    if (f.placeholder) ctx.line("placeholder=" + numbersAttr(f.placeholder), o + 1);
+    ctx.line(ctx.onChange("event.target.value"), o + 1);
+    ctx.line("className=" + (grouped ? q(s.bare + " tabular-nums") : ctx.clsValue(" tabular-nums")), o + 1);
+    ctx.line("/>", o);
+    if (grouped) {
+      if (f.code) ctx.line("<span className=" + q(s.addon) + ">" + numbersText(f.code) + "</span>", 1);
+      ctx.line("</div>");
+    }
+  },
+});
+
+/* ---- Percentage ---- */
+
+defineType({
+  type: "percent",
+  name: "Percentage",
+  blurb: "Number with a % sign",
+  group: "Numbers",
+  icon: Percent,
+  keywords: ["percent", "rate", "ratio", "share", "discount"],
+  defaults: { label: "Discount" },
+  settings: [S.placeholder("15"), S.number("min", "Minimum", 0), S.number("max", "Maximum", 100)],
+  sanitize: (f) => (f.max > f.min ? f : { ...f, max: f.min + 1 }),
+  validate: {
+    test: (f, v) => Number(v) >= f.min && Number(v) <= f.max,
+    code: (ctx) => "!(Number(" + ctx.v + ") >= " + ctx.f.min + " && Number(" + ctx.v + ") <= " + ctx.f.max + ")",
+    message: (f) => "Enter a percentage from " + f.min + " to " + f.max,
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    return (
+      <div className={ctx.clsOf("inputGroup", "inputGroupError")}>
+        <input
+          id={ctx.id}
+          name={f.key}
+          type="number"
+          inputMode={numbersInputMode(f.min, true)}
+          min={f.min}
+          max={f.max}
+          aria-describedby={ctx.describedBy}
+          value={value == null ? "" : value}
+          placeholder={f.placeholder || undefined}
+          onChange={(event) => set(event.target.value)}
+          className={s.bare + " tabular-nums"}
+        />
+        <span className={s.addon}>%</span>
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    ctx.line("<div className=" + ctx.clsValue("", "inputGroup", "inputGroupError") + ">");
+    ctx.line("<input", 1);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    ctx.line('type="number"', 2);
+    if (numbersInputMode(f.min, true)) ctx.line("inputMode=" + q(numbersInputMode(f.min, true)), 2);
+    ctx.line("min={" + f.min + "}", 2);
+    ctx.line("max={" + f.max + "}", 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line("value={" + ctx.v + "}", 2);
+    if (f.placeholder) ctx.line("placeholder=" + numbersAttr(f.placeholder), 2);
+    ctx.line(ctx.onChange("event.target.value"), 2);
+    ctx.line("className=" + q(s.bare + " tabular-nums"), 2);
+    ctx.line("/>", 1);
+    ctx.line("<span className=" + q(s.addon) + ">%</span>", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Quantity stepper ---- */
+
+/** Centered digits, native spin buttons hidden (the − / + buttons replace them). */
+const STEPPER_INPUT_EXTRA =
+  " min-w-0 text-center tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+
+/** Decimal places the step grid needs, so 0.1 + 0.2 lands on 0.3. */
+const stepperDecimals = (f) => Math.max(...[f.step, f.min].map((n) => (String(n).split(".")[1] || "").length));
+const stepperClamp = (f, n) => Math.min(f.max, Math.max(f.min, n));
+const stepperRound = (n, decimals) => (decimals ? Number(n.toFixed(decimals)) : n);
+
+/** A typed number, snapped to the step grid and kept within min–max (the bounds themselves always stick). */
+function stepperCommit(f, n) {
+  if (n <= f.min) return f.min;
+  if (n >= f.max) return f.max;
+  return Math.min(f.max, stepperRound(f.min + Math.round((n - f.min) / f.step) * f.step, stepperDecimals(f)));
+}
+
+defineHelper("StepperInput", {
+  scope: "module",
+  hooks: ["useState"],
+  lines: [
+    "// Keeps the typed text while editing; the committed value snaps to the step and stays within min–max.",
+    "function StepperInput({ value, min, max, step, onValueChange, ...props }) {",
+    "  const [draft, setDraft] = useState(null);",
+    '  const decimals = Math.max(...[min, step].map((n) => (String(n).split(".")[1] || "").length));',
+    "",
+    "  const commit = (n) => {",
+    "    if (n <= min) return min;",
+    "    if (n >= max) return max;",
+    "    return Math.min(max, Number((min + Math.round((n - min) / step) * step).toFixed(decimals)));",
+    "  };",
+    "",
+    "  const handleChange = (event) => {",
+    "    const text = event.target.value;",
+    "    setDraft(text);",
+    '    if (text.trim() !== "" && Number.isFinite(Number(text))) onValueChange(commit(Number(text)));',
+    "  };",
+    "",
+    "  return (",
+    "    <input",
+    "      {...props}",
+    '      type="number"',
+    "      min={min}",
+    "      max={max}",
+    "      step={step}",
+    "      value={draft === null ? String(value) : draft}",
+    "      onChange={handleChange}",
+    "      onBlur={() => setDraft(null)}",
+    '      onKeyDown={(event) => event.key === "Enter" && setDraft(null)}',
+    "    />",
+    "  );",
+    "}",
+  ],
+});
+
+defineType({
+  type: "stepper",
+  name: "Quantity Stepper",
+  blurb: "Minus and plus buttons",
+  group: "Numbers",
+  icon: Diff,
+  keywords: ["quantity", "counter", "increment", "spinner", "count", "tickets"],
+  defaults: { label: "Additional guests" },
+  settings: [S.number("min", "Minimum", 0), S.number("max", "Maximum", 99), S.number("step", "Step", 1, { min: 0.01 })],
+  alwaysFilled: true,
+  sanitize: (f) => (f.max > f.min ? f : { ...f, max: f.min + f.step }),
+  empty: (f) => f.min,
+  tokens: {
+    stepperButton: {
+      base:
+        "inline-flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg border shadow-sm outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-40",
+      light: "border-slate-300 bg-white text-slate-600 enabled:hover:border-slate-400 enabled:hover:bg-slate-50 enabled:hover:text-slate-900",
+      dark: "border-slate-700/80 bg-slate-900/70 text-slate-300 enabled:hover:border-slate-600 enabled:hover:bg-slate-900 enabled:hover:text-white",
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const [draft, setDraft] = useState(null);
+    const decimals = stepperDecimals(f);
+    /* The live preview keeps its value while the Inspector edits min/max: pull it back into range. */
+    useEffect(() => {
+      const next = stepperClamp(f, typeof value === "number" && Number.isFinite(value) ? value : f.min);
+      if (next !== value) set(next);
+    }, [value, f.min, f.max, set]);
+    const shift = (direction) => set(stepperClamp(f, stepperRound(value + direction * f.step, decimals)));
+    return (
+      <div className="flex w-44 max-w-full items-center gap-2">
+        <button
+          type="button"
+          aria-label="Decrease"
+          aria-controls={ctx.id}
+          disabled={value <= f.min}
+          onClick={() => shift(-1)}
+          className={s.stepperButton}
+        >
+          <Minus className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <input
+          id={ctx.id}
+          name={f.key}
+          inputMode={numbersInputMode(f.min, decimals > 0)}
+          aria-describedby={ctx.describedBy}
+          type="number"
+          min={f.min}
+          max={f.max}
+          step={f.step}
+          value={draft === null ? String(value) : draft}
+          onChange={(event) => {
+            const text = event.target.value;
+            setDraft(text);
+            if (text.trim() !== "" && Number.isFinite(Number(text))) set(stepperCommit(f, Number(text)));
+          }}
+          onBlur={() => setDraft(null)}
+          onKeyDown={(event) => event.key === "Enter" && setDraft(null)}
+          className={ctx.cls + STEPPER_INPUT_EXTRA}
+        />
+        <button
+          type="button"
+          aria-label="Increase"
+          aria-controls={ctx.id}
+          disabled={value >= f.max}
+          onClick={() => shift(1)}
+          className={s.stepperButton}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    const decimals = stepperDecimals(f);
+    const shifted = (op) => {
+      const sum = v + " " + op + " " + f.step;
+      return decimals ? "Number((" + sum + ").toFixed(" + decimals + "))" : sum;
+    };
+    const button = (label, iconName, disabled, next) => {
+      ctx.line("<button", 1);
+      ctx.line('type="button"', 2);
+      ctx.line("aria-label=" + q(label), 2);
+      ctx.line("aria-controls=" + q(ctx.key), 2);
+      ctx.line("disabled={" + disabled + "}", 2);
+      ctx.line("onClick={() => " + ctx.set(next) + "}", 2);
+      ctx.line("className=" + q(s.stepperButton), 2);
+      ctx.line(">", 1);
+      ctx.line("<" + ctx.icon(iconName) + ' className="h-4 w-4" aria-hidden="true" />', 2);
+      ctx.line("</button>", 1);
+    };
+    ctx.use("StepperInput");
+    ctx.line('<div className="flex w-44 max-w-full items-center gap-2">');
+    button("Decrease", "Minus", v + " <= " + f.min, "Math.max(" + f.min + ", " + shifted("-") + ")");
+    ctx.line("<StepperInput", 1);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    if (numbersInputMode(f.min, decimals > 0)) ctx.line("inputMode=" + q(numbersInputMode(f.min, decimals > 0)), 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line("min={" + f.min + "}", 2);
+    ctx.line("max={" + f.max + "}", 2);
+    ctx.line("step={" + f.step + "}", 2);
+    ctx.line("value={" + v + "}", 2);
+    ctx.line("onValueChange={(value) => " + ctx.set("value") + "}", 2);
+    ctx.line("className=" + ctx.clsValue(STEPPER_INPUT_EXTRA), 2);
+    ctx.line("/>", 1);
+    button("Increase", "Plus", v + " >= " + f.max, "Math.min(" + f.max + ", " + shifted("+") + ")");
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Measurement ---- */
+
+/** Trimmed, non-blank, de-duplicated units, in the order the author listed them. */
+const measureUnits = (f) => {
+  const units = f.units.map((unit) => unit.trim());
+  return units.filter((unit, i) => unit !== "" && units.indexOf(unit) === i);
+};
+
+/** 72, 72.5 or .5 — a non-negative decimal. */
+const MEASURE_PATTERN = /^\d*\.?\d+$/;
+
+defineHelper("MEASURE_PATTERN", { scope: "module", lines: ["const MEASURE_PATTERN = " + MEASURE_PATTERN.toString() + ";"] });
+
+defineType({
+  type: "measure",
+  name: "Measurement",
+  blurb: "Number with a unit",
+  group: "Numbers",
+  icon: Ruler,
+  keywords: ["unit", "weight", "height", "length", "size", "kg"],
+  defaults: { label: "Parcel weight" },
+  settings: [S.placeholder("2.5"), S.options("units", "Units", ["kg", "lb"])],
+  sanitize: (f) => (f.units.length ? f : { ...f, units: ["kg", "lb"] }),
+  empty: (f) => ({ amount: "", unit: measureUnits(f)[0] || "" }),
+  blank: {
+    test: (f, v) => !v || v.amount == null || String(v.amount).trim() === "",
+    code: (ctx) => ctx.v + '.amount.trim() === ""',
+  },
+  validate: {
+    test: (f, v) => MEASURE_PATTERN.test(String(v.amount).trim()),
+    code: (ctx) => (ctx.use("MEASURE_PATTERN"), "!MEASURE_PATTERN.test(" + ctx.v + ".amount.trim())"),
+    message: () => "Enter a number of 0 or more, like 2.5",
+  },
+  tokens: {
+    measureUnit: {
+      base: "max-w-[10rem] cursor-pointer appearance-none truncate border-l py-2.5 pl-3 pr-8 text-sm font-medium outline-none transition duration-150",
+      light:
+        "border-slate-200 bg-slate-50 text-slate-700 [color-scheme:light] hover:bg-slate-100 focus-visible:bg-indigo-50 focus-visible:text-indigo-700",
+      dark:
+        "border-slate-700/80 bg-slate-800/60 text-slate-200 [color-scheme:dark] hover:bg-slate-800 focus-visible:bg-indigo-500/15 focus-visible:text-white",
+    },
+    measureChevron: {
+      base: "pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2",
+      light: "text-slate-500",
+      dark: "text-slate-400",
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const units = measureUnits(f);
+    const amount = value && value.amount != null ? value.amount : "";
+    const unit = value && units.indexOf(value.unit) !== -1 ? value.unit : units[0] || "";
+    /* The live preview keeps its value while the Inspector edits units: follow the unit that is shown. */
+    useEffect(() => {
+      if (value && value.unit !== unit) set({ amount, unit });
+    }, [value, amount, unit, set]);
+    return (
+      <div className={ctx.clsOf("inputGroup", "inputGroupError")}>
+        <input
+          id={ctx.id}
+          name={f.key}
+          type="text"
+          inputMode="decimal"
+          aria-describedby={ctx.describedBy}
+          value={amount}
+          placeholder={f.placeholder || undefined}
+          onChange={(event) => set({ amount: event.target.value, unit })}
+          className={s.bare + " tabular-nums"}
+        />
+        {units.length > 1 ? (
+          <div className="relative flex shrink-0">
+            <select
+              name={f.key + "-unit"}
+              aria-label="Unit"
+              value={unit}
+              onChange={(event) => set({ amount, unit: event.target.value })}
+              className={s.measureUnit}
+            >
+              {units.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className={s.measureChevron} aria-hidden="true" />
+          </div>
+        ) : units.length ? (
+          <span className={s.addon}>{units[0]}</span>
+        ) : null}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    const units = measureUnits(f);
+    ctx.line("<div className=" + ctx.clsValue("", "inputGroup", "inputGroupError") + ">");
+    ctx.line("<input", 1);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    ctx.line('type="text"', 2);
+    ctx.line('inputMode="decimal"', 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line("value={" + v + ".amount}", 2);
+    if (f.placeholder) ctx.line("placeholder=" + numbersAttr(f.placeholder), 2);
+    ctx.line(ctx.onChange("{ ..." + v + ", amount: event.target.value }"), 2);
+    ctx.line("className=" + q(s.bare + " tabular-nums"), 2);
+    ctx.line("/>", 1);
+    if (units.length > 1) {
+      ctx.line('<div className="relative flex shrink-0">', 1);
+      ctx.line("<select", 2);
+      ctx.line("name=" + q(ctx.key + "-unit"), 3);
+      ctx.line('aria-label="Unit"', 3);
+      ctx.line("value={" + v + ".unit}", 3);
+      ctx.line(ctx.onChange("{ ..." + v + ", unit: event.target.value }"), 3);
+      ctx.line("className=" + q(s.measureUnit), 3);
+      ctx.line(">", 2);
+      units.forEach((unit) => ctx.line("<option value=" + numbersAttr(unit) + ">" + numbersText(unit) + "</option>", 3));
+      ctx.line("</select>", 2);
+      ctx.line("<" + ctx.icon("ChevronDown") + " className=" + q(s.measureChevron) + ' aria-hidden="true" />', 2);
+      ctx.line("</div>", 1);
+    } else if (units.length) {
+      ctx.line("<span className=" + q(s.addon) + ">" + numbersText(units[0]) + "</span>", 1);
+    }
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Number range ---- */
+
+const numberRangeEmpty = (end) => end == null || end === "";
+
+/** Mirrors the exported `numberRangeIsValid` helper: filled ends in bounds, and from ≤ to. */
+function numberRangeIsValid(range, min, max) {
+  const ends = [range.from, range.to].filter((end) => !numberRangeEmpty(end)).map(Number);
+  const lo = min == null ? -Infinity : min;
+  const hi = max == null ? Infinity : max;
+  return ends.every((end) => end >= lo && end <= hi) && (ends.length < 2 || ends[0] <= ends[1]);
+}
+
+defineHelper("numberRangeIsValid", {
+  scope: "module",
+  lines: [
+    "const numberRangeIsValid = ({ from, to }, { min = -Infinity, max = Infinity } = {}) => {",
+    '  const ends = [from, to].filter((end) => end !== "").map(Number);',
+    "  return ends.every((end) => end >= min && end <= max) && (ends.length < 2 || ends[0] <= ends[1]);",
+    "};",
+  ],
+});
+
+defineType({
+  type: "numberRange",
+  name: "Number Range",
+  blurb: "From and to values",
+  group: "Numbers",
+  icon: MoveHorizontal,
+  keywords: ["min max", "between", "price range", "interval", "from to"],
+  labelMode: "group",
+  defaults: { label: "Price range" },
+  settings: [
+    S.text("prefix", "Prefix", "", { hint: "optional, e.g. $" }),
+    S.number("min", "Minimum", null, { optional: true, hint: "optional" }),
+    S.number("max", "Maximum", null, { optional: true, hint: "optional" }),
+    S.text("fromLabel", "From label", "From"),
+    S.text("toLabel", "To label", "To"),
+  ],
+  sanitize: (f) => (f.min != null && f.max != null && f.max < f.min ? { ...f, max: f.min } : f),
+  empty: () => ({ from: "", to: "" }),
+  /* Required: both ends. Optional: a half-filled range is still checked. */
+  blank: {
+    test: (f, v) => {
+      const from = numberRangeEmpty(v && v.from);
+      const to = numberRangeEmpty(v && v.to);
+      return f.required ? from || to : from && to;
+    },
+    code: (ctx) => ctx.v + '.from === ""' + (ctx.f.required ? " || " : " && ") + ctx.v + '.to === ""',
+  },
+  validate: {
+    test: (f, v) => numberRangeIsValid(v, f.min, f.max),
+    code: (ctx) => {
+      const { f } = ctx;
+      ctx.use("numberRangeIsValid");
+      const bounds = [f.min != null ? "min: " + f.min : "", f.max != null ? "max: " + f.max : ""].filter(Boolean);
+      return "!numberRangeIsValid(" + ctx.v + (bounds.length ? ", { " + bounds.join(", ") + " }" : "") + ")";
+    },
+    message: (f) => {
+      const from = f.fromLabel || "From";
+      const to = f.toLabel || "To";
+      const order = "with " + from + " no more than " + to;
+      if (f.min != null && f.max != null) return "Use values from " + f.min + " to " + f.max + ", " + order;
+      if (f.min != null) return "Use values of " + f.min + " or more, " + order;
+      if (f.max != null) return "Use values of " + f.max + " or less, " + order;
+      return from + " can't be more than " + to;
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const range = value || { from: "", to: "" };
+    const end = (part, label) => {
+      const id = ctx.id + "-" + part;
+      const input = (
+        <input
+          id={id}
+          name={f.key + "-" + part}
+          type="number"
+          inputMode={numbersInputMode(f.min, true)}
+          min={f.min == null ? undefined : f.min}
+          max={f.max == null ? undefined : f.max}
+          value={range[part] == null ? "" : range[part]}
+          onChange={(event) => set({ ...range, [part]: event.target.value })}
+          className={f.prefix ? s.bare + " tabular-nums" : ctx.cls + " tabular-nums"}
+        />
+      );
+      return (
+        <div className="min-w-0">
+          <label htmlFor={id} className={s.subLabel}>
+            {label}
+          </label>
+          {f.prefix ? (
+            <div className={ctx.clsOf("inputGroup", "inputGroupError")}>
+              <span className={s.addon}>{f.prefix}</span>
+              {input}
+            </div>
+          ) : (
+            input
+          )}
+        </div>
+      );
+    };
+    return (
+      <div role="group" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className="grid grid-cols-2 gap-3">
+        {end("from", f.fromLabel || "From")}
+        {end("to", f.toLabel || "To")}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    const o = f.prefix ? 1 : 0;
+    ctx.line('<div role="group" ' + ctx.labelledAttr + (ctx.describedAttr ? " " + ctx.describedAttr : "") + ' className="grid grid-cols-2 gap-3">');
+    [
+      ["from", f.fromLabel || "From"],
+      ["to", f.toLabel || "To"],
+    ].forEach(([part, label]) => {
+      const id = ctx.key + "-" + part;
+      ctx.line('<div className="min-w-0">', 1);
+      ctx.line("<label htmlFor=" + q(id) + " className=" + q(s.subLabel) + ">", 2);
+      ctx.line(numbersText(label), 3);
+      ctx.line("</label>", 2);
+      if (f.prefix) {
+        ctx.line("<div className=" + ctx.clsValue("", "inputGroup", "inputGroupError") + ">", 2);
+        ctx.line("<span className=" + q(s.addon) + ">" + numbersText(f.prefix) + "</span>", 3);
+      }
+      ctx.line("<input", 2 + o);
+      ctx.line("id=" + q(id), 3 + o);
+      ctx.line("name=" + q(id), 3 + o);
+      ctx.line('type="number"', 3 + o);
+      if (numbersInputMode(f.min, true)) ctx.line("inputMode=" + q(numbersInputMode(f.min, true)), 3 + o);
+      if (f.min != null) ctx.line("min={" + f.min + "}", 3 + o);
+      if (f.max != null) ctx.line("max={" + f.max + "}", 3 + o);
+      ctx.line("value={" + v + "." + part + "}", 3 + o);
+      ctx.line(ctx.onChange("{ ..." + v + ", " + part + ": event.target.value }"), 3 + o);
+      ctx.line("className=" + (f.prefix ? q(s.bare + " tabular-nums") : ctx.clsValue(" tabular-nums")), 3 + o);
+      ctx.line("/>", 2 + o);
+      if (f.prefix) ctx.line("</div>", 2);
+      ctx.line("</div>", 1);
+    });
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Color picker ---- */
+
+const COLOR_HEX_PATTERN = /^#[0-9a-f]{6}$/i;
+
+/** Mirrors the exported `colorToHex`: "#abc", "abc", "aabbcc" → "#AABBCC"; empty → fallback; else unchanged. */
+function colorToHex(text, fallback) {
+  const digits = text.trim().replace(/^#/, "");
+  if (digits === "") return fallback;
+  const hex = "#" + (digits.length === 3 ? digits.split("").map((d) => d + d).join("") : digits).toUpperCase();
+  return COLOR_HEX_PATTERN.test(hex) ? hex : text;
+}
+
+/** The starting colour: the Default color setting once it is a valid hex, else the brand indigo. */
+const colorDefault = (f) => (COLOR_HEX_PATTERN.test(f.defaultColor) ? f.defaultColor.toUpperCase() : "#6366F1");
+
+/** What the native swatch shows until the typed colour is valid (native color inputs want lowercase). */
+const colorSwatchFallback = (f) => colorDefault(f).toLowerCase();
+
+defineHelper("COLOR_HEX_PATTERN", { scope: "module", lines: ["const COLOR_HEX_PATTERN = " + COLOR_HEX_PATTERN.toString() + ";"] });
+
+defineHelper("colorToHex", {
+  scope: "module",
+  requires: ["COLOR_HEX_PATTERN"],
+  lines: [
+    '// Tidies typed input on blur: "#abc", "abc" or "aabbcc" become "#AABBCC"; anything else is left for validation.',
+    "const colorToHex = (text, fallback) => {",
+    '  const digits = text.trim().replace(/^#/, "");',
+    '  if (digits === "") return fallback;',
+    '  const hex = "#" + (digits.length === 3 ? digits.split("").map((d) => d + d).join("") : digits).toUpperCase();',
+    "  return COLOR_HEX_PATTERN.test(hex) ? hex : text;",
+    "};",
+  ],
+});
+
+defineType({
+  type: "color",
+  name: "Color Picker",
+  blurb: "Hex color with swatch",
+  group: "Advanced",
+  icon: Pipette,
+  keywords: ["colour", "hex", "brand", "swatch", "palette"],
+  defaults: { label: "Brand color" },
+  settings: [S.text("defaultColor", "Default color", "#6366F1", { mono: true, hint: "#RRGGBB" })],
+  alwaysFilled: true,
+  empty: (f) => colorDefault(f),
+  /* A cleared hex box (submitted with Enter before blur) is an invalid colour, not a blank one. */
+  blank: {
+    test: (f, v) => v == null,
+    code: (ctx) => ctx.v + " == null",
+  },
+  validate: {
+    test: (f, v) => COLOR_HEX_PATTERN.test(String(v)),
+    code: (ctx) => (ctx.use("COLOR_HEX_PATTERN"), "!COLOR_HEX_PATTERN.test(" + ctx.v + ")"),
+    message: () => "Enter a hex color like #6366F1",
+  },
+  tokens: {
+    colorSwatch: {
+      base:
+        "h-7 w-7 cursor-pointer appearance-none rounded-md border bg-transparent p-0 outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20 [&::-moz-color-swatch]:rounded-[5px] [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-[5px] [&::-webkit-color-swatch]:border-0",
+      light: "border-slate-300",
+      dark: "border-slate-600",
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const text = value == null ? "" : String(value);
+    return (
+      <div className={ctx.clsOf("inputGroup", "inputGroupError")}>
+        <span className={s.addon}>
+          <input
+            type="color"
+            aria-label="Pick a color"
+            value={COLOR_HEX_PATTERN.test(text) ? text.toLowerCase() : colorSwatchFallback(f)}
+            onChange={(event) => set(event.target.value.toUpperCase())}
+            className={s.colorSwatch}
+          />
+        </span>
+        <input
+          id={ctx.id}
+          name={f.key}
+          type="text"
+          autoComplete="off"
+          spellCheck={false}
+          aria-describedby={ctx.describedBy}
+          value={text}
+          onChange={(event) => set(event.target.value)}
+          onBlur={(event) => {
+            const hex = colorToHex(event.target.value, colorDefault(f));
+            if (hex !== event.target.value) set(hex);
+          }}
+          className={s.bare + " font-mono uppercase"}
+        />
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.use("COLOR_HEX_PATTERN");
+    ctx.use("colorToHex");
+    ctx.line("<div className=" + ctx.clsValue("", "inputGroup", "inputGroupError") + ">");
+    ctx.line("<span className=" + q(s.addon) + ">", 1);
+    ctx.line("<input", 2);
+    ctx.line('type="color"', 3);
+    ctx.line('aria-label="Pick a color"', 3);
+    ctx.line("value={COLOR_HEX_PATTERN.test(" + v + ") ? " + v + ".toLowerCase() : " + q(colorSwatchFallback(f)) + "}", 3);
+    ctx.line(ctx.onChange("event.target.value.toUpperCase()"), 3);
+    ctx.line("className=" + q(s.colorSwatch), 3);
+    ctx.line("/>", 2);
+    ctx.line("</span>", 1);
+    ctx.line("<input", 1);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    ctx.line('type="text"', 2);
+    ctx.line('autoComplete="off"', 2);
+    ctx.line("spellCheck={false}", 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line("value={" + v + "}", 2);
+    ctx.line(ctx.onChange("event.target.value"), 2);
+    ctx.line("onBlur={(event) => {", 2);
+    ctx.line("const hex = colorToHex(event.target.value, " + q(colorDefault(f)) + ");", 3);
+    ctx.line("if (hex !== event.target.value) " + ctx.set("hex") + ";", 3);
+    ctx.line("}}", 2);
+    ctx.line("className=" + q(s.bare + " font-mono uppercase"), 2);
+    ctx.line("/>", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Hidden value ---- */
+
+defineType({
+  type: "hidden",
+  name: "Hidden Value",
+  blurb: "Invisible tracking data",
+  group: "Advanced",
+  icon: EyeOff,
+  keywords: ["hidden", "tracking", "utm", "campaign", "referrer", "metadata"],
+  labelMode: "none",
+  alwaysFilled: true,
+  cell: "hidden",
+  /* The submitted name is the Field key; the label only identifies the element on the canvas. */
+  inspect: { label: "Canvas label" },
+  defaults: { label: "Campaign" },
+  settings: [S.text("value", "Value", "spring-campaign", { mono: true })],
+  empty: (f) => f.value,
+  render(ctx) {
+    const { f, value, set } = ctx;
+    /* Nobody can type into a hidden field, so follow the Inspector's value in the live preview. */
+    useEffect(() => {
+      if (value !== f.value) set(f.value);
+    }, [f.value, value, set]);
+    return <input type="hidden" name={f.key} value={value == null ? "" : String(value)} />;
+  },
+  emit(ctx) {
+    ctx.line("<input");
+    ctx.line('type="hidden"', 1);
+    ctx.line(ctx.nameAttr, 1);
+    ctx.line("value={" + ctx.v + "}", 1);
+    ctx.line("/>");
+  },
+});
+
+/* ---- Password + confirm ---- */
+
+const passwordConfirmParts = (f) => [
+  ["password", f.passwordLabel || "Password"],
+  ["confirm", f.confirmLabel || "Confirm password"],
+];
+
+defineType({
+  type: "passwordConfirm",
+  name: "Password + Confirm",
+  blurb: "New password, typed twice",
+  group: "Advanced",
+  icon: LockKeyhole,
+  keywords: ["password", "confirm", "signup", "repeat", "verify", "account"],
+  labelMode: "group",
+  defaults: { label: "Account password", helper: "At least 8 characters.", width: "full" },
+  settings: [
+    S.number("minLength", "Minimum length", 8, { min: 1, max: 128 }),
+    S.text("passwordLabel", "Password label", "Password"),
+    S.text("confirmLabel", "Confirm label", "Confirm password"),
+  ],
+  empty: () => ({ password: "", confirm: "" }),
+  /* Required: a password was entered. Optional: an untouched pair is skipped, a half-typed one is checked. */
+  blank: {
+    test: (f, v) => {
+      const password = !v || !v.password;
+      return f.required ? password : password && (!v || !v.confirm);
+    },
+    code: (ctx) => ctx.v + '.password === ""' + (ctx.f.required ? "" : " && " + ctx.v + '.confirm === ""'),
+  },
+  validate: {
+    test: (f, v) => String(v.password).length >= f.minLength && v.confirm === v.password,
+    code: (ctx) => ctx.v + ".password.length < " + ctx.f.minLength + " || " + ctx.v + ".confirm !== " + ctx.v + ".password",
+    message: (f) => "Use at least " + f.minLength + (f.minLength === 1 ? " character" : " characters") + " and make sure both entries match",
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const pair = value || { password: "", confirm: "" };
+    return (
+      <div role="group" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className="grid gap-3">
+        {passwordConfirmParts(f).map(([part, label]) => (
+          <div key={part}>
+            <label htmlFor={ctx.id + "-" + part} className={s.subLabel}>
+              {label}
+            </label>
+            <input
+              id={ctx.id + "-" + part}
+              name={f.key + "-" + part}
+              type="password"
+              autoComplete="new-password"
+              value={pair[part] == null ? "" : pair[part]}
+              onChange={(event) => set({ ...pair, [part]: event.target.value })}
+              className={ctx.cls}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.line('<div role="group" ' + ctx.labelledAttr + (ctx.describedAttr ? " " + ctx.describedAttr : "") + ' className="grid gap-3">');
+    passwordConfirmParts(f).forEach(([part, label]) => {
+      const id = ctx.key + "-" + part;
+      ctx.line("<div>", 1);
+      ctx.line("<label htmlFor=" + q(id) + " className=" + q(s.subLabel) + ">", 2);
+      ctx.line(numbersText(label), 3);
+      ctx.line("</label>", 2);
+      ctx.line("<input", 2);
+      ctx.line("id=" + q(id), 3);
+      ctx.line("name=" + q(id), 3);
+      ctx.line('type="password"', 3);
+      ctx.line('autoComplete="new-password"', 3);
+      ctx.line("value={" + v + "." + part + "}", 3);
+      ctx.line(ctx.onChange("{ ..." + v + ", " + part + ": event.target.value }"), 3);
+      ctx.line("className=" + ctx.clsValue(), 3);
+      ctx.line("/>", 2);
+      ctx.line("</div>", 1);
+    });
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Choice family ------------------------------------------------------
+ * Multi-select list, button group, chips, yes/no, cards, autocomplete,
+ * consent checkbox, rank order and color swatches.
+ * ------------------------------------------------------------------------ */
+
+/** Options as shown: trimmed, non-empty and unique, so keys and values never collide. */
+function choiceOptions(list) {
+  const seen = new Set();
+  const out = [];
+  (Array.isArray(list) ? list : []).forEach((raw) => {
+    const option = String(raw).trim();
+    if (option && !seen.has(option)) {
+      seen.add(option);
+      out.push(option);
+    }
+  });
+  return out;
+}
+
+/** "Title | detail" → { title, detail }, split on the first "|". */
+function choiceSplit(option) {
+  const text = String(option);
+  const at = text.indexOf("|");
+  if (at === -1) return { title: text.trim(), detail: "" };
+  return { title: text.slice(0, at).trim(), detail: text.slice(at + 1).trim() };
+}
+
+/**
+ * A JSX attribute holding user text. JSX attribute strings know no escapes
+ * (a `"` or `\` would break or change them) and decode HTML entities, so any
+ * text that is not safe verbatim is written as a string expression instead.
+ */
+function choiceAttr(name, value) {
+  const text = String(value == null ? "" : value);
+  const literal = q(text);
+  return name + (literal.slice(1, -1) === text && text.indexOf("&") === -1 ? "=" + literal : "={" + literal + "}");
+}
+
+/** JSX child text: jsxText, plus "&" kept literal (JSX would decode "&amp;"). */
+function choiceText(value) {
+  const text = String(value == null ? "" : value);
+  return text.indexOf("&") !== -1 ? "{" + q(text) + "}" : jsxText(text);
+}
+
+const CHOICE_EMPTY = " rounded-lg border border-dashed border-slate-500/40 px-3.5 py-3";
+
+function choiceNoOptions(s) {
+  return <p className={s.muted + CHOICE_EMPTY}>No options yet.</p>;
+}
+
+function choiceEmitNoOptions(ctx) {
+  ctx.line("<p className=" + ctx.q(ctx.s.muted + CHOICE_EMPTY) + ">No options yet.</p>");
+}
+
+/** Opens a labelled group container, one attribute per line. */
+function choiceEmitGroup(ctx, role, className, extra = []) {
+  ctx.line("<div");
+  ctx.line("role=" + ctx.q(role), 1);
+  ctx.line(ctx.labelledAttr, 1);
+  if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+  extra.forEach((attr) => ctx.line(attr, 1));
+  if (className) ctx.line("className=" + ctx.q(className), 1);
+  ctx.line(">");
+}
+
+/**
+ * Preview only: live-preview values outlive Inspector edits, so a choice whose
+ * option was renamed or deleted would stay in the submitted payload (and pass
+ * the required check) while nothing on screen shows it. Write the reconciled
+ * value back whenever it differs. The exported form cannot drift, so emit has
+ * no counterpart. Call before any early return (it is a hook).
+ */
+function useChoiceSync(value, next, set) {
+  const stale = JSON.stringify(next) !== JSON.stringify(value);
+  useEffect(() => {
+    if (stale) set(next);
+  });
+}
+
+/** The single choice, or "" once its option is gone. */
+const choiceKeep = (value, options) => (options.indexOf(value) !== -1 ? value : "");
+
+/** The picked options that still exist, in their picked order. */
+const choiceKeepAll = (value, options) => (Array.isArray(value) ? value : []).filter((item) => options.indexOf(item) !== -1);
+
+/** Roving tabindex: the checked radio is the tab stop, or the first one while none is. */
+const choiceTabIndex = (active, index, current) => (active || (current === null && index === 0) ? 0 : -1);
+
+const choiceTabIndexCode = (ctx, option, index) =>
+  "tabIndex={" + (index === 0 ? "!" + ctx.v + " || " : "") + ctx.v + " === " + ctx.q(option) + " ? 0 : -1}";
+
+/**
+ * Arrow keys, Home and End move the checked option in a radiogroup of buttons
+ * (the WAI-ARIA radio group pattern). The exported copy below must match.
+ */
+function buttonsArrowKeys(event) {
+  if (event.altKey || event.ctrlKey || event.metaKey) return;
+  const radios = Array.from(event.currentTarget.querySelectorAll('[role="radio"]'));
+  const index = radios.indexOf(event.target);
+  if (index === -1) return;
+  const last = radios.length - 1;
+  let next;
+  switch (event.key) {
+    case "ArrowRight":
+    case "ArrowDown":
+      next = index === last ? 0 : index + 1;
+      break;
+    case "ArrowLeft":
+    case "ArrowUp":
+      next = index === 0 ? last : index - 1;
+      break;
+    case "Home":
+      next = 0;
+      break;
+    case "End":
+      next = last;
+      break;
+    default:
+      return;
+  }
+  event.preventDefault();
+  radios[next].focus();
+  radios[next].click();
+}
+
+defineHelper("buttonsArrowKeys", {
+  scope: "module",
+  lines: [
+    "/** Arrow keys, Home and End move the checked option in a radiogroup of buttons. */",
+    "const buttonsArrowKeys = (event) => {",
+    "  if (event.altKey || event.ctrlKey || event.metaKey) return;",
+    "  const radios = Array.from(event.currentTarget.querySelectorAll('[role=\"radio\"]'));",
+    "  const index = radios.indexOf(event.target);",
+    "  if (index === -1) return;",
+    "  const last = radios.length - 1;",
+    "  let next;",
+    "  switch (event.key) {",
+    '    case "ArrowRight":',
+    '    case "ArrowDown":',
+    "      next = index === last ? 0 : index + 1;",
+    "      break;",
+    '    case "ArrowLeft":',
+    '    case "ArrowUp":',
+    "      next = index === 0 ? last : index - 1;",
+    "      break;",
+    '    case "Home":',
+    "      next = 0;",
+    "      break;",
+    '    case "End":',
+    "      next = last;",
+    "      break;",
+    "    default:",
+    "      return;",
+    "  }",
+    "  event.preventDefault();",
+    "  radios[next].focus();",
+    "  radios[next].click();",
+    "};",
+  ],
+});
+
+/* ---- Multi-select List --------------------------------------------------- */
+
+const multiselectInput = selectInput({ multiple: true });
+
+defineType({
+  type: "multiselect",
+  name: "Multi-select List",
+  blurb: "Pick several from a list",
+  group: "Choice",
+  icon: ListFilter,
+  keywords: ["multiple", "listbox", "select many", "departments"],
+  defaults: { label: "Departments", helper: "Hold Ctrl (⌘ on Mac) to select more than one." },
+  settings: [S.options("options", "Options", ["Design", "Engineering", "Marketing", "Sales", "Support"])],
+  empty: () => [],
+  render(ctx) {
+    const options = choiceOptions(ctx.f.options);
+    const value = choiceKeepAll(ctx.value, options);
+    useChoiceSync(ctx.value, value, ctx.set);
+    return multiselectInput.render({ ...ctx, value, f: { ...ctx.f, options } });
+  },
+  /* Same markup as selectInput, but option values that contain quotes stay valid JSX. */
+  emit(ctx) {
+    const options = choiceOptions(ctx.f.options);
+    ctx.line("<select");
+    ctx.line(ctx.idAttr, 1);
+    ctx.line(ctx.nameAttr, 1);
+    ctx.line("multiple", 1);
+    ctx.line("size={" + Math.min(Math.max(options.length, 3), 8) + "}", 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line("value={" + ctx.v + "}", 1);
+    ctx.line(ctx.onChange("Array.from(event.target.selectedOptions, (option) => option.value)"), 1);
+    ctx.line("className=" + ctx.clsValue(), 1);
+    ctx.line(">");
+    options.forEach((option) => {
+      ctx.line("<option " + choiceAttr("value", option) + ' className="rounded px-2 py-1">' + choiceText(option) + "</option>", 1);
+    });
+    ctx.line("</select>");
+  },
+});
+
+/* ---- Button Group -------------------------------------------------------- */
+
+defineType({
+  type: "buttons",
+  name: "Button Group",
+  blurb: "Segmented single choice",
+  group: "Choice",
+  icon: Columns2,
+  keywords: ["segmented", "toggle group", "single choice", "tabs"],
+  labelMode: "group",
+  defaults: { label: "Billing cycle" },
+  settings: [S.options("options", "Options", ["Monthly", "Yearly"])],
+  render(ctx) {
+    const { value, set, s } = ctx;
+    const options = choiceOptions(ctx.f.options);
+    useChoiceSync(value, choiceKeep(value, options), set);
+    if (!options.length) return choiceNoOptions(s);
+    const current = options.indexOf(value) !== -1 ? value : null;
+    return (
+      <div
+        role="radiogroup"
+        aria-labelledby={ctx.labelId}
+        aria-describedby={ctx.describedBy}
+        onKeyDown={buttonsArrowKeys}
+        className="flex flex-wrap gap-2"
+      >
+        {options.map((option, i) => {
+          const active = option === current;
+          return (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              tabIndex={choiceTabIndex(active, i, current)}
+              onClick={() => set(option)}
+              className={active ? s.optionActive : s.option}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { s } = ctx;
+    const options = choiceOptions(ctx.f.options);
+    if (!options.length) return choiceEmitNoOptions(ctx);
+    ctx.use("buttonsArrowKeys");
+    choiceEmitGroup(ctx, "radiogroup", "flex flex-wrap gap-2", ["onKeyDown={buttonsArrowKeys}"]);
+    options.forEach((option, i) => {
+      const match = ctx.v + " === " + ctx.q(option);
+      ctx.line("<button", 1);
+      ctx.line('type="button"', 2);
+      ctx.line('role="radio"', 2);
+      ctx.line("aria-checked={" + match + "}", 2);
+      ctx.line(choiceTabIndexCode(ctx, option, i), 2);
+      ctx.line("onClick={() => " + ctx.set(ctx.q(option)) + "}", 2);
+      ctx.line("className={" + match + " ? " + ctx.q(s.optionActive) + " : " + ctx.q(s.option) + "}", 2);
+      ctx.line(">", 1);
+      ctx.line(choiceText(option), 2);
+      ctx.line("</button>", 1);
+    });
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Chip Select --------------------------------------------------------- */
+
+const CHIP_BASE =
+  "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-40";
+
+defineType({
+  type: "chips",
+  name: "Chip Select",
+  blurb: "Toggleable pills",
+  group: "Choice",
+  icon: Tags,
+  keywords: ["pills", "tags", "multiple choice", "filter"],
+  labelMode: "group",
+  defaults: { label: "Work preferences", helper: "Select all that apply.", width: "full" },
+  settings: [
+    S.number("maxSelect", "Max selections", null, { optional: true, min: 1, max: 50, step: 1, hint: "optional" }),
+    S.options("options", "Options", ["Remote", "Hybrid", "On-site", "Part-time", "Contract"]),
+  ],
+  /* A cap is a whole number of chips (the Inspector accepts decimals). */
+  sanitize: (f) => (f.maxSelect == null || Number.isInteger(f.maxSelect) ? f : { ...f, maxSelect: Math.max(1, Math.round(f.maxSelect)) }),
+  empty: () => [],
+  tokens: {
+    chipsChip: {
+      base: CHIP_BASE,
+      light: "border-slate-300 bg-white text-slate-700 enabled:hover:border-slate-400 enabled:hover:bg-slate-50",
+      dark: "border-slate-700/70 bg-slate-900/50 text-slate-200 enabled:hover:border-slate-600 enabled:hover:bg-slate-900",
+    },
+    chipsChipActive: {
+      base: CHIP_BASE,
+      light: "border-indigo-500 bg-indigo-50 text-indigo-700",
+      dark: "border-indigo-400/60 bg-indigo-500/15 text-indigo-200",
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const options = choiceOptions(f.options);
+    /* Count only chips that still exist, or a renamed option could hold the cap shut. */
+    const list = choiceKeepAll(value, options);
+    useChoiceSync(value, list, set);
+    if (!options.length) return choiceNoOptions(s);
+    const full = f.maxSelect != null && list.length >= f.maxSelect;
+    return (
+      <div role="group" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const active = list.indexOf(option) !== -1;
+          return (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={active}
+              disabled={!active && full}
+              onClick={() => set(active ? list.filter((item) => item !== option) : list.concat(option))}
+              className={active ? s.chipsChipActive : s.chipsChip}
+            >
+              {active ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : null}
+              {option}
+            </button>
+          );
+        })}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s } = ctx;
+    const options = choiceOptions(f.options);
+    if (!options.length) return choiceEmitNoOptions(ctx);
+    ctx.use("toggleOption");
+    const check = ctx.icon("Check");
+    choiceEmitGroup(ctx, "group", "flex flex-wrap gap-2");
+    options.forEach((option) => {
+      const on = ctx.v + ".includes(" + ctx.q(option) + ")";
+      ctx.line("<button", 1);
+      ctx.line('type="button"', 2);
+      ctx.line("aria-pressed={" + on + "}", 2);
+      if (f.maxSelect != null) ctx.line("disabled={!" + on + " && " + ctx.v + ".length >= " + f.maxSelect + "}", 2);
+      ctx.line("onClick={() => toggleOption(" + ctx.q(ctx.key) + ", " + ctx.q(option) + ")}", 2);
+      ctx.line("className={" + on + " ? " + ctx.q(s.chipsChipActive) + " : " + ctx.q(s.chipsChip) + "}", 2);
+      ctx.line(">", 1);
+      ctx.line("{" + on + " && <" + check + ' className="h-3.5 w-3.5" aria-hidden="true" />}', 2);
+      ctx.line(choiceText(option), 2);
+      ctx.line("</button>", 1);
+    });
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Yes / No ------------------------------------------------------------ */
+
+const yesnoAnswers = (f) => [
+  { value: "yes", label: String(f.yesLabel || "").trim() || "Yes" },
+  { value: "no", label: String(f.noLabel || "").trim() || "No" },
+];
+
+defineType({
+  type: "yesno",
+  name: "Yes / No",
+  blurb: "Two-button answer",
+  group: "Choice",
+  icon: ThumbsUp,
+  keywords: ["boolean", "binary", "yes no", "question"],
+  labelMode: "group",
+  defaults: { label: "Have you worked with us before?" },
+  settings: [S.text("yesLabel", "Yes label", "Yes"), S.text("noLabel", "No label", "No")],
+  empty: () => "",
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const tabStop = value === "no" ? "no" : "yes";
+    return (
+      <div
+        role="radiogroup"
+        aria-labelledby={ctx.labelId}
+        aria-describedby={ctx.describedBy}
+        onKeyDown={buttonsArrowKeys}
+        className="grid grid-cols-2 gap-3"
+      >
+        {yesnoAnswers(f).map((answer) => (
+          <button
+            key={answer.value}
+            type="button"
+            role="radio"
+            aria-checked={value === answer.value}
+            tabIndex={answer.value === tabStop ? 0 : -1}
+            onClick={() => set(answer.value)}
+            className={value === answer.value ? s.optionActive : s.option}
+          >
+            {answer.label}
+          </button>
+        ))}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s } = ctx;
+    ctx.use("buttonsArrowKeys");
+    choiceEmitGroup(ctx, "radiogroup", "grid grid-cols-2 gap-3", ["onKeyDown={buttonsArrowKeys}"]);
+    yesnoAnswers(f).forEach((answer) => {
+      const match = ctx.v + " === " + ctx.q(answer.value);
+      ctx.line("<button", 1);
+      ctx.line('type="button"', 2);
+      ctx.line('role="radio"', 2);
+      ctx.line("aria-checked={" + match + "}", 2);
+      ctx.line("tabIndex={" + ctx.v + ' === "no" ? ' + (answer.value === "no" ? "0 : -1" : "-1 : 0") + "}", 2);
+      ctx.line("onClick={() => " + ctx.set(ctx.q(answer.value)) + "}", 2);
+      ctx.line("className={" + match + " ? " + ctx.q(s.optionActive) + " : " + ctx.q(s.option) + "}", 2);
+      ctx.line(">", 1);
+      ctx.line(choiceText(answer.label), 2);
+      ctx.line("</button>", 1);
+    });
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Card Choice --------------------------------------------------------- */
+
+/** "Title | description" cards, unique by title (the stored value). */
+function cardChoiceCards(list) {
+  const seen = new Set();
+  const out = [];
+  (Array.isArray(list) ? list : []).forEach((raw) => {
+    const card = choiceSplit(raw);
+    if (card.title && !seen.has(card.title)) {
+      seen.add(card.title);
+      out.push(card);
+    }
+  });
+  return out;
+}
+
+const CARD_BASE =
+  "flex h-full cursor-pointer select-none items-start gap-3 rounded-lg border p-4 text-sm transition duration-150 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-indigo-500/20";
+const CARD_TEXT = "min-w-0 flex-1 break-words";
+const CARD_DETAIL = " mt-1 block leading-relaxed";
+/** Two columns only when the field spans the full row; a half-width field stacks its cards. */
+const cardChoiceGrid = (f) => (f.width === "full" ? "grid grid-cols-1 gap-3 sm:grid-cols-2" : "grid grid-cols-1 gap-3");
+const cardChoiceMark = (s, active) => (active ? s.markActive : s.mark) + " mt-0.5 h-4 w-4 rounded-full";
+
+defineType({
+  type: "cardChoice",
+  name: "Card Choice",
+  blurb: "Selectable cards",
+  group: "Choice",
+  icon: LayoutPanelTop,
+  keywords: ["cards", "plan", "pricing", "tiles", "radio"],
+  labelMode: "group",
+  defaults: { label: "Choose a plan", width: "full" },
+  settings: [
+    S.options("options", "Cards (title | description)", [
+      "Starter | For individuals getting started",
+      "Team | Collaboration for up to 20 people",
+      "Business | Advanced controls and SSO",
+      "Enterprise | Custom contracts and support",
+    ]),
+  ],
+  tokens: {
+    cardChoiceCard: {
+      base: CARD_BASE,
+      light: "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50",
+      dark: "border-slate-700/70 bg-slate-900/50 text-slate-200 hover:border-slate-600 hover:bg-slate-900",
+    },
+    cardChoiceCardActive: {
+      base: CARD_BASE,
+      light: "border-indigo-500 bg-indigo-50 text-indigo-900",
+      dark: "border-indigo-500/70 bg-indigo-500/10 text-white",
+    },
+  },
+  render(ctx) {
+    const { value, set, s } = ctx;
+    const cards = cardChoiceCards(ctx.f.options);
+    useChoiceSync(value, choiceKeep(value, cards.map((card) => card.title)), set);
+    if (!cards.length) return choiceNoOptions(s);
+    return (
+      <div role="radiogroup" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className={cardChoiceGrid(ctx.f)}>
+        {cards.map((card) => {
+          const active = value === card.title;
+          return (
+            <label key={card.title} className={active ? s.cardChoiceCardActive : s.cardChoiceCard}>
+              <input type="radio" name={ctx.id} value={card.title} checked={active} onChange={() => set(card.title)} className="sr-only" />
+              <span className={CARD_TEXT}>
+                <span className="block font-semibold">{card.title}</span>
+                {card.detail ? <span className={s.muted + CARD_DETAIL}>{card.detail}</span> : null}
+              </span>
+              <span className={cardChoiceMark(s, active)}>{active ? <span className={s.markDot + " h-1.5 w-1.5"} /> : null}</span>
+            </label>
+          );
+        })}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { s } = ctx;
+    const cards = cardChoiceCards(ctx.f.options);
+    if (!cards.length) return choiceEmitNoOptions(ctx);
+    choiceEmitGroup(ctx, "radiogroup", cardChoiceGrid(ctx.f));
+    cards.forEach((card) => {
+      const match = ctx.v + " === " + ctx.q(card.title);
+      ctx.line("<label className={" + match + " ? " + ctx.q(s.cardChoiceCardActive) + " : " + ctx.q(s.cardChoiceCard) + "}>", 1);
+      ctx.line("<input", 2);
+      ctx.line('type="radio"', 3);
+      ctx.line(ctx.nameAttr, 3);
+      ctx.line(choiceAttr("value", card.title), 3);
+      ctx.line("checked={" + match + "}", 3);
+      ctx.line("onChange={() => " + ctx.set(ctx.q(card.title)) + "}", 3);
+      ctx.line('className="sr-only"', 3);
+      ctx.line("/>", 2);
+      ctx.line("<span className=" + ctx.q(CARD_TEXT) + ">", 2);
+      ctx.line('<span className="block font-semibold">' + choiceText(card.title) + "</span>", 3);
+      if (card.detail) ctx.line("<span className=" + ctx.q(s.muted + CARD_DETAIL) + ">" + choiceText(card.detail) + "</span>", 3);
+      ctx.line("</span>", 2);
+      ctx.line("<span className={" + match + " ? " + ctx.q(cardChoiceMark(s, true)) + " : " + ctx.q(cardChoiceMark(s, false)) + "}>", 2);
+      ctx.line("{" + match + " && <span className=" + ctx.q(s.markDot + " h-1.5 w-1.5") + " />}", 3);
+      ctx.line("</span>", 2);
+      ctx.line("</label>", 1);
+    });
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Autocomplete -------------------------------------------------------- */
+
+/** Lower-cased suggestions a strict field accepts, or null when any text is fine. */
+function comboboxAllowed(f) {
+  if (!f.strict) return null;
+  const allowed = choiceOptions(choiceOptions(f.options).map((option) => option.toLowerCase()));
+  return allowed.length ? allowed : null;
+}
+
+defineType({
+  type: "combobox",
+  name: "Autocomplete",
+  blurb: "Text with suggestions",
+  group: "Choice",
+  icon: TextSearch,
+  keywords: ["combobox", "suggestions", "datalist", "typeahead", "search"],
+  defaults: { label: "Job title" },
+  settings: [
+    S.placeholder("Start typing…"),
+    S.toggle("strict", "Only allow listed values", false, { hint: "Other text fails validation" }),
+    S.options("options", "Suggestions", ["Product Designer", "Software Engineer", "Product Manager", "Data Analyst", "Customer Success Manager"]),
+  ],
+  validate: {
+    test: (f, v) => {
+      const allowed = comboboxAllowed(f);
+      return !allowed || allowed.indexOf(String(v).trim().toLowerCase()) !== -1;
+    },
+    when: (f) => Boolean(comboboxAllowed(f)),
+    code: (ctx) =>
+      "![" + comboboxAllowed(ctx.f).map((option) => ctx.q(option)).join(", ") + "].includes(" + ctx.v + ".trim().toLowerCase())",
+    message: () => "Pick one of the suggestions",
+  },
+  render(ctx) {
+    const { f, value, set } = ctx;
+    const options = choiceOptions(f.options);
+    const listId = options.length ? ctx.id + "-list" : undefined;
+    return (
+      <>
+        <input
+          id={ctx.id}
+          name={f.key}
+          type="text"
+          list={listId}
+          autoComplete="off"
+          aria-describedby={ctx.describedBy}
+          value={value == null ? "" : value}
+          placeholder={f.placeholder || undefined}
+          onChange={(event) => set(event.target.value)}
+          className={ctx.cls}
+        />
+        {listId ? (
+          <datalist id={listId}>
+            {options.map((option) => (
+              <option key={option} value={option} />
+            ))}
+          </datalist>
+        ) : null}
+      </>
+    );
+  },
+  emit(ctx) {
+    const { f } = ctx;
+    const options = choiceOptions(f.options);
+    const listId = ctx.key + "-list";
+    ctx.line("<input");
+    ctx.line(ctx.idAttr, 1);
+    ctx.line(ctx.nameAttr, 1);
+    ctx.line('type="text"', 1);
+    if (options.length) ctx.line("list=" + ctx.q(listId), 1);
+    ctx.line('autoComplete="off"', 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line("value={" + ctx.v + "}", 1);
+    if (f.placeholder) ctx.line(choiceAttr("placeholder", f.placeholder), 1);
+    ctx.line(ctx.onChange("event.target.value"), 1);
+    ctx.line("className=" + ctx.clsValue(), 1);
+    ctx.line("/>");
+    if (!options.length) return;
+    ctx.line("<datalist id=" + ctx.q(listId) + ">");
+    options.forEach((option) => ctx.line("<option " + choiceAttr("value", option) + " />", 1));
+    ctx.line("</datalist>");
+  },
+});
+
+/* ---- Consent Checkbox ---------------------------------------------------- */
+
+/** Only web, mail and site-relative links; a bare domain gets https://. */
+function consentHref(url) {
+  const value = String(url || "").trim();
+  if (/^(https?:\/\/|mailto:|\/)/i.test(value)) return value;
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+([/?#]|$)/i.test(value)) return "https://" + value;
+  return "";
+}
+
+/** The sentence: lead-in text plus an optional link (without a URL the link text is plain). */
+function consentParts(f) {
+  const text = String(f.text || "").trim();
+  const linkText = String(f.linkText || "").trim();
+  const href = linkText ? consentHref(f.linkUrl) : "";
+  if (href) return { text, linkText, href };
+  return { text: [text, linkText].filter(Boolean).join(" ") || String(f.label || "").trim() || "I agree", linkText: "", href: "" };
+}
+
+const CONSENT_MARK = " h-4 w-4 peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/30";
+
+defineType({
+  type: "consent",
+  name: "Consent Checkbox",
+  blurb: "Agree to terms",
+  group: "Choice",
+  icon: FileCheck,
+  keywords: ["terms", "agree", "privacy", "gdpr", "checkbox"],
+  labelMode: "inline",
+  inspect: { label: "Field name" },
+  defaults: { label: "Terms acceptance", required: true, width: "full" },
+  settings: [
+    S.text("text", "Text", "I agree to the"),
+    S.text("linkText", "Link text", "terms of service"),
+    S.text("linkUrl", "Link URL", "https://example.com/terms", { mono: true, hint: "optional" }),
+  ],
+  empty: () => false,
+  tokens: {
+    consentMarkError: {
+      base: "flex shrink-0 items-center justify-center border-2 transition-colors",
+      light: "border-rose-500",
+      dark: "border-rose-400",
+    },
+    consentLink: {
+      base: "rounded-sm font-medium underline underline-offset-2 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500/50",
+      light: "text-indigo-600 hover:text-indigo-500",
+      dark: "text-indigo-300 hover:text-indigo-200",
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const on = value === true;
+    const parts = consentParts(f);
+    return (
+      <label className={s.choice}>
+        <input
+          type="checkbox"
+          id={ctx.id}
+          name={f.key}
+          checked={on}
+          aria-describedby={ctx.describedBy}
+          onChange={(event) => set(event.target.checked)}
+          className="peer sr-only"
+        />
+        <span className={on ? s.markFill + CONSENT_MARK : ctx.clsOf("mark", "consentMarkError") + CONSENT_MARK + " rounded"}>
+          {on ? <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden="true" /> : null}
+        </span>
+        <span>
+          {parts.text}
+          {parts.text && parts.href ? " " : null}
+          {parts.href ? (
+            <a href={parts.href} target="_blank" rel="noopener noreferrer" className={s.consentLink}>
+              {parts.linkText}
+            </a>
+          ) : null}
+          {f.required ? <span className={s.required}>*</span> : null}
+        </span>
+      </label>
+    );
+  },
+  emit(ctx) {
+    const { f, s } = ctx;
+    const on = ctx.v;
+    const parts = consentParts(f);
+    const idle = ctx.clsValue(CONSENT_MARK + " rounded", "mark", "consentMarkError");
+    const idleExpr = idle.charAt(0) === "{" ? idle.slice(1, -1) : idle;
+    ctx.line("<label className=" + ctx.q(s.choice) + ">");
+    ctx.line("<input", 1);
+    ctx.line('type="checkbox"', 2);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    ctx.line("checked={" + on + "}", 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line(ctx.onChange("event.target.checked"), 2);
+    ctx.line('className="peer sr-only"', 2);
+    ctx.line("/>", 1);
+    ctx.line("<span className={" + on + " ? " + ctx.q(s.markFill + CONSENT_MARK) + " : " + idleExpr + "}>", 1);
+    ctx.line("{" + on + " && <" + ctx.icon("Check") + ' className="h-2.5 w-2.5" strokeWidth={3} aria-hidden="true" />}', 2);
+    ctx.line("</span>", 1);
+    ctx.line("<span>", 1);
+    if (parts.text) ctx.line(choiceText(parts.text) + (parts.href ? '{" "}' : ""), 2);
+    if (parts.href) {
+      ctx.line("<a", 2);
+      ctx.line(choiceAttr("href", parts.href), 3);
+      ctx.line('target="_blank"', 3);
+      ctx.line('rel="noopener noreferrer"', 3);
+      ctx.line("className=" + ctx.q(s.consentLink), 3);
+      ctx.line(">", 2);
+      ctx.line(choiceText(parts.linkText), 3);
+      ctx.line("</a>", 2);
+    }
+    if (f.required) ctx.line("<span className=" + ctx.q(s.required) + ">*</span>", 2);
+    ctx.line("</span>", 1);
+    ctx.line("</label>");
+  },
+});
+
+/* ---- Rank Order ---------------------------------------------------------- */
+
+/** The stored order, limited to the current items, with any new items appended. */
+function rankingOrder(value, options) {
+  const kept = (Array.isArray(value) ? value : []).filter((item, i, list) => options.indexOf(item) !== -1 && list.indexOf(item) === i);
+  return kept.concat(options.filter((option) => kept.indexOf(option) === -1));
+}
+
+/** Preview twin of the exported RankingList helper — keep the two in step. */
+function RankingField({ items, onChange, rowClassName, badgeClassName, buttonClassName }) {
+  const listRef = useRef(null);
+  const pendingFocus = useRef(null);
+  const [announcement, setAnnouncement] = useState("");
+
+  useEffect(() => {
+    const target = pendingFocus.current;
+    pendingFocus.current = null;
+    const row = target && listRef.current ? listRef.current.children[target.index] : null;
+    if (!row) return;
+    const [up, down] = row.querySelectorAll("button");
+    const preferred = target.down ? down : up;
+    (preferred.disabled ? (target.down ? up : down) : preferred).focus();
+  }, [items]);
+
+  const move = (from, to) => {
+    const next = items.slice();
+    next.splice(to, 0, next.splice(from, 1)[0]);
+    pendingFocus.current = { index: to, down: to > from };
+    setAnnouncement(`${items[from]} moved to position ${to + 1} of ${items.length}`);
+    onChange(next);
+  };
+
+  return (
+    <>
+      <ol ref={listRef} className="grid grid-cols-1 gap-2">
+        {items.map((item, index) => (
+          <li key={item} className={rowClassName}>
+            <span className={badgeClassName}>{index + 1}</span>
+            <span className="min-w-0 flex-1 break-words">{item}</span>
+            <span className="flex shrink-0 gap-1">
+              <button
+                type="button"
+                aria-label={`Move ${item} up`}
+                disabled={index === 0}
+                onClick={() => move(index, index - 1)}
+                className={buttonClassName}
+              >
+                <ChevronUp className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label={`Move ${item} down`}
+                disabled={index === items.length - 1}
+                onClick={() => move(index, index + 1)}
+                className={buttonClassName}
+              >
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
+    </>
+  );
+}
+
+defineHelper("RankingList", {
+  scope: "module",
+  hooks: ["useEffect", "useRef", "useState"],
+  lines: [
+    "/**",
+    " * A reorderable list: the arrow buttons move an item, keyboard focus follows it,",
+    " * and a polite live region tells screen readers where it landed.",
+    " */",
+    "function RankingList({ items, onChange, rowClassName, badgeClassName, buttonClassName }) {",
+    "  const listRef = useRef(null);",
+    "  const pendingFocus = useRef(null);",
+    '  const [announcement, setAnnouncement] = useState("");',
+    "",
+    "  useEffect(() => {",
+    "    const target = pendingFocus.current;",
+    "    pendingFocus.current = null;",
+    "    const row = target && listRef.current ? listRef.current.children[target.index] : null;",
+    "    if (!row) return;",
+    '    const [up, down] = row.querySelectorAll("button");',
+    "    const preferred = target.down ? down : up;",
+    "    (preferred.disabled ? (target.down ? up : down) : preferred).focus();",
+    "  }, [items]);",
+    "",
+    "  const move = (from, to) => {",
+    "    const next = items.slice();",
+    "    next.splice(to, 0, next.splice(from, 1)[0]);",
+    "    pendingFocus.current = { index: to, down: to > from };",
+    "    setAnnouncement(`${items[from]} moved to position ${to + 1} of ${items.length}`);",
+    "    onChange(next);",
+    "  };",
+    "",
+    "  return (",
+    "    <>",
+    '      <ol ref={listRef} className="grid grid-cols-1 gap-2">',
+    "        {items.map((item, index) => (",
+    "          <li key={item} className={rowClassName}>",
+    "            <span className={badgeClassName}>{index + 1}</span>",
+    '            <span className="min-w-0 flex-1 break-words">{item}</span>',
+    '            <span className="flex shrink-0 gap-1">',
+    "              <button",
+    '                type="button"',
+    "                aria-label={`Move ${item} up`}",
+    "                disabled={index === 0}",
+    "                onClick={() => move(index, index - 1)}",
+    "                className={buttonClassName}",
+    "              >",
+    '                <ChevronUp className="h-4 w-4" aria-hidden="true" />',
+    "              </button>",
+    "              <button",
+    '                type="button"',
+    "                aria-label={`Move ${item} down`}",
+    "                disabled={index === items.length - 1}",
+    "                onClick={() => move(index, index + 1)}",
+    "                className={buttonClassName}",
+    "              >",
+    '                <ChevronDown className="h-4 w-4" aria-hidden="true" />',
+    "              </button>",
+    "            </span>",
+    "          </li>",
+    "        ))}",
+    "      </ol>",
+    '      <p aria-live="polite" className="sr-only">',
+    "        {announcement}",
+    "      </p>",
+    "    </>",
+    "  );",
+    "}",
+  ],
+});
+
+defineType({
+  type: "ranking",
+  name: "Rank Order",
+  blurb: "Order items by priority",
+  group: "Choice",
+  icon: ListOrdered,
+  keywords: ["rank", "order", "sort", "priority", "reorder"],
+  labelMode: "group",
+  alwaysFilled: true,
+  defaults: { label: "Priorities", helper: "Put what matters most at the top." },
+  settings: [S.options("options", "Items", ["Price", "Speed", "Support", "Integrations"])],
+  empty: (f) => choiceOptions(f.options),
+  tokens: {
+    rankingRow: {
+      base: "flex items-center gap-3 rounded-lg border py-1.5 pl-2 pr-1.5 text-sm",
+      light: "border-slate-300 bg-white text-slate-700",
+      dark: "border-slate-700/70 bg-slate-900/50 text-slate-200",
+    },
+    rankingBadge: {
+      base: "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold tabular-nums",
+      light: "bg-indigo-50 text-indigo-700",
+      dark: "bg-indigo-500/15 text-indigo-300",
+    },
+    rankingButton: {
+      base:
+        "inline-flex h-7 w-7 items-center justify-center rounded-md outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-30",
+      light: "text-slate-500 enabled:hover:bg-slate-100 enabled:hover:text-slate-900",
+      dark: "text-slate-400 enabled:hover:bg-slate-800 enabled:hover:text-white",
+    },
+  },
+  render(ctx) {
+    const { value, set, s } = ctx;
+    const options = choiceOptions(ctx.f.options);
+    const items = rankingOrder(value, options);
+    useChoiceSync(value, items, set);
+    if (!options.length) return choiceNoOptions(s);
+    return (
+      <div role="group" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy}>
+        <RankingField
+          items={items}
+          onChange={set}
+          rowClassName={s.rankingRow}
+          badgeClassName={s.rankingBadge}
+          buttonClassName={s.rankingButton}
+        />
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { s } = ctx;
+    if (!choiceOptions(ctx.f.options).length) return choiceEmitNoOptions(ctx);
+    ctx.use("RankingList");
+    ctx.icon("ChevronUp");
+    ctx.icon("ChevronDown");
+    choiceEmitGroup(ctx, "group", "");
+    ctx.line("<RankingList", 1);
+    ctx.line("items={" + ctx.v + "}", 2);
+    ctx.line("onChange={(items) => " + ctx.set("items") + "}", 2);
+    ctx.line("rowClassName=" + ctx.q(s.rankingRow), 2);
+    ctx.line("badgeClassName=" + ctx.q(s.rankingBadge), 2);
+    ctx.line("buttonClassName=" + ctx.q(s.rankingButton), 2);
+    ctx.line("/>", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Color Swatches ------------------------------------------------------ */
+
+/** Bare hex digits ("6366F1") get their "#", or the swatch would paint nothing. */
+const swatchesColor = (text) => (/^([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(text) ? "#" + text : text);
+
+/** "Name | #hex" swatches (a bare value is both name and color), unique by color. */
+function swatchesList(list) {
+  const seen = new Set();
+  const out = [];
+  (Array.isArray(list) ? list : []).forEach((raw) => {
+    const { title, detail } = choiceSplit(raw);
+    const color = swatchesColor(detail || title);
+    if (!color || seen.has(color)) return;
+    seen.add(color);
+    const name = detail ? title || color : color;
+    out.push({ color, label: name === color ? color : name + " " + color });
+  });
+  return out;
+}
+
+const SWATCH_BASE =
+  "h-8 w-8 rounded-full border outline-none transition duration-150 motion-safe:hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500";
+
+defineType({
+  type: "swatches",
+  name: "Color Swatches",
+  blurb: "Pick a preset color",
+  group: "Choice",
+  icon: Palette,
+  keywords: ["color", "colour", "palette", "theme", "brand"],
+  labelMode: "group",
+  defaults: { label: "Accent color" },
+  settings: [
+    S.options("options", "Colors (name | hex)", [
+      "Indigo | #6366F1",
+      "Rose | #F43F5E",
+      "Amber | #F59E0B",
+      "Emerald | #10B981",
+      "Sky | #0EA5E9",
+      "Slate | #475569",
+    ]),
+  ],
+  tokens: {
+    swatchesSwatch: { base: SWATCH_BASE, light: "border-black/10", dark: "border-white/15" },
+    swatchesSwatchActive: {
+      base: SWATCH_BASE + " ring-2 ring-offset-2",
+      light: "border-black/10 ring-slate-900 ring-offset-white",
+      dark: "border-white/15 ring-white ring-offset-[#12151E]",
+    },
+  },
+  render(ctx) {
+    const { value, set, s } = ctx;
+    const swatches = swatchesList(ctx.f.options);
+    useChoiceSync(value, choiceKeep(value, swatches.map((swatch) => swatch.color)), set);
+    if (!swatches.length) return choiceNoOptions(s);
+    const current = swatches.some((swatch) => swatch.color === value) ? value : null;
+    return (
+      <div
+        role="radiogroup"
+        aria-labelledby={ctx.labelId}
+        aria-describedby={ctx.describedBy}
+        onKeyDown={buttonsArrowKeys}
+        className="flex flex-wrap gap-3"
+      >
+        {swatches.map((swatch, i) => {
+          const active = swatch.color === current;
+          return (
+            <button
+              key={swatch.color}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              aria-label={swatch.label}
+              title={swatch.label}
+              tabIndex={choiceTabIndex(active, i, current)}
+              onClick={() => set(swatch.color)}
+              className={active ? s.swatchesSwatchActive : s.swatchesSwatch}
+              style={{ backgroundColor: swatch.color }}
+            />
+          );
+        })}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { s } = ctx;
+    const swatches = swatchesList(ctx.f.options);
+    if (!swatches.length) return choiceEmitNoOptions(ctx);
+    ctx.use("buttonsArrowKeys");
+    choiceEmitGroup(ctx, "radiogroup", "flex flex-wrap gap-3", ["onKeyDown={buttonsArrowKeys}"]);
+    swatches.forEach((swatch, i) => {
+      const match = ctx.v + " === " + ctx.q(swatch.color);
+      ctx.line("<button", 1);
+      ctx.line('type="button"', 2);
+      ctx.line('role="radio"', 2);
+      ctx.line("aria-checked={" + match + "}", 2);
+      ctx.line(choiceAttr("aria-label", swatch.label), 2);
+      ctx.line(choiceAttr("title", swatch.label), 2);
+      ctx.line(choiceTabIndexCode(ctx, swatch.color, i), 2);
+      ctx.line("onClick={() => " + ctx.set(ctx.q(swatch.color)) + "}", 2);
+      ctx.line("className={" + match + " ? " + ctx.q(s.swatchesSwatchActive) + " : " + ctx.q(s.swatchesSwatch) + "}", 2);
+      ctx.line("style={{ backgroundColor: " + ctx.q(swatch.color) + " }}", 2);
+      ctx.line("/>", 1);
+    });
+    ctx.line("</div>");
+  },
+});
+
+/* ============================================================================
+ * Family: Scales & files
+ *   Scales        — Star Rating, NPS Score, Likert Scale, Emoji Reaction, Matrix Grid
+ *   Files & media — Image Upload, Multiple Files, Drop Zone, Signature Pad
+ *
+ * Every builder-side function below has a twin in the exported code (a
+ * defineHelper with the same name and the same logic), so the live preview
+ * and the generated component behave identically.
+ * ==========================================================================*/
+
+/* ---- shared: radio-button scales ----------------------------------------- */
+
+/** Arrow keys, Home and End move the choice in a group of role="radio" buttons. */
+function ratingArrowKeys(event) {
+  const radios = Array.from(event.currentTarget.querySelectorAll('[role="radio"]'));
+  const index = radios.indexOf(event.target);
+  const last = radios.length - 1;
+  let next = null;
+  if (event.key === "ArrowRight" || event.key === "ArrowDown") next = index === last ? 0 : index + 1;
+  else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = index === 0 ? last : index - 1;
+  else if (event.key === "Home") next = 0;
+  else if (event.key === "End") next = last;
+  if (index === -1 || next === null) return;
+  event.preventDefault();
+  radios[next].focus();
+  radios[next].click();
+}
+
+defineHelper("ratingArrowKeys", {
+  scope: "module",
+  lines: [
+    '/** Arrow keys, Home and End move the choice in a group of role="radio" buttons. */',
+    "const ratingArrowKeys = (event) => {",
+    "  const radios = Array.from(event.currentTarget.querySelectorAll('[role=\"radio\"]'));",
+    "  const index = radios.indexOf(event.target);",
+    "  const last = radios.length - 1;",
+    "  let next = null;",
+    '  if (event.key === "ArrowRight" || event.key === "ArrowDown") next = index === last ? 0 : index + 1;',
+    '  else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = index === 0 ? last : index - 1;',
+    '  else if (event.key === "Home") next = 0;',
+    '  else if (event.key === "End") next = last;',
+    "  if (index === -1 || next === null) return;",
+    "  event.preventDefault();",
+    "  radios[next].focus();",
+    "  radios[next].click();",
+    "};",
+  ],
+});
+
+/**
+ * Opens a `{[...].map((name) => (` block in exported JSX. Short lists stay on
+ * one line; long ones are broken one item per line, the way Prettier would.
+ */
+function scalesMapOpen(ctx, items, param, depth) {
+  const inline = "{[" + items.join(", ") + "].map((" + param + ") => (";
+  if (inline.length <= 72) {
+    ctx.line(inline, depth);
+    return;
+  }
+  ctx.line("{[", depth);
+  items.forEach((item) => ctx.line(item + ",", depth + 1));
+  ctx.line("].map((" + param + ") => (", depth);
+}
+
+/**
+ * A JSX attribute holding user text. JSX attribute strings have no escapes and
+ * decode HTML entities, so anything with a quote, backslash, control character
+ * or `&` is written as an expression instead: accept={"a\"b"}.
+ */
+function scalesAttr(name, value) {
+  const text = String(value == null ? "" : value);
+  const literal = q(text);
+  return literal === '"' + text + '"' && text.indexOf("&") === -1 ? name + "=" + literal : name + "={" + literal + "}";
+}
+
+/** User text as a JSX child. Like ctx.jsxText, but `&` is also kept literal (JSX would decode "&amp;"). */
+const scalesText = (ctx, text) => (String(text).indexOf("&") !== -1 ? "{" + ctx.q(text) + "}" : ctx.jsxText(text));
+
+/* ---- Scales -------------------------------------------------------------- */
+
+const ratingSteps = (max) => Array.from({ length: max }, (_, i) => i + 1);
+
+const RATING_STAR_BASE =
+  "rounded-md p-1 outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20";
+
+defineType({
+  type: "rating",
+  name: "Star Rating",
+  blurb: "Clickable star score",
+  group: "Scales",
+  icon: Star,
+  keywords: ["stars", "review", "score", "feedback", "rate"],
+  labelMode: "group",
+  defaults: { label: "How would you rate our service?" },
+  settings: [S.number("max", "Stars", 5, { min: 3, max: 10 })],
+  sanitize: (f) => (Number.isInteger(f.max) ? f : { ...f, max: Math.round(f.max) }),
+  empty: () => null,
+  tokens: {
+    ratingStar: { base: RATING_STAR_BASE, light: "text-slate-300 hover:text-amber-400", dark: "text-slate-600 hover:text-amber-300" },
+    ratingStarActive: { base: RATING_STAR_BASE, light: "text-amber-500 hover:text-amber-400", dark: "text-amber-400 hover:text-amber-300" },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const current = value == null ? 0 : value;
+    /* A preview value can outlive a lowered "Stars" setting; keep one star tabbable regardless. */
+    const tabStop = value != null && value <= f.max ? value : 1;
+    return (
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <div
+          role="radiogroup"
+          aria-labelledby={ctx.labelId}
+          aria-describedby={ctx.describedBy}
+          onKeyDown={ratingArrowKeys}
+          className="flex flex-wrap items-center gap-0.5"
+        >
+          {ratingSteps(f.max).map((star) => (
+            <button
+              key={star}
+              type="button"
+              role="radio"
+              aria-checked={value === star}
+              aria-label={star === 1 ? "1 star" : star + " stars"}
+              tabIndex={star === tabStop ? 0 : -1}
+              onClick={() => set(star)}
+              className={star <= current ? s.ratingStarActive : s.ratingStar}
+            >
+              <Star className="h-6 w-6" fill={star <= current ? "currentColor" : "none"} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+        {value != null ? (
+          <span className={s.muted}>
+            {value} of {f.max}
+          </span>
+        ) : null}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.use("ratingArrowKeys");
+    const filled = "star <= (" + v + " ?? 0)";
+    ctx.line('<div className="flex flex-wrap items-center gap-x-3 gap-y-1">');
+    ctx.line("<div", 1);
+    ctx.line('role="radiogroup"', 2);
+    ctx.line(ctx.labelledAttr, 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line("onKeyDown={ratingArrowKeys}", 2);
+    ctx.line('className="flex flex-wrap items-center gap-0.5"', 2);
+    ctx.line(">", 1);
+    scalesMapOpen(ctx, ratingSteps(f.max), "star", 2);
+    ctx.line("<button", 3);
+    ctx.line("key={star}", 4);
+    ctx.line('type="button"', 4);
+    ctx.line('role="radio"', 4);
+    ctx.line("aria-checked={" + v + " === star}", 4);
+    ctx.line('aria-label={star === 1 ? "1 star" : star + " stars"}', 4);
+    ctx.line("tabIndex={star === (" + v + " ?? 1) ? 0 : -1}", 4);
+    ctx.line("onClick={() => " + ctx.set("star") + "}", 4);
+    ctx.line("className={" + filled + " ? " + q(s.ratingStarActive) + " : " + q(s.ratingStar) + "}", 4);
+    ctx.line(">", 3);
+    ctx.line("<" + ctx.icon("Star"), 4);
+    ctx.line('className="h-6 w-6"', 5);
+    ctx.line("fill={" + filled + ' ? "currentColor" : "none"}', 5);
+    ctx.line('aria-hidden="true"', 5);
+    ctx.line("/>", 4);
+    ctx.line("</button>", 3);
+    ctx.line("))}", 2);
+    ctx.line("</div>", 1);
+    ctx.line("{" + v + " !== null && (", 1);
+    ctx.line("<span className=" + q(s.muted) + ">", 2);
+    ctx.line("{" + v + "} of " + f.max, 3);
+    ctx.line("</span>", 2);
+    ctx.line(")}", 1);
+    ctx.line("</div>");
+  },
+});
+
+const NPS_SCORES = ratingSteps(11).map((n) => n - 1);
+const NPS_SCORE_BASE =
+  "inline-flex h-10 items-center justify-center rounded-lg border text-sm font-medium tabular-nums outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20";
+
+/** The group's aria-describedby: the helper text plus the low/high captions. */
+function npsDescribedBy(helpId, f, scaleId) {
+  const ids = [helpId, f.lowLabel || f.highLabel ? scaleId : null].filter(Boolean);
+  return ids.length ? ids.join(" ") : null;
+}
+
+defineType({
+  type: "nps",
+  name: "NPS Score",
+  blurb: "0–10 likelihood score",
+  group: "Scales",
+  icon: Gauge,
+  keywords: ["net promoter", "recommend", "survey", "likelihood", "0-10"],
+  labelMode: "group",
+  defaults: { label: "How likely are you to recommend us to a friend?", width: "full" },
+  settings: [S.text("lowLabel", "Low label", "Not likely"), S.text("highLabel", "High label", "Extremely likely")],
+  empty: () => null,
+  tokens: {
+    npsScore: {
+      base: NPS_SCORE_BASE,
+      light: "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50",
+      dark: "border-slate-700/70 bg-slate-900/50 text-slate-200 hover:border-slate-600 hover:bg-slate-900",
+    },
+    npsScoreActive: { base: NPS_SCORE_BASE, light: "border-indigo-600 bg-indigo-600 text-white", dark: "border-indigo-500 bg-indigo-500 text-white" },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const scaleId = ctx.id + "-scale";
+    return (
+      <div>
+        <div
+          role="radiogroup"
+          aria-labelledby={ctx.labelId}
+          aria-describedby={npsDescribedBy(ctx.describedBy, f, scaleId) || undefined}
+          onKeyDown={ratingArrowKeys}
+          className="grid grid-cols-[repeat(auto-fit,minmax(2.25rem,1fr))] gap-1.5"
+        >
+          {NPS_SCORES.map((score) => (
+            <button
+              key={score}
+              type="button"
+              role="radio"
+              aria-checked={value === score}
+              tabIndex={score === (value == null ? 0 : value) ? 0 : -1}
+              onClick={() => set(score)}
+              className={value === score ? s.npsScoreActive : s.npsScore}
+            >
+              {score}
+            </button>
+          ))}
+        </div>
+        {f.lowLabel || f.highLabel ? (
+          <div id={scaleId} className="mt-2 flex gap-4">
+            {f.lowLabel ? <span className={s.muted}>{f.lowLabel}</span> : null}
+            {f.highLabel ? <span className={s.muted + " ml-auto text-right"}>{f.highLabel}</span> : null}
+          </div>
+        ) : null}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.use("ratingArrowKeys");
+    const describedBy = npsDescribedBy(ctx.describedAttr ? ctx.key + "-help" : null, f, ctx.key + "-scale");
+    ctx.line("<div>");
+    ctx.line("<div", 1);
+    ctx.line('role="radiogroup"', 2);
+    ctx.line(ctx.labelledAttr, 2);
+    if (describedBy) ctx.line("aria-describedby=" + q(describedBy), 2);
+    ctx.line("onKeyDown={ratingArrowKeys}", 2);
+    ctx.line('className="grid grid-cols-[repeat(auto-fit,minmax(2.25rem,1fr))] gap-1.5"', 2);
+    ctx.line(">", 1);
+    scalesMapOpen(ctx, NPS_SCORES, "score", 2);
+    ctx.line("<button", 3);
+    ctx.line("key={score}", 4);
+    ctx.line('type="button"', 4);
+    ctx.line('role="radio"', 4);
+    ctx.line("aria-checked={" + v + " === score}", 4);
+    ctx.line("tabIndex={score === (" + v + " ?? 0) ? 0 : -1}", 4);
+    ctx.line("onClick={() => " + ctx.set("score") + "}", 4);
+    ctx.line("className={" + v + " === score ? " + q(s.npsScoreActive) + " : " + q(s.npsScore) + "}", 4);
+    ctx.line(">", 3);
+    ctx.line("{score}", 4);
+    ctx.line("</button>", 3);
+    ctx.line("))}", 2);
+    ctx.line("</div>", 1);
+    if (f.lowLabel || f.highLabel) {
+      ctx.line("<div id=" + q(ctx.key + "-scale") + ' className="mt-2 flex gap-4">', 1);
+      if (f.lowLabel) ctx.line("<span className=" + q(s.muted) + ">" + scalesText(ctx, f.lowLabel) + "</span>", 2);
+      if (f.highLabel) ctx.line("<span className=" + q(s.muted + " ml-auto text-right") + ">" + scalesText(ctx, f.highLabel) + "</span>", 2);
+      ctx.line("</div>", 1);
+    }
+    ctx.line("</div>");
+  },
+});
+
+const LIKERT_LABELS = {
+  5: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+  7: ["Strongly disagree", "Disagree", "Somewhat disagree", "Neutral", "Somewhat agree", "Agree", "Strongly agree"],
+};
+const likertConstant = (points) => "LIKERT_" + points + "_POINT";
+
+Object.keys(LIKERT_LABELS).forEach((points) => {
+  const name = likertConstant(points);
+  defineHelper(name, {
+    scope: "module",
+    lines: ["const " + name + " = ["].concat(
+      LIKERT_LABELS[points].map((label) => "  " + q(label) + ","),
+      ["];"]
+    ),
+  });
+});
+
+/**
+ * From sm up the options sit in one evenly spaced row with captions under each;
+ * on phones (where "Somewhat disagree" cannot fit a seventh of the width) they
+ * stack into a compact list with the caption beside each mark.
+ */
+const likertGrid = (points) => "relative grid " + (points === 7 ? "sm:grid-cols-7" : "sm:grid-cols-5");
+
+/** The track joins the centres of the first and last column (row layout only). */
+const likertTrackInset = (points) => (points === 7 ? "inset-x-[7.14%]" : "inset-x-[10%]");
+
+const LIKERT_OPTION_BASE =
+  "group flex cursor-pointer select-none items-center gap-3 px-1 py-1.5 text-sm leading-tight sm:flex-col sm:gap-2 sm:py-2 sm:text-center sm:text-xs";
+const LIKERT_MARK_BASE =
+  "relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20";
+
+defineType({
+  type: "likert",
+  requiredText: () => "Choose a response",
+  name: "Likert Scale",
+  blurb: "Agree–disagree scale",
+  group: "Scales",
+  icon: ChartNoAxesColumn,
+  keywords: ["agree", "disagree", "opinion", "survey", "statement"],
+  labelMode: "group",
+  defaults: { label: "The onboarding was easy to follow", width: "full" },
+  settings: [
+    S.select("points", "Points", 5, [
+      { value: 5, label: "5-point" },
+      { value: 7, label: "7-point" },
+    ]),
+  ],
+  tokens: {
+    likertTrack: { base: "pointer-events-none absolute top-[1.125rem] hidden h-px sm:block", light: "bg-slate-200", dark: "bg-slate-700" },
+    likertOption: { base: LIKERT_OPTION_BASE, light: "text-slate-600 hover:text-slate-900", dark: "text-slate-400 hover:text-slate-200" },
+    likertOptionActive: { base: LIKERT_OPTION_BASE + " font-medium", light: "text-indigo-700", dark: "text-indigo-300" },
+    likertMark: { base: LIKERT_MARK_BASE, light: "border-slate-400 bg-white group-hover:border-slate-500", dark: "border-slate-600 bg-slate-900 group-hover:border-slate-500" },
+    likertMarkActive: { base: LIKERT_MARK_BASE, light: "border-indigo-600 bg-white", dark: "border-indigo-400 bg-slate-900" },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    return (
+      <div
+        role="radiogroup"
+        aria-labelledby={ctx.labelId}
+        aria-describedby={ctx.describedBy}
+        className={likertGrid(f.points)}
+      >
+        <span className={s.likertTrack + " " + likertTrackInset(f.points)} aria-hidden="true" />
+        {LIKERT_LABELS[f.points].map((option) => {
+          const active = value === option;
+          return (
+            <label key={option} className={active ? s.likertOptionActive : s.likertOption}>
+              <input type="radio" name={ctx.id} value={option} checked={active} onChange={() => set(option)} className="peer sr-only" />
+              <span className={active ? s.likertMarkActive : s.likertMark}>
+                {active ? <span className={s.markDot + " h-2 w-2"} /> : null}
+              </span>
+              {option}
+            </label>
+          );
+        })}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    const list = likertConstant(f.points);
+    ctx.use(list);
+    const active = v + " === option";
+    ctx.line("<div");
+    ctx.line('role="radiogroup"', 1);
+    ctx.line(ctx.labelledAttr, 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line("className=" + q(likertGrid(f.points)), 1);
+    ctx.line(">");
+    ctx.line("<span className=" + q(s.likertTrack + " " + likertTrackInset(f.points)) + ' aria-hidden="true" />', 1);
+    ctx.line("{" + list + ".map((option) => (", 1);
+    ctx.line("<label key={option} className={" + active + " ? " + q(s.likertOptionActive) + " : " + q(s.likertOption) + "}>", 2);
+    ctx.line("<input", 3);
+    ctx.line('type="radio"', 4);
+    ctx.line("name=" + q(ctx.key), 4);
+    ctx.line("value={option}", 4);
+    ctx.line("checked={" + active + "}", 4);
+    ctx.line("onChange={() => " + ctx.set("option") + "}", 4);
+    ctx.line('className="peer sr-only"', 4);
+    ctx.line("/>", 3);
+    ctx.line("<span className={" + active + " ? " + q(s.likertMarkActive) + " : " + q(s.likertMark) + "}>", 3);
+    ctx.line("{" + active + " && <span className=" + q(s.markDot + " h-2 w-2") + " />}", 4);
+    ctx.line("</span>", 3);
+    ctx.line("{option}", 3);
+    ctx.line("</label>", 2);
+    ctx.line("))}", 1);
+    ctx.line("</div>");
+  },
+});
+
+const EMOJI_FACES = [
+  { emoji: "😡", label: "Very unhappy" },
+  { emoji: "😕", label: "Unhappy" },
+  { emoji: "😐", label: "Neutral" },
+  { emoji: "🙂", label: "Happy" },
+  { emoji: "😍", label: "Love it" },
+];
+
+defineHelper("EMOJI_FACES", {
+  scope: "module",
+  lines: ["const EMOJI_FACES = ["].concat(
+    EMOJI_FACES.map((face) => "  { emoji: " + q(face.emoji) + ", label: " + q(face.label) + " },"),
+    ["];"]
+  ),
+});
+
+const EMOJI_FACE_BASE =
+  "inline-flex h-11 w-11 items-center justify-center rounded-full text-2xl leading-none outline-none transition duration-150 motion-reduce:transition-none";
+
+defineType({
+  type: "emoji",
+  name: "Emoji Reaction",
+  blurb: "Five-face sentiment",
+  group: "Scales",
+  icon: Smile,
+  keywords: ["smiley", "sentiment", "mood", "reaction", "feedback"],
+  labelMode: "group",
+  defaults: { label: "How do you feel about the new design?", width: "full" },
+  tokens: {
+    emojiFace: {
+      base: EMOJI_FACE_BASE + " hover:scale-110 focus-visible:ring-4 focus-visible:ring-indigo-500/20",
+      light: "hover:bg-slate-100",
+      dark: "hover:bg-slate-800",
+    },
+    emojiFaceActive: {
+      base: EMOJI_FACE_BASE + " scale-110 ring-2 focus-visible:ring-4",
+      light: "bg-indigo-50 ring-indigo-500",
+      dark: "bg-indigo-500/15 ring-indigo-400",
+    },
+  },
+  render(ctx) {
+    const { value, set, s } = ctx;
+    const focusable = value || EMOJI_FACES[0].label;
+    return (
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div
+          role="radiogroup"
+          aria-labelledby={ctx.labelId}
+          aria-describedby={ctx.describedBy}
+          onKeyDown={ratingArrowKeys}
+          className="flex items-center gap-1.5"
+        >
+          {EMOJI_FACES.map(({ emoji, label }) => (
+            <button
+              key={label}
+              type="button"
+              role="radio"
+              aria-checked={value === label}
+              aria-label={label}
+              tabIndex={label === focusable ? 0 : -1}
+              onClick={() => set(label)}
+              className={value === label ? s.emojiFaceActive : s.emojiFace}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+        {value ? <span className={s.muted}>{value}</span> : null}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { s, q, v } = ctx;
+    ctx.use("ratingArrowKeys");
+    ctx.use("EMOJI_FACES");
+    ctx.line('<div className="flex flex-wrap items-center gap-x-4 gap-y-2">');
+    ctx.line("<div", 1);
+    ctx.line('role="radiogroup"', 2);
+    ctx.line(ctx.labelledAttr, 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line("onKeyDown={ratingArrowKeys}", 2);
+    ctx.line('className="flex items-center gap-1.5"', 2);
+    ctx.line(">", 1);
+    ctx.line("{EMOJI_FACES.map(({ emoji, label }) => (", 2);
+    ctx.line("<button", 3);
+    ctx.line("key={label}", 4);
+    ctx.line('type="button"', 4);
+    ctx.line('role="radio"', 4);
+    ctx.line("aria-checked={" + v + " === label}", 4);
+    ctx.line("aria-label={label}", 4);
+    ctx.line("tabIndex={label === (" + v + " || EMOJI_FACES[0].label) ? 0 : -1}", 4);
+    ctx.line("onClick={() => " + ctx.set("label") + "}", 4);
+    ctx.line("className={" + v + " === label ? " + q(s.emojiFaceActive) + " : " + q(s.emojiFace) + "}", 4);
+    ctx.line(">", 3);
+    ctx.line("{emoji}", 4);
+    ctx.line("</button>", 3);
+    ctx.line("))}", 2);
+    ctx.line("</div>", 1);
+    ctx.line("{" + v + " && <span className=" + q(s.muted) + ">{" + v + "}</span>}", 1);
+    ctx.line("</div>");
+  },
+});
+
+/** Rows/columns as shown: trimmed, blank ones dropped, duplicates merged. */
+const matrixAxis = (list) => Array.from(new Set((list || []).map((item) => String(item).trim()).filter(Boolean)));
+
+const MATRIX_FRAME_BASE = "overflow-x-auto rounded-lg border shadow-sm";
+const MATRIX_ROW_HEAD_BASE = "sticky left-0 z-10 min-w-[8rem] px-4 py-3 text-left text-sm font-normal";
+const MATRIX_EMPTY = " rounded-lg border border-dashed border-slate-500/40 px-3.5 py-3";
+
+defineType({
+  type: "matrix",
+  requiredText: () => "Answer every row",
+  name: "Matrix Grid",
+  blurb: "Rate rows on one scale",
+  group: "Scales",
+  icon: Grid3x3,
+  keywords: ["grid", "table", "survey", "rows", "columns", "likert"],
+  labelMode: "group",
+  defaults: { label: "How would you rate each area?", width: "full" },
+  settings: [
+    S.options("rows", "Rows", ["Ease of use", "Performance", "Documentation"]),
+    S.options("columns", "Columns", ["Poor", "Fair", "Good", "Great"]),
+  ],
+  empty: (f) => {
+    const out = {};
+    matrixAxis(f.rows).forEach((row) => {
+      out[row] = "";
+    });
+    return out;
+  },
+  /* Required means every row is answered, not just one. */
+  blank: {
+    test: (f, v) => matrixAxis(f.rows).some((row) => isBlankValue(v && v[row])),
+    code: (ctx) => "Object.values(" + ctx.v + ').some((answer) => answer === "")',
+  },
+  tokens: {
+    matrixFrame: { base: MATRIX_FRAME_BASE, light: "border-slate-200 bg-white", dark: "border-slate-700/80 bg-slate-900" },
+    matrixFrameError: { base: MATRIX_FRAME_BASE, light: "border-rose-400 bg-white", dark: "border-rose-500/80 bg-slate-900" },
+    matrixCorner: { base: "sticky left-0 z-10", light: "bg-white", dark: "bg-slate-900" },
+    matrixColHead: { base: "whitespace-nowrap px-2 pb-2 pt-3 text-center text-xs font-medium", light: "text-slate-500", dark: "text-slate-400" },
+    matrixRow: { base: "border-t", light: "border-slate-100", dark: "border-slate-800" },
+    matrixRowHead: { base: MATRIX_ROW_HEAD_BASE, light: "bg-white text-slate-700", dark: "bg-slate-900 text-slate-200" },
+    matrixRowHeadError: { base: MATRIX_ROW_HEAD_BASE, light: "bg-white text-rose-600", dark: "bg-slate-900 text-rose-400" },
+    matrixCell: { base: "flex cursor-pointer justify-center px-2 py-3 transition-colors", light: "hover:bg-slate-50", dark: "hover:bg-slate-800/60" },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const rows = matrixAxis(f.rows);
+    const columns = matrixAxis(f.columns);
+    if (!rows.length || !columns.length) {
+      return <p className={s.muted + MATRIX_EMPTY}>Add at least one row and one column.</p>;
+    }
+    const answers = value && typeof value === "object" ? value : {};
+    const ring = " peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20";
+    return (
+      <div role="group" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className={ctx.clsOf("matrixFrame", "matrixFrameError")}>
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <td className={s.matrixCorner} />
+              {columns.map((column) => (
+                <th key={column} scope="col" className={s.matrixColHead}>
+                  {column}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row} className={s.matrixRow}>
+                <th scope="row" className={ctx.error && !answers[row] ? s.matrixRowHeadError : s.matrixRowHead}>
+                  {row}
+                </th>
+                {columns.map((column) => {
+                  const active = answers[row] === column;
+                  return (
+                    <td key={column} className="p-0">
+                      <label className={s.matrixCell}>
+                        <input
+                          type="radio"
+                          name={ctx.id + "-" + row}
+                          value={column}
+                          checked={active}
+                          aria-label={row + ": " + column}
+                          onChange={() => set({ ...answers, [row]: column })}
+                          className="peer sr-only"
+                        />
+                        <span className={(active ? s.markActive : s.mark) + " h-4 w-4 rounded-full" + ring}>
+                          {active ? <span className={s.markDot + " h-1.5 w-1.5"} /> : null}
+                        </span>
+                      </label>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    const rows = matrixAxis(f.rows);
+    const columns = matrixAxis(f.columns);
+    if (!rows.length || !columns.length) {
+      ctx.line("<p className=" + q(s.muted + MATRIX_EMPTY) + ">Add at least one row and one column.</p>");
+      return;
+    }
+    const ring = " peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20";
+    const active = v + "[row] === column";
+    const rowHead = ctx.hasError
+      ? "{errors." + ctx.key + " && !" + v + "[row] ? " + q(s.matrixRowHeadError) + " : " + q(s.matrixRowHead) + "}"
+      : q(s.matrixRowHead);
+    ctx.line("<div");
+    ctx.line('role="group"', 1);
+    ctx.line(ctx.labelledAttr, 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line("className=" + ctx.clsValue("", "matrixFrame", "matrixFrameError"), 1);
+    ctx.line(">");
+    ctx.line('<table className="w-full border-collapse text-sm">', 1);
+    ctx.line("<thead>", 2);
+    ctx.line("<tr>", 3);
+    ctx.line("<td className=" + q(s.matrixCorner) + " />", 4);
+    scalesMapOpen(ctx, columns.map(q), "column", 4);
+    ctx.line('<th key={column} scope="col" className=' + q(s.matrixColHead) + ">", 5);
+    ctx.line("{column}", 6);
+    ctx.line("</th>", 5);
+    ctx.line("))}", 4);
+    ctx.line("</tr>", 3);
+    ctx.line("</thead>", 2);
+    ctx.line("<tbody>", 2);
+    scalesMapOpen(ctx, rows.map(q), "row", 3);
+    ctx.line("<tr key={row} className=" + q(s.matrixRow) + ">", 4);
+    ctx.line('<th scope="row" className=' + rowHead + ">", 5);
+    ctx.line("{row}", 6);
+    ctx.line("</th>", 5);
+    scalesMapOpen(ctx, columns.map(q), "column", 5);
+    ctx.line('<td key={column} className="p-0">', 6);
+    ctx.line("<label className=" + q(s.matrixCell) + ">", 7);
+    ctx.line("<input", 8);
+    ctx.line('type="radio"', 9);
+    ctx.line("name={" + q(ctx.key + "-") + " + row}", 9);
+    ctx.line("value={column}", 9);
+    ctx.line("checked={" + active + "}", 9);
+    ctx.line('aria-label={row + ": " + column}', 9);
+    ctx.line("onChange={() => " + ctx.set("{ ..." + v + ", [row]: column }") + "}", 9);
+    ctx.line('className="peer sr-only"', 9);
+    ctx.line("/>", 8);
+    ctx.line(
+      "<span className={" + active + " ? " + q(s.markActive + " h-4 w-4 rounded-full" + ring) + " : " + q(s.mark + " h-4 w-4 rounded-full" + ring) + "}>",
+      8
+    );
+    ctx.line("{" + active + " && <span className=" + q(s.markDot + " h-1.5 w-1.5") + " />}", 9);
+    ctx.line("</span>", 8);
+    ctx.line("</label>", 7);
+    ctx.line("</td>", 6);
+    ctx.line("))}", 5);
+    ctx.line("</tr>", 4);
+    ctx.line("))}", 3);
+    ctx.line("</tbody>", 2);
+    ctx.line("</table>", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Files & media: shared --------------------------------------------- */
+
+/** 240 KB, 3.1 MB — a file size for people. */
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 ** 2) return Math.round(bytes / 1024) + " KB";
+  if (bytes < 1024 ** 3) return (bytes / 1024 ** 2).toFixed(1) + " MB";
+  return (bytes / 1024 ** 3).toFixed(1) + " GB";
+}
+
+defineHelper("formatFileSize", {
+  scope: "module",
+  lines: [
+    "/** 240 KB, 3.1 MB — a file size for people. */",
+    "const formatFileSize = (bytes) => {",
+    '  if (bytes < 1024) return bytes + " B";',
+    '  if (bytes < 1024 ** 2) return Math.round(bytes / 1024) + " KB";',
+    '  if (bytes < 1024 ** 3) return (bytes / 1024 ** 2).toFixed(1) + " MB";',
+    '  return (bytes / 1024 ** 3).toFixed(1) + " GB";',
+    "};",
+  ],
+});
+
+/** Does a file match an accept list such as ".pdf,image/*"? (Drops and "All files" bypass the picker's filter.) */
+function fileMatchesAccept(file, accept) {
+  const name = String(file.name || "").toLowerCase();
+  const mime = String(file.type || "").toLowerCase();
+  return accept
+    .split(",")
+    .map((type) => type.trim().toLowerCase())
+    .filter(Boolean)
+    .some((type) => {
+      if (type.startsWith(".")) return name.endsWith(type);
+      if (type.endsWith("/*")) return mime.startsWith(type.slice(0, -1));
+      return mime === type;
+    });
+}
+
+defineHelper("fileMatchesAccept", {
+  scope: "module",
+  lines: [
+    '/** Does a file match an accept list such as ".pdf,image/*"? Drops bypass the picker\'s filter. */',
+    "const fileMatchesAccept = (file, accept) =>",
+    "  accept",
+    '    .split(",")',
+    "    .map((type) => type.trim().toLowerCase())",
+    "    .filter(Boolean)",
+    "    .some((type) => {",
+    '      if (type.startsWith(".")) return file.name.toLowerCase().endsWith(type);',
+    '      if (type.endsWith("/*")) return file.type.startsWith(type.slice(0, -1));',
+    "      return file.type === type;",
+    "    });",
+  ],
+});
+
+const ACCEPT_KINDS = {
+  image: ["image", "images"],
+  video: ["video", "videos"],
+  audio: ["audio", "audio"],
+  text: ["text", "text files"],
+};
+
+/**
+ * Human copy for an accept list, e.g. ".pdf,.png,.jpg" →
+ *   hint:    "PDF, PNG or JPG"
+ *   message: "Use a PDF, PNG or JPG file"
+ */
+function describeAcceptList(accept) {
+  const seen = new Set();
+  const names = String(accept || "")
+    .split(",")
+    .map((type) => type.trim().toLowerCase())
+    .filter(Boolean)
+    .map((type) => {
+      if (type.startsWith(".")) return [type.slice(1).toUpperCase(), type.slice(1).toUpperCase()];
+      const [kind, sub = "*"] = type.split("/");
+      if (sub === "*") return ACCEPT_KINDS[kind] || [kind, kind + " files"];
+      const short = sub.split("+")[0].replace(/^(x-|vnd\.)/, "").toUpperCase();
+      return [short, short];
+    })
+    .filter(([one]) => !seen.has(one) && seen.add(one));
+  if (!names.length) return { hint: "Any file type", message: "Choose a different file" };
+  const joinOr = (items) => (items.length < 2 ? items[0] : items.slice(0, -1).join(", ") + " or " + items[items.length - 1]);
+  const many = joinOr(names.map((n) => n[1]));
+  const one = joinOr(names.map((n) => n[0]));
+  const an = /^([aeiou]|[AEFHILMNORSX](?![a-z]))/.test(one) ? "an " : "a ";
+  return { hint: many.charAt(0).toUpperCase() + many.slice(1), message: "Use " + an + one + " file" };
+}
+
+/** The accept list as typed, without stray whitespace ("" = any file). */
+const acceptOf = (f) => String(f.accept || "").trim();
+
+/** A picked file (or null), with the input cleared so picking the same file again still fires. */
+function takePickedFile(event) {
+  const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+  event.target.value = "";
+  return file;
+}
+
+/** Emits the onChange for a single-file picker that keeps the current file when the dialog is cancelled. */
+function emitSingleFileChange(ctx, depth) {
+  ctx.line("onChange={(event) => {", depth);
+  ctx.line("const file = event.target.files[0];", depth + 1);
+  ctx.line("if (file) " + ctx.set("file") + ";", depth + 1);
+  ctx.line('event.target.value = "";', depth + 1);
+  ctx.line("}}", depth);
+}
+
+/**
+ * The "chosen file" card shared by Image Upload and Drop Zone: preview, name,
+ * size, Change, Remove. Remove hands focus back to the file input, so keyboard
+ * and screen-reader users are not dropped at the top of the page.
+ */
+function FileCardView({ ctx, children }) {
+  const { value, set, s } = ctx;
+  return (
+    <div className={ctx.clsOf("imageCard", "imageCardError")}>
+      {children}
+      <div className="min-w-0 flex-1">
+        <p className={s.imageName}>{value.name}</p>
+        <p className={s.muted}>{formatFileSize(value.size)}</p>
+      </div>
+      <label htmlFor={ctx.id} className={s.imageAction}>
+        Change
+      </label>
+      <button
+        type="button"
+        aria-label={"Remove " + value.name}
+        onClick={() => {
+          set(null);
+          document.getElementById(ctx.id).focus();
+        }}
+        className={s.imageAction}
+      >
+        Remove
+      </button>
+    </div>
+  );
+}
+
+/** Export twin of FileCardView; `preview` emits the leading thumbnail/badge at the given depth. */
+function emitFileCard(ctx, depth, preview) {
+  const { s, q, v } = ctx;
+  ctx.use("formatFileSize");
+  ctx.line("<div className=" + ctx.clsValue("", "imageCard", "imageCardError") + ">", depth);
+  preview(depth + 1);
+  ctx.line('<div className="min-w-0 flex-1">', depth + 1);
+  ctx.line("<p className=" + q(s.imageName) + ">{" + v + ".name}</p>", depth + 2);
+  ctx.line("<p className=" + q(s.muted) + ">{formatFileSize(" + v + ".size)}</p>", depth + 2);
+  ctx.line("</div>", depth + 1);
+  ctx.line("<label htmlFor=" + q(ctx.key) + " className=" + q(s.imageAction) + ">", depth + 1);
+  ctx.line("Change", depth + 2);
+  ctx.line("</label>", depth + 1);
+  ctx.line("<button", depth + 1);
+  ctx.line('type="button"', depth + 2);
+  ctx.line('aria-label={"Remove " + ' + v + ".name}", depth + 2);
+  ctx.line("onClick={() => {", depth + 2);
+  ctx.line(ctx.set("null") + ";", depth + 3);
+  ctx.line("document.getElementById(" + q(ctx.key) + ").focus();", depth + 3);
+  ctx.line("}}", depth + 2);
+  ctx.line("className=" + q(s.imageAction), depth + 2);
+  ctx.line(">", depth + 1);
+  ctx.line("Remove", depth + 2);
+  ctx.line("</button>", depth + 1);
+  ctx.line("</div>", depth);
+}
+
+/* ---- Image Upload -------------------------------------------------------- */
+
+/** Shows a chosen image file; its object URL is revoked when the file changes or on unmount. */
+function ImageThumbnail({ file, className }) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    const url = window.URL.createObjectURL(file);
+    setSrc(url);
+    return () => window.URL.revokeObjectURL(url);
+  }, [file]);
+  return src ? <img src={src} alt="" className={className} /> : <span className={className} />;
+}
+
+defineHelper("ImageThumbnail", {
+  scope: "module",
+  hooks: ["useEffect", "useState"],
+  lines: [
+    "/** Shows a chosen image file; its object URL is revoked when the file changes or on unmount. */",
+    "function ImageThumbnail({ file, className }) {",
+    '  const [src, setSrc] = useState("");',
+    "",
+    "  useEffect(() => {",
+    "    const url = window.URL.createObjectURL(file);",
+    "    setSrc(url);",
+    "    return () => window.URL.revokeObjectURL(url);",
+    "  }, [file]);",
+    "",
+    '  return src ? <img src={src} alt="" className={className} /> : <span className={className} />;',
+    "}",
+  ],
+});
+
+const imageAccept = (f) => acceptOf(f) || "image/*";
+const IMAGE_CARD_BASE =
+  "flex items-center gap-3 rounded-lg border p-2 pr-3 text-sm shadow-sm transition duration-150 peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20";
+const IMAGE_PICKER_BASE =
+  "inline-flex cursor-pointer items-center gap-2.5 rounded-lg border border-dashed px-4 py-3 text-sm font-medium transition duration-150 peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20";
+
+defineType({
+  type: "image",
+  name: "Image Upload",
+  blurb: "Photo with live preview",
+  group: "Files & media",
+  icon: ImagePlus,
+  keywords: ["photo", "picture", "avatar", "upload", "logo"],
+  defaults: { label: "Profile photo", helper: "A square image works best.", width: "full" },
+  settings: [
+    S.text("accept", "Accepted types", "image/*", { mono: true, hint: "accept" }),
+    S.text("placeholder", "Button text", "Choose an image"),
+  ],
+  empty: () => null,
+  /* Anything the picker lets through ("All files") must still be an image we can preview. */
+  validate: {
+    test: (f, v) => fileMatchesAccept(v, imageAccept(f)),
+    code: (ctx) => (ctx.use("fileMatchesAccept"), "!fileMatchesAccept(" + ctx.v + ", " + ctx.q(imageAccept(ctx.f)) + ")"),
+    message: (f) => describeAcceptList(imageAccept(f)).message,
+  },
+  tokens: {
+    imagePicker: {
+      base: IMAGE_PICKER_BASE,
+      light: "border-slate-300 bg-slate-50 text-slate-600 hover:border-indigo-400 hover:text-indigo-600",
+      dark: "border-slate-700 bg-slate-900/50 text-slate-300 hover:border-indigo-500/60 hover:text-indigo-300",
+    },
+    imagePickerError: {
+      base: IMAGE_PICKER_BASE,
+      light: "border-rose-400 bg-rose-50 text-rose-700",
+      dark: "border-rose-500/80 bg-rose-950/20 text-rose-300",
+    },
+    imageThumb: { base: "h-14 w-14 shrink-0 rounded-md object-cover ring-1", light: "bg-slate-100 ring-slate-200", dark: "bg-slate-800 ring-slate-700" },
+    /* Shared with Drop Zone: the card that shows a chosen file. */
+    imageCard: {
+      base: IMAGE_CARD_BASE,
+      light: "border-slate-300 bg-white",
+      dark: "border-slate-700/80 bg-slate-900/70",
+    },
+    /* A chosen file that fails validation (wrong type), shown with its error. */
+    imageCardError: { base: IMAGE_CARD_BASE, light: "border-rose-400 bg-rose-50", dark: "border-rose-500/80 bg-rose-950/20" },
+    imageName: { base: "truncate font-medium", light: "text-slate-900", dark: "text-slate-100" },
+    imageAction: {
+      base: "shrink-0 cursor-pointer rounded-md px-2.5 py-1.5 text-xs font-medium outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20",
+      light: "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+      dark: "text-slate-300 hover:bg-slate-800 hover:text-white",
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    return (
+      <div className="relative">
+        <input
+          id={ctx.id}
+          name={f.key}
+          type="file"
+          accept={imageAccept(f)}
+          aria-describedby={ctx.describedBy}
+          onChange={(event) => {
+            const file = takePickedFile(event);
+            if (file) set(file);
+          }}
+          className="peer sr-only"
+        />
+        {value ? (
+          <FileCardView ctx={ctx}>
+            <ImageThumbnail file={value} className={s.imageThumb} />
+          </FileCardView>
+        ) : (
+          <label htmlFor={ctx.id} className={ctx.clsOf("imagePicker", "imagePickerError")}>
+            <ImagePlus className="h-5 w-5" aria-hidden="true" />
+            {f.placeholder || "Choose an image"}
+          </label>
+        )}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.line('<div className="relative">');
+    ctx.line("<input", 1);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    ctx.line('type="file"', 2);
+    ctx.line(scalesAttr("accept", imageAccept(f)), 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    emitSingleFileChange(ctx, 2);
+    ctx.line('className="peer sr-only"', 2);
+    ctx.line("/>", 1);
+    ctx.line("{" + v + " ? (", 1);
+    emitFileCard(ctx, 2, (depth) => {
+      ctx.use("ImageThumbnail");
+      ctx.line("<ImageThumbnail file={" + v + "} className=" + q(s.imageThumb) + " />", depth);
+    });
+    ctx.line(") : (", 1);
+    ctx.line("<label htmlFor=" + q(ctx.key) + " className=" + ctx.clsValue("", "imagePicker", "imagePickerError") + ">", 2);
+    ctx.line("<" + ctx.icon("ImagePlus") + ' className="h-5 w-5" aria-hidden="true" />', 3);
+    ctx.line(scalesText(ctx, f.placeholder || "Choose an image"), 3);
+    ctx.line("</label>", 2);
+    ctx.line(")}", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Multiple Files ------------------------------------------------------ */
+
+/** Adds newly picked files to a list, skipping ones already chosen (same name and size). */
+function appendFileList(current, fileList) {
+  const added = Array.from(fileList || []).filter((file) => !current.some((item) => item.name === file.name && item.size === file.size));
+  return current.concat(added);
+}
+
+defineHelper("appendFiles", {
+  scope: "component",
+  lines: [
+    "/** Adds newly picked files, skipping ones already chosen, and clears the input for the next pick. */",
+    "const appendFiles = (key, input) => {",
+    "  const current = values[key];",
+    "  const added = Array.from(input.files).filter(",
+    "    (file) => !current.some((item) => item.name === file.name && item.size === file.size)",
+    "  );",
+    "  setField(key, current.concat(added));",
+    '  input.value = "";',
+    "};",
+  ],
+});
+
+defineType({
+  type: "multifile",
+  name: "Multiple Files",
+  blurb: "Several attachments",
+  group: "Files & media",
+  icon: Files,
+  keywords: ["attachments", "documents", "upload", "multiple", "files"],
+  defaults: { label: "Supporting material", helper: "Select several at once, or add more later.", width: "full" },
+  settings: [
+    S.text("accept", "Accepted types", "", { mono: true, hint: "accept", placeholder: "Any file" }),
+    S.number("maxFiles", "Maximum files", 5, { min: 1, max: 100, optional: true, hint: "optional" }),
+  ],
+  /* The limit is a count of files: whole numbers only. */
+  sanitize: (f) => (f.maxFiles == null || Number.isInteger(f.maxFiles) ? f : { ...f, maxFiles: Math.max(1, Math.round(f.maxFiles)) }),
+  empty: () => [],
+  validate: {
+    test: (f, v) => f.maxFiles == null || v.length <= f.maxFiles,
+    when: (f) => f.maxFiles != null,
+    code: (ctx) => ctx.v + ".length > " + ctx.f.maxFiles,
+    message: (f) => (f.maxFiles == null ? "Too many files" : "Attach up to " + f.maxFiles + (f.maxFiles === 1 ? " file" : " files")),
+  },
+  tokens: {
+    multifileError: {
+      base: "w-full cursor-pointer rounded-lg border border-dashed px-3.5 py-2.5 text-sm outline-none transition duration-150 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:px-3 file:py-1.5 file:text-xs file:font-semibold",
+      light: "border-rose-400 bg-rose-50 text-slate-600 file:bg-rose-100 file:text-rose-700",
+      dark: "border-rose-500/80 bg-rose-950/20 text-slate-400 file:bg-rose-500/15 file:text-rose-200",
+    },
+    multifileItem: {
+      base: "flex items-center gap-3 rounded-lg border py-1.5 pl-3 pr-1.5 text-sm",
+      light: "border-slate-200 bg-white text-slate-700",
+      dark: "border-slate-800 bg-slate-900/50 text-slate-200",
+    },
+    multifileIcon: { base: "h-4 w-4 shrink-0", light: "text-slate-400", dark: "text-slate-500" },
+    multifileRemove: {
+      base: "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20",
+      light: "text-slate-400 hover:bg-slate-100 hover:text-rose-600",
+      dark: "text-slate-500 hover:bg-slate-800 hover:text-rose-400",
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const files = Array.isArray(value) ? value : [];
+    return (
+      <div>
+        <input
+          id={ctx.id}
+          name={f.key}
+          type="file"
+          multiple
+          accept={acceptOf(f) || undefined}
+          aria-describedby={ctx.describedBy}
+          onChange={(event) => {
+            set(appendFileList(files, event.target.files));
+            event.target.value = "";
+          }}
+          className={ctx.clsOf("file", "multifileError")}
+        />
+        {files.length ? (
+          <ul className="mt-3 space-y-2">
+            {files.map((file) => (
+              <li key={file.name + ":" + file.size} className={s.multifileItem}>
+                <FileText className={s.multifileIcon} aria-hidden="true" />
+                <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                <span className={s.muted + " shrink-0 tabular-nums"}>{formatFileSize(file.size)}</span>
+                <button
+                  type="button"
+                  aria-label={"Remove " + file.name}
+                  onClick={() => {
+                    set(files.filter((item) => item !== file));
+                    document.getElementById(ctx.id).focus();
+                  }}
+                  className={s.multifileRemove}
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.use("appendFiles");
+    ctx.use("formatFileSize");
+    ctx.line("<div>");
+    ctx.line("<input", 1);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    ctx.line('type="file"', 2);
+    ctx.line("multiple", 2);
+    if (acceptOf(f)) ctx.line(scalesAttr("accept", acceptOf(f)), 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    ctx.line("onChange={(event) => appendFiles(" + q(ctx.key) + ", event.target)}", 2);
+    ctx.line("className=" + ctx.clsValue("", "file", "multifileError"), 2);
+    ctx.line("/>", 1);
+    ctx.line("{" + v + ".length > 0 && (", 1);
+    ctx.line('<ul className="mt-3 space-y-2">', 2);
+    ctx.line("{" + v + ".map((file) => (", 3);
+    ctx.line('<li key={file.name + ":" + file.size} className=' + q(s.multifileItem) + ">", 4);
+    ctx.line("<" + ctx.icon("FileText") + " className=" + q(s.multifileIcon) + ' aria-hidden="true" />', 5);
+    ctx.line('<span className="min-w-0 flex-1 truncate">{file.name}</span>', 5);
+    ctx.line("<span className=" + q(s.muted + " shrink-0 tabular-nums") + ">{formatFileSize(file.size)}</span>", 5);
+    ctx.line("<button", 5);
+    ctx.line('type="button"', 6);
+    ctx.line('aria-label={"Remove " + file.name}', 6);
+    ctx.line("onClick={() => {", 6);
+    ctx.line(ctx.set(v + ".filter((item) => item !== file)") + ";", 7);
+    ctx.line("document.getElementById(" + q(ctx.key) + ").focus();", 7);
+    ctx.line("}}", 6);
+    ctx.line("className=" + q(s.multifileRemove), 6);
+    ctx.line(">", 5);
+    ctx.line("<" + ctx.icon("X") + ' className="h-4 w-4" aria-hidden="true" />', 6);
+    ctx.line("</button>", 5);
+    ctx.line("</li>", 4);
+    ctx.line("))}", 3);
+    ctx.line("</ul>", 2);
+    ctx.line(")}", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Drop Zone ----------------------------------------------------------- */
+
+/** A <label> that takes the first dropped file and highlights while files are dragged over it. */
+function DropzoneTarget({ onFile, className, activeClassName, children, ...props }) {
+  const [active, setActive] = useState(false);
+  return (
+    <label
+      {...props}
+      className={active ? activeClassName : className}
+      onDragOver={(event) => {
+        if (!Array.from(event.dataTransfer.types || []).includes("Files")) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        setActive(true);
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setActive(false);
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        setActive(false);
+        const file = event.dataTransfer.files[0];
+        if (file) onFile(file);
+      }}
+    >
+      {children}
+    </label>
+  );
+}
+
+defineHelper("DropzoneTarget", {
+  scope: "module",
+  hooks: ["useState"],
+  lines: [
+    "/** A <label> that takes the first dropped file and highlights while files are dragged over it. */",
+    "function DropzoneTarget({ onFile, className, activeClassName, children, ...props }) {",
+    "  const [active, setActive] = useState(false);",
+    "",
+    "  return (",
+    "    <label",
+    "      {...props}",
+    "      className={active ? activeClassName : className}",
+    "      onDragOver={(event) => {",
+    '        if (!event.dataTransfer.types.includes("Files")) return;',
+    "        event.preventDefault();",
+    '        event.dataTransfer.dropEffect = "copy";',
+    "        setActive(true);",
+    "      }}",
+    "      onDragLeave={(event) => {",
+    "        if (!event.currentTarget.contains(event.relatedTarget)) setActive(false);",
+    "      }}",
+    "      onDrop={(event) => {",
+    "        event.preventDefault();",
+    "        setActive(false);",
+    "        const file = event.dataTransfer.files[0];",
+    "        if (file) onFile(file);",
+    "      }}",
+    "    >",
+    "      {children}",
+    "    </label>",
+    "  );",
+    "}",
+  ],
+});
+
+const DROPZONE_AREA_BASE =
+  "group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-8 text-center text-sm transition duration-150 peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20";
+
+defineType({
+  type: "dropzone",
+  name: "Drop Zone",
+  blurb: "Drag-and-drop upload",
+  group: "Files & media",
+  icon: CloudUpload,
+  keywords: ["drag and drop", "upload", "file", "attachment", "drop"],
+  defaults: { label: "Proof of address", helper: "A utility bill or bank statement from the last 3 months.", width: "full" },
+  settings: [S.text("accept", "Accepted types", ".pdf,.png,.jpg", { mono: true, hint: "accept", placeholder: "Any file" })],
+  empty: () => null,
+  /* Dropped files skip the picker's accept filter, so check the type again. */
+  validate: {
+    test: (f, v) => !acceptOf(f) || fileMatchesAccept(v, acceptOf(f)),
+    when: (f) => Boolean(acceptOf(f)),
+    code: (ctx) => {
+      ctx.use("fileMatchesAccept");
+      return "!fileMatchesAccept(" + ctx.v + ", " + ctx.q(acceptOf(ctx.f)) + ")";
+    },
+    message: (f) => describeAcceptList(acceptOf(f)).message,
+  },
+  tokens: {
+    dropzoneArea: {
+      base: DROPZONE_AREA_BASE,
+      light: "border-slate-300 bg-slate-50 text-slate-600 hover:border-indigo-400",
+      dark: "border-slate-700 bg-slate-900/40 text-slate-300 hover:border-indigo-500/60",
+    },
+    dropzoneAreaActive: { base: DROPZONE_AREA_BASE, light: "border-indigo-500 bg-indigo-50 text-indigo-900", dark: "border-indigo-400 bg-indigo-500/10 text-white" },
+    dropzoneAreaError: { base: DROPZONE_AREA_BASE, light: "border-rose-400 bg-rose-50 text-slate-600", dark: "border-rose-500/80 bg-rose-950/20 text-slate-300" },
+    dropzoneIcon: { base: "h-8 w-8 transition-colors", light: "text-slate-400 group-hover:text-indigo-500", dark: "text-slate-500 group-hover:text-indigo-400" },
+    dropzoneBrowse: { base: "font-semibold underline-offset-2 group-hover:underline", light: "text-indigo-600", dark: "text-indigo-400" },
+    dropzoneBadge: { base: "flex h-10 w-10 shrink-0 items-center justify-center rounded-md", light: "bg-indigo-50 text-indigo-600", dark: "bg-indigo-500/10 text-indigo-300" },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    return (
+      <div className="relative">
+        <input
+          id={ctx.id}
+          name={f.key}
+          type="file"
+          accept={acceptOf(f) || undefined}
+          aria-describedby={ctx.describedBy}
+          onChange={(event) => {
+            const file = takePickedFile(event);
+            if (file) set(file);
+          }}
+          className="peer sr-only"
+        />
+        {value ? (
+          <FileCardView ctx={ctx}>
+            <span className={s.dropzoneBadge}>
+              <FileCheck className="h-5 w-5" aria-hidden="true" />
+            </span>
+          </FileCardView>
+        ) : (
+          <DropzoneTarget
+            htmlFor={ctx.id}
+            onFile={set}
+            className={ctx.clsOf("dropzoneArea", "dropzoneAreaError")}
+            activeClassName={s.dropzoneAreaActive}
+          >
+            <CloudUpload className={s.dropzoneIcon} aria-hidden="true" />
+            <span>
+              Drag a file here or <span className={s.dropzoneBrowse}>browse</span>
+            </span>
+            <span className={s.muted}>{describeAcceptList(f.accept).hint}</span>
+          </DropzoneTarget>
+        )}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.line('<div className="relative">');
+    ctx.line("<input", 1);
+    ctx.line(ctx.idAttr, 2);
+    ctx.line(ctx.nameAttr, 2);
+    ctx.line('type="file"', 2);
+    if (acceptOf(f)) ctx.line(scalesAttr("accept", acceptOf(f)), 2);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 2);
+    emitSingleFileChange(ctx, 2);
+    ctx.line('className="peer sr-only"', 2);
+    ctx.line("/>", 1);
+    ctx.line("{" + v + " ? (", 1);
+    emitFileCard(ctx, 2, (depth) => {
+      ctx.line("<span className=" + q(s.dropzoneBadge) + ">", depth);
+      ctx.line("<" + ctx.icon("FileCheck") + ' className="h-5 w-5" aria-hidden="true" />', depth + 1);
+      ctx.line("</span>", depth);
+    });
+    ctx.line(") : (", 1);
+    ctx.use("DropzoneTarget");
+    ctx.line("<DropzoneTarget", 2);
+    ctx.line("htmlFor=" + q(ctx.key), 3);
+    ctx.line("onFile={(file) => " + ctx.set("file") + "}", 3);
+    ctx.line("className=" + ctx.clsValue("", "dropzoneArea", "dropzoneAreaError"), 3);
+    ctx.line("activeClassName=" + q(s.dropzoneAreaActive), 3);
+    ctx.line(">", 2);
+    ctx.line("<" + ctx.icon("CloudUpload") + " className=" + q(s.dropzoneIcon) + ' aria-hidden="true" />', 3);
+    ctx.line("<span>", 3);
+    ctx.line("Drag a file here or <span className=" + q(s.dropzoneBrowse) + ">browse</span>", 4);
+    ctx.line("</span>", 3);
+    ctx.line("<span className=" + q(s.muted) + ">" + scalesText(ctx, describeAcceptList(f.accept).hint) + "</span>", 3);
+    ctx.line("</DropzoneTarget>", 2);
+    ctx.line(")}", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Signature Pad ------------------------------------------------------- */
+
+/**
+ * Signatures are always drawn in dark ink, so the saved PNG reads on paper and
+ * light pages. In dark mode the canvas is shown inverted by CSS (the
+ * signatureCanvas token), which follows theme switches without a repaint.
+ */
+const SIGNATURE_INK = "#0f172a";
+
+/** Paints a signature: an optional saved image plus the strokes drawn so far. */
+function drawSignature(canvas, state) {
+  const context = canvas.getContext("2d");
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  if (state.saved) {
+    const scale = Math.min(canvas.width / state.saved.width, canvas.height / state.saved.height);
+    context.drawImage(state.saved, 0, 0, state.saved.width * scale, state.saved.height * scale);
+  }
+  context.setTransform(state.ratio, 0, 0, state.ratio, 0, 0);
+  context.strokeStyle = SIGNATURE_INK;
+  context.fillStyle = SIGNATURE_INK;
+  context.lineWidth = 2.5;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  state.strokes.forEach((points) => {
+    const first = points[0];
+    const last = points[points.length - 1];
+    context.beginPath();
+    if (points.length === 1) {
+      context.arc(first.x, first.y, context.lineWidth / 2, 0, Math.PI * 2);
+      context.fill();
+      return;
+    }
+    context.moveTo(first.x, first.y);
+    for (let i = 1; i < points.length - 1; i += 1) {
+      const mid = { x: (points[i].x + points[i + 1].x) / 2, y: (points[i].y + points[i + 1].y) / 2 };
+      context.quadraticCurveTo(points[i].x, points[i].y, mid.x, mid.y);
+    }
+    context.lineTo(last.x, last.y);
+    context.stroke();
+  });
+}
+
+/**
+ * Pointer-driven signature pad. The bitmap follows the element's size and the
+ * screen's pixel ratio; each finished stroke reports a PNG data URL.
+ */
+function SignaturePad({ value, onChange, className }) {
+  const canvasRef = useRef(null);
+  const stateRef = useRef({ ratio: 1, strokes: [], saved: null, drawing: false });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const fit = () => {
+      stateRef.current.ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.round(canvas.clientWidth * stateRef.current.ratio);
+      canvas.height = Math.round(canvas.clientHeight * stateRef.current.ratio);
+      drawSignature(canvas, stateRef.current);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const state = stateRef.current;
+    if (!value) {
+      state.strokes = [];
+      state.saved = null;
+      drawSignature(canvas, state);
+      return;
+    }
+    if (state.strokes.length || state.saved) return;
+    const image = new Image();
+    image.onload = () => {
+      state.saved = image;
+      drawSignature(canvas, state);
+    };
+    image.src = value;
+    return () => {
+      image.onload = null;
+    };
+  }, [value]);
+
+  const pointFrom = (event) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  };
+
+  const handlePointerDown = (event) => {
+    if (event.button !== 0) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    stateRef.current.drawing = true;
+    stateRef.current.strokes.push([pointFrom(event)]);
+    drawSignature(canvasRef.current, stateRef.current);
+  };
+
+  const handlePointerMove = (event) => {
+    const state = stateRef.current;
+    if (!state.drawing) return;
+    const native = event.nativeEvent;
+    const samples = native.getCoalescedEvents ? native.getCoalescedEvents() : [];
+    const stroke = state.strokes[state.strokes.length - 1];
+    (samples.length ? samples : [event]).forEach((sample) => stroke.push(pointFrom(sample)));
+    drawSignature(canvasRef.current, state);
+  };
+
+  const handlePointerUp = () => {
+    const state = stateRef.current;
+    if (!state.drawing) return;
+    state.drawing = false;
+    onChange(canvasRef.current.toDataURL("image/png"));
+  };
+
+  return (
+    <canvas
+      ref={canvasRef}
+      role="img"
+      aria-label={value ? "Your signature" : "Empty signature pad"}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      className={className}
+    />
+  );
+}
+
+defineHelper("drawSignature", {
+  scope: "module",
+  lines: [
+    "/**",
+    " * Signatures are always drawn in dark ink, so the saved PNG reads on paper and",
+    " * light pages. In dark mode the canvas is shown inverted by CSS (its className),",
+    " * which follows theme switches without a repaint.",
+    " */",
+    'const SIGNATURE_INK = "#0f172a";',
+    "",
+    "/** Paints a signature: an optional saved image plus the strokes drawn so far. */",
+    "function drawSignature(canvas, state) {",
+    '  const context = canvas.getContext("2d");',
+    "  context.setTransform(1, 0, 0, 1, 0, 0);",
+    "  context.clearRect(0, 0, canvas.width, canvas.height);",
+    "  if (state.saved) {",
+    "    const scale = Math.min(canvas.width / state.saved.width, canvas.height / state.saved.height);",
+    "    context.drawImage(state.saved, 0, 0, state.saved.width * scale, state.saved.height * scale);",
+    "  }",
+    "  context.setTransform(state.ratio, 0, 0, state.ratio, 0, 0);",
+    "  context.strokeStyle = SIGNATURE_INK;",
+    "  context.fillStyle = SIGNATURE_INK;",
+    "  context.lineWidth = 2.5;",
+    '  context.lineCap = "round";',
+    '  context.lineJoin = "round";',
+    "  state.strokes.forEach((points) => {",
+    "    const first = points[0];",
+    "    const last = points[points.length - 1];",
+    "    context.beginPath();",
+    "    if (points.length === 1) {",
+    "      context.arc(first.x, first.y, context.lineWidth / 2, 0, Math.PI * 2);",
+    "      context.fill();",
+    "      return;",
+    "    }",
+    "    context.moveTo(first.x, first.y);",
+    "    for (let i = 1; i < points.length - 1; i += 1) {",
+    "      const mid = { x: (points[i].x + points[i + 1].x) / 2, y: (points[i].y + points[i + 1].y) / 2 };",
+    "      context.quadraticCurveTo(points[i].x, points[i].y, mid.x, mid.y);",
+    "    }",
+    "    context.lineTo(last.x, last.y);",
+    "    context.stroke();",
+    "  });",
+    "}",
+  ],
+});
+
+defineHelper("SignaturePad", {
+  scope: "module",
+  hooks: ["useEffect", "useRef"],
+  requires: ["drawSignature"],
+  lines: [
+    "/**",
+    " * Pointer-driven signature pad. The bitmap follows the element's size and the",
+    " * screen's pixel ratio; each finished stroke reports a PNG data URL.",
+    " */",
+    "function SignaturePad({ value, onChange, className }) {",
+    "  const canvasRef = useRef(null);",
+    "  const stateRef = useRef({ ratio: 1, strokes: [], saved: null, drawing: false });",
+    "",
+    "  useEffect(() => {",
+    "    const canvas = canvasRef.current;",
+    "    const fit = () => {",
+    "      stateRef.current.ratio = window.devicePixelRatio || 1;",
+    "      canvas.width = Math.round(canvas.clientWidth * stateRef.current.ratio);",
+    "      canvas.height = Math.round(canvas.clientHeight * stateRef.current.ratio);",
+    "      drawSignature(canvas, stateRef.current);",
+    "    };",
+    "    fit();",
+    "    const observer = new ResizeObserver(fit);",
+    "    observer.observe(canvas);",
+    "    return () => observer.disconnect();",
+    "  }, []);",
+    "",
+    "  // Follow the value: clear on reset, and repaint a saved signature after a remount.",
+    "  useEffect(() => {",
+    "    const canvas = canvasRef.current;",
+    "    const state = stateRef.current;",
+    "    if (!value) {",
+    "      state.strokes = [];",
+    "      state.saved = null;",
+    "      drawSignature(canvas, state);",
+    "      return;",
+    "    }",
+    "    if (state.strokes.length || state.saved) return;",
+    "    const image = new Image();",
+    "    image.onload = () => {",
+    "      state.saved = image;",
+    "      drawSignature(canvas, state);",
+    "    };",
+    "    image.src = value;",
+    "    return () => {",
+    "      image.onload = null;",
+    "    };",
+    "  }, [value]);",
+    "",
+    "  const pointFrom = (event) => {",
+    "    const rect = canvasRef.current.getBoundingClientRect();",
+    "    return { x: event.clientX - rect.left, y: event.clientY - rect.top };",
+    "  };",
+    "",
+    "  const handlePointerDown = (event) => {",
+    "    if (event.button !== 0) return;",
+    "    event.currentTarget.setPointerCapture(event.pointerId);",
+    "    stateRef.current.drawing = true;",
+    "    stateRef.current.strokes.push([pointFrom(event)]);",
+    "    drawSignature(canvasRef.current, stateRef.current);",
+    "  };",
+    "",
+    "  const handlePointerMove = (event) => {",
+    "    const state = stateRef.current;",
+    "    if (!state.drawing) return;",
+    "    const native = event.nativeEvent;",
+    "    const samples = native.getCoalescedEvents ? native.getCoalescedEvents() : [];",
+    "    const stroke = state.strokes[state.strokes.length - 1];",
+    "    (samples.length ? samples : [event]).forEach((sample) => stroke.push(pointFrom(sample)));",
+    "    drawSignature(canvasRef.current, state);",
+    "  };",
+    "",
+    "  const handlePointerUp = () => {",
+    "    const state = stateRef.current;",
+    "    if (!state.drawing) return;",
+    "    state.drawing = false;",
+    '    onChange(canvasRef.current.toDataURL("image/png"));',
+    "  };",
+    "",
+    "  return (",
+    "    <canvas",
+    "      ref={canvasRef}",
+    '      role="img"',
+    '      aria-label={value ? "Your signature" : "Empty signature pad"}',
+    "      onPointerDown={handlePointerDown}",
+    "      onPointerMove={handlePointerMove}",
+    "      onPointerUp={handlePointerUp}",
+    "      onPointerCancel={handlePointerUp}",
+    "      className={className}",
+    "    />",
+    "  );",
+    "}",
+  ],
+});
+
+const SIGNATURE_FRAME_BASE = "relative overflow-hidden rounded-lg border shadow-sm transition duration-150";
+
+defineType({
+  type: "signature",
+  name: "Signature Pad",
+  blurb: "Draw to sign",
+  group: "Files & media",
+  icon: Signature,
+  keywords: ["sign", "signature", "consent", "autograph", "draw"],
+  labelMode: "group",
+  defaults: { label: "Signature", helper: "Draw with your mouse, trackpad or finger.", width: "full" },
+  settings: [S.text("placeholder", "Hint", "Sign here")],
+  tokens: {
+    signatureFrame: { base: SIGNATURE_FRAME_BASE, light: "border-slate-300 bg-white", dark: "border-slate-700/80 bg-slate-900/70" },
+    signatureFrameError: { base: SIGNATURE_FRAME_BASE, light: "border-rose-400 bg-rose-50", dark: "border-rose-500/80 bg-rose-950/20" },
+    /* Ink is drawn dark; dark mode inverts it (hue-rotate keeps the slate tint) so it follows theme switches live. */
+    signatureCanvas: { base: "relative block h-40 w-full cursor-crosshair touch-none", light: "invert-0", dark: "invert hue-rotate-180" },
+    signatureLine: { base: "pointer-events-none absolute inset-x-6 bottom-10 border-t border-dashed", light: "border-slate-300", dark: "border-slate-700" },
+    signatureHint: { base: "pointer-events-none absolute bottom-12 left-6 select-none text-sm", light: "text-slate-400", dark: "text-slate-500" },
+    signatureClear: {
+      base: "absolute right-2 top-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium outline-none transition duration-150 focus-visible:ring-4 focus-visible:ring-indigo-500/20 disabled:pointer-events-none disabled:opacity-40",
+      light: "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
+      dark: "text-slate-400 hover:bg-slate-800 hover:text-white",
+    },
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    return (
+      <div role="group" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className={ctx.clsOf("signatureFrame", "signatureFrameError")}>
+        <span className={s.signatureLine} aria-hidden="true" />
+        {!value && f.placeholder ? (
+          <span className={s.signatureHint} aria-hidden="true">
+            {f.placeholder}
+          </span>
+        ) : null}
+        <SignaturePad value={value} onChange={set} className={s.signatureCanvas} />
+        <button type="button" disabled={!value} onClick={() => set("")} className={s.signatureClear}>
+          <Eraser className="h-3.5 w-3.5" aria-hidden="true" />
+          Clear
+        </button>
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.use("SignaturePad");
+    ctx.line("<div");
+    ctx.line('role="group"', 1);
+    ctx.line(ctx.labelledAttr, 1);
+    if (ctx.describedAttr) ctx.line(ctx.describedAttr, 1);
+    ctx.line("className=" + ctx.clsValue("", "signatureFrame", "signatureFrameError"), 1);
+    ctx.line(">");
+    ctx.line("<span className=" + q(s.signatureLine) + ' aria-hidden="true" />', 1);
+    if (f.placeholder) {
+      ctx.line("{!" + v + " && (", 1);
+      ctx.line("<span className=" + q(s.signatureHint) + ' aria-hidden="true">', 2);
+      ctx.line(scalesText(ctx, f.placeholder), 3);
+      ctx.line("</span>", 2);
+      ctx.line(")}", 1);
+    }
+    ctx.line("<SignaturePad", 1);
+    ctx.line("value={" + v + "}", 2);
+    ctx.line("onChange={(dataUrl) => " + ctx.set("dataUrl") + "}", 2);
+    ctx.line("className=" + q(s.signatureCanvas), 2);
+    ctx.line("/>", 1);
+    ctx.line("<button", 1);
+    ctx.line('type="button"', 2);
+    ctx.line("disabled={!" + v + "}", 2);
+    ctx.line("onClick={() => " + ctx.set('""') + "}", 2);
+    ctx.line("className=" + q(s.signatureClear), 2);
+    ctx.line(">", 1);
+    ctx.line("<" + ctx.icon("Eraser") + ' className="h-3.5 w-3.5" aria-hidden="true" />', 2);
+    ctx.line("Clear", 2);
+    ctx.line("</button>", 1);
+    ctx.line("</div>");
+  },
+});
+
+/* ---- Family: Date, time & layout -------------------------------------------
+ * Date & time: datetime, month, week, dateRange, duration, year
+ * Layout:      paragraph, callout, spacer, imageBlock, reset
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Value formats of the native pickers. Firefox and desktop Safari render
+ * month/week inputs as plain text boxes, so the format is checked too.
+ */
+const dtlPatterns = {
+  datetime: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?$/,
+  month: /^\d{4}-(0[1-9]|1[0-2])$/,
+  week: /^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])$/,
+};
+
+defineHelper("DATETIME_PATTERN", { scope: "module", lines: ["const DATETIME_PATTERN = " + dtlPatterns.datetime.toString() + ";"] });
+defineHelper("MONTH_PATTERN", { scope: "module", lines: ["const MONTH_PATTERN = " + dtlPatterns.month.toString() + ";"] });
+defineHelper("WEEK_PATTERN", { scope: "module", lines: ["const WEEK_PATTERN = " + dtlPatterns.week.toString() + ";"] });
+
+/**
+ * Text JSX would read as an HTML entity (&amp; &copy; &#169;) — in children and
+ * in attribute strings alike. A bare "Terms & conditions" is left alone.
+ */
+const dtlEntity = /&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);/i;
+
+/** JSX child for user copy: quoted when it holds line breaks or an entity JSX would decode. */
+const dtlText = (ctx, text) => (/\n/.test(text) || dtlEntity.test(text) ? "{" + ctx.q(text) + "}" : ctx.jsxText(text));
+
+/**
+ * A string attribute for user-provided text. JSX attribute strings have no
+ * escape sequences but do decode entities, so anything q() would escape
+ * (quotes, backslashes, line breaks) or an entity goes in an expression
+ * container instead: alt={"The \"A\" team"}.
+ */
+const dtlAttr = (ctx, name, value) => {
+  const text = String(value);
+  const literal = ctx.q(text);
+  return name + "=" + (literal === '"' + text + '"' && !dtlEntity.test(text) ? literal : "{" + literal + "}");
+};
+
+/**
+ * Adds per-field attributes (min, max, placeholder …) to a plain, ungrouped
+ * textInput(). `attrsOf(f)` returns { name: string | number | null }; null
+ * entries are left out. In the export they sit just before aria-describedby /
+ * value, where a person would write them. When attrsOf owns `placeholder`,
+ * textInput's own placeholder line is suppressed so user text is emitted
+ * through dtlAttr (quote-safe).
+ */
+function dtlWithAttrs(base, attrsOf) {
+  const present = (attrs) => Object.keys(attrs).filter((name) => attrs[name] != null);
+  return {
+    render(ctx) {
+      const attrs = attrsOf(ctx.f);
+      const props = {};
+      present(attrs).forEach((name) => {
+        props[name] = attrs[name];
+      });
+      return React.cloneElement(base.render(ctx), props);
+    },
+    emit(ctx) {
+      const attrs = attrsOf(ctx.f);
+      let pending = present(attrs);
+      base.emit({
+        ...ctx,
+        f: "placeholder" in attrs ? { ...ctx.f, placeholder: "" } : ctx.f,
+        line(text, offset) {
+          if (pending.length && /^(aria-describedby|value)=/.test(text)) {
+            pending.forEach((name) => {
+              const value = attrs[name];
+              ctx.line(typeof value === "number" ? name + "={" + value + "}" : dtlAttr(ctx, name, value), offset);
+            });
+            pending = [];
+          }
+          ctx.line(text, offset);
+        },
+      });
+    },
+  };
+}
+
+/* ---- Date & time --------------------------------------------------------- */
+
+/**
+ * Bounds a datetime field actually applies — only complete "YYYY-MM-DDThh:mm[:ss]"
+ * values count. Zero seconds are dropped ("09:00:00" → "09:00") because pickers
+ * report minute values, and "…T09:00" sorts before "…T09:00:00" as a string —
+ * the earliest allowed minute would otherwise be rejected.
+ */
+const dtlDatetimeBounds = (f) => {
+  const pick = (raw) => {
+    /* "2026-01-01 09:00" (as the error message prints it) counts too. */
+    const value = typeof raw === "string" ? raw.trim().replace(/^(\d{4}-\d{2}-\d{2}) +(?=\d)/, "$1T") : "";
+    return dtlPatterns.datetime.test(value) ? value.replace(/(T\d{2}:\d{2}):00(\.0{1,3})?$/, "$1") : null;
+  };
+  return { min: pick(f.min), max: pick(f.max) };
+};
+const dtlReadableDatetime = (value) => value.replace("T", " ");
+
+defineType({
+  type: "datetime",
+  name: "Date & Time",
+  blurb: "Date plus clock time",
+  group: "Date & time",
+  icon: CalendarClock,
+  keywords: ["datetime", "timestamp", "appointment", "schedule", "meeting"],
+  defaults: { label: "Preferred meeting time" },
+  settings: [
+    S.text("min", "Earliest", "", { mono: true, hint: "optional", placeholder: "2026-01-01T09:00" }),
+    S.text("max", "Latest", "", { mono: true, hint: "optional", placeholder: "2026-12-31T17:00" }),
+  ],
+  /* A complete latest bound earlier than the earliest one is raised to match it. */
+  sanitize: (f) => {
+    const { min, max } = dtlDatetimeBounds(f);
+    return min && max && max < min ? { ...f, max: min } : f;
+  },
+  validate: {
+    test: (f, v) => {
+      const { min, max } = dtlDatetimeBounds(f);
+      const value = String(v);
+      return dtlPatterns.datetime.test(value) && (!min || value >= min) && (!max || value <= max);
+    },
+    code: (ctx) => {
+      const { min, max } = dtlDatetimeBounds(ctx.f);
+      ctx.use("DATETIME_PATTERN");
+      const parts = ["!DATETIME_PATTERN.test(" + ctx.v + ")"];
+      if (min) parts.push(ctx.v + " < " + q(min));
+      if (max) parts.push(ctx.v + " > " + q(max));
+      return parts.join(" || ");
+    },
+    message: (f) => {
+      const { min, max } = dtlDatetimeBounds(f);
+      if (min && max) return "Choose a time between " + dtlReadableDatetime(min) + " and " + dtlReadableDatetime(max);
+      if (min) return "Choose a time on or after " + dtlReadableDatetime(min);
+      if (max) return "Choose a time on or before " + dtlReadableDatetime(max);
+      return "Enter a valid date and time";
+    },
+  },
+  ...dtlWithAttrs(textInput({ htmlType: "datetime-local", scheme: true }), dtlDatetimeBounds),
+});
+
+defineType({
+  type: "month",
+  name: "Month",
+  blurb: "Month and year",
+  group: "Date & time",
+  icon: CalendarFold,
+  keywords: ["month", "billing period", "yyyy-mm", "start month"],
+  defaults: { label: "Start month" },
+  validate: {
+    test: (f, v) => dtlPatterns.month.test(String(v)),
+    code: (ctx) => (ctx.use("MONTH_PATTERN"), "!MONTH_PATTERN.test(" + ctx.v + ")"),
+    message: () => "Enter a month as YYYY-MM",
+  },
+  /* The placeholder only shows where the browser falls back to a text box. */
+  ...dtlWithAttrs(textInput({ htmlType: "month", scheme: true }), () => ({ placeholder: "YYYY-MM" })),
+});
+
+defineType({
+  type: "week",
+  name: "Week",
+  blurb: "ISO week of a year",
+  group: "Date & time",
+  icon: Calendar1,
+  keywords: ["week number", "iso week", "sprint", "delivery week"],
+  defaults: { label: "Delivery week" },
+  validate: {
+    test: (f, v) => dtlPatterns.week.test(String(v)),
+    code: (ctx) => (ctx.use("WEEK_PATTERN"), "!WEEK_PATTERN.test(" + ctx.v + ")"),
+    message: () => "Enter a week as YYYY-Www, like 2026-W09",
+  },
+  ...dtlWithAttrs(textInput({ htmlType: "week", scheme: true }), () => ({ placeholder: "YYYY-Www" })),
+});
+
+const dtlRangeLabel = (f, which) => {
+  const text = String((which === "start" ? f.startLabel : f.endLabel) || "").trim();
+  return text || (which === "start" ? "Start" : "End");
+};
+
+defineType({
+  type: "dateRange",
+  name: "Date Range",
+  blurb: "Start and end dates",
+  group: "Date & time",
+  icon: CalendarRange,
+  keywords: ["range", "from to", "start end", "period", "booking", "check-in"],
+  labelMode: "group",
+  defaults: { label: "Project timeline", width: "full" },
+  settings: [S.text("startLabel", "Start label", "Start"), S.text("endLabel", "End label", "End")],
+  empty: () => ({ start: "", end: "" }),
+  /* Required means both ends are chosen. */
+  blank: {
+    test: (f, v) => !v || !v.start || !v.end,
+    code: (ctx) => "!" + ctx.v + ".start || !" + ctx.v + ".end",
+  },
+  validate: {
+    test: (f, v) => v.end >= v.start,
+    code: (ctx) => ctx.v + ".end < " + ctx.v + ".start",
+    message: () => "The end date must be on or after the start date",
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const v = value || { start: "", end: "" };
+    const cls = ctx.cls + " " + s.dateScheme;
+    return (
+      <div role="group" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor={ctx.id + "-start"} className={s.subLabel}>
+            {dtlRangeLabel(f, "start")}
+          </label>
+          <input
+            id={ctx.id + "-start"}
+            name={f.key + "_start"}
+            type="date"
+            value={v.start}
+            onChange={(event) => set({ ...v, start: event.target.value })}
+            className={cls}
+          />
+        </div>
+        <div>
+          <label htmlFor={ctx.id + "-end"} className={s.subLabel}>
+            {dtlRangeLabel(f, "end")}
+          </label>
+          <input
+            id={ctx.id + "-end"}
+            name={f.key + "_end"}
+            type="date"
+            min={v.start}
+            value={v.end}
+            onChange={(event) => set({ ...v, end: event.target.value })}
+            className={cls}
+          />
+        </div>
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q, v } = ctx;
+    ctx.line('<div role="group" ' + ctx.labelledAttr + (ctx.describedAttr ? " " + ctx.describedAttr : "") + ' className="grid gap-3 sm:grid-cols-2">');
+    ["start", "end"].forEach((which) => {
+      ctx.line("<div>", 1);
+      ctx.line("<label htmlFor=" + q(ctx.key + "-" + which) + " className=" + q(s.subLabel) + ">", 2);
+      ctx.line(dtlText(ctx, dtlRangeLabel(f, which)), 3);
+      ctx.line("</label>", 2);
+      ctx.line("<input", 2);
+      ctx.line("id=" + q(ctx.key + "-" + which), 3);
+      ctx.line("name=" + q(ctx.key + "_" + which), 3);
+      ctx.line('type="date"', 3);
+      if (which === "end") ctx.line("min={" + v + ".start}", 3);
+      ctx.line("value={" + v + "." + which + "}", 3);
+      ctx.line(ctx.onChange("{ ..." + v + ", " + which + ": event.target.value }"), 3);
+      ctx.line("className=" + ctx.clsValue(" " + s.dateScheme), 3);
+      ctx.line("/>", 2);
+      ctx.line("</div>", 1);
+    });
+    ctx.line("</div>");
+  },
+});
+
+/** The two boxes of a Duration: whole hours, and minutes within the hour. */
+const dtlDurationParts = [
+  { part: "hours", label: "Hours", unit: "h", max: null },
+  { part: "minutes", label: "Minutes", unit: "min", max: 59 },
+];
+/** Digits or nothing: number inputs report "" for text they cannot parse. */
+const dtlWholeNumber = /^\d*$/;
+defineHelper("DURATION_PART_PATTERN", {
+  scope: "module",
+  lines: ["const DURATION_PART_PATTERN = " + dtlWholeNumber.toString() + ";"],
+});
+
+defineType({
+  type: "duration",
+  name: "Duration",
+  blurb: "Hours and minutes",
+  group: "Date & time",
+  icon: Timer,
+  keywords: ["hours", "minutes", "length", "time spent", "elapsed", "effort"],
+  labelMode: "group",
+  defaults: { label: "Estimated duration" },
+  empty: () => ({ hours: "", minutes: "" }),
+  validate: {
+    test: (f, v) =>
+      dtlWholeNumber.test(String(v.hours)) && dtlWholeNumber.test(String(v.minutes)) && Number(v.minutes) <= 59,
+    code: (ctx) => {
+      ctx.use("DURATION_PART_PATTERN");
+      const { v } = ctx;
+      return "!DURATION_PART_PATTERN.test(" + v + ".hours) || !DURATION_PART_PATTERN.test(" + v + ".minutes) || Number(" + v + ".minutes) > 59";
+    },
+    message: () => "Use whole hours and 0–59 minutes",
+  },
+  render(ctx) {
+    const { f, value, set, s } = ctx;
+    const v = value || { hours: "", minutes: "" };
+    return (
+      <div role="group" aria-labelledby={ctx.labelId} aria-describedby={ctx.describedBy} className="grid grid-cols-2 gap-3">
+        {dtlDurationParts.map((p) => (
+          <div key={p.part} className={ctx.clsOf("inputGroup", "inputGroupError")}>
+            <input
+              id={ctx.id + "-" + p.part}
+              name={f.key + "_" + p.part}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={p.max == null ? undefined : p.max}
+              aria-label={p.label}
+              value={v[p.part]}
+              onChange={(event) => set({ ...v, [p.part]: event.target.value })}
+              className={s.bare}
+            />
+            <span aria-hidden="true" className={s.addon}>
+              {p.unit}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { s, q, v } = ctx;
+    ctx.line('<div role="group" ' + ctx.labelledAttr + (ctx.describedAttr ? " " + ctx.describedAttr : "") + ' className="grid grid-cols-2 gap-3">');
+    dtlDurationParts.forEach((p) => {
+      ctx.line("<div className=" + ctx.clsValue("", "inputGroup", "inputGroupError") + ">", 1);
+      ctx.line("<input", 2);
+      ctx.line("id=" + q(ctx.key + "-" + p.part), 3);
+      ctx.line("name=" + q(ctx.key + "_" + p.part), 3);
+      ctx.line('type="number"', 3);
+      ctx.line('inputMode="numeric"', 3);
+      ctx.line("min={0}", 3);
+      if (p.max != null) ctx.line("max={" + p.max + "}", 3);
+      ctx.line("aria-label=" + q(p.label), 3);
+      ctx.line("value={" + v + "." + p.part + "}", 3);
+      ctx.line(ctx.onChange("{ ..." + v + ", " + p.part + ": event.target.value }"), 3);
+      ctx.line("className=" + q(s.bare), 3);
+      ctx.line("/>", 2);
+      ctx.line('<span aria-hidden="true" className=' + q(s.addon) + ">" + p.unit + "</span>", 2);
+      ctx.line("</div>", 1);
+    });
+    ctx.line("</div>");
+  },
+});
+
+const dtlYearPattern = /^\d{4}$/;
+defineHelper("YEAR_PATTERN", { scope: "module", lines: ["const YEAR_PATTERN = " + dtlYearPattern.toString() + ";"] });
+
+defineType({
+  type: "year",
+  name: "Year",
+  blurb: "Four-digit year",
+  group: "Date & time",
+  icon: CalendarCheck,
+  keywords: ["yyyy", "founded", "graduation", "model year", "birth year"],
+  defaults: { label: "Year founded" },
+  settings: [
+    S.placeholder("2015"),
+    S.number("min", "Earliest", 1900, { min: 1000, max: 9999, step: 1 }),
+    S.number("max", "Latest", 2100, { min: 1000, max: 9999, step: 1 }),
+  ],
+  /* Whole years only, and never a latest year before the earliest one. */
+  sanitize: (f) => {
+    const min = Math.round(f.min);
+    const max = Math.max(min, Math.round(f.max));
+    return min === f.min && max === f.max ? f : { ...f, min, max };
+  },
+  /* Four plain digits: number inputs also accept "2e3" or "2015.0", which are not years. */
+  validate: {
+    test: (f, v) => dtlYearPattern.test(String(v)) && Number(v) >= f.min && Number(v) <= f.max,
+    code: (ctx) => {
+      ctx.use("YEAR_PATTERN");
+      const n = "Number(" + ctx.v + ")";
+      return "!YEAR_PATTERN.test(" + ctx.v + ") || " + n + " < " + ctx.f.min + " || " + n + " > " + ctx.f.max;
+    },
+    message: (f) => "Enter a year from " + f.min + " to " + f.max,
+  },
+  ...dtlWithAttrs(textInput({ htmlType: "number", inputMode: "numeric" }), (f) => ({
+    min: f.min,
+    max: f.max,
+    placeholder: f.placeholder || null,
+  })),
+});
+
+/* ---- Layout -------------------------------------------------------------- */
+
+const dtlParagraphToken = (f) => (f.size === "base" ? "paragraphBase" : "paragraphSm");
+
+defineType({
+  type: "paragraph",
+  name: "Text Block",
+  blurb: "Explanatory copy",
+  group: "Layout",
+  icon: Pilcrow,
+  keywords: ["text", "copy", "description", "instructions", "body", "note"],
+  kind: "static",
+  common: ["width"],
+  defaults: { label: "Text block", width: "full" },
+  settings: [
+    S.textarea("content", "Text", "We read every submission and reply within one business day."),
+    S.select("size", "Size", "sm", [
+      { value: "sm", label: "Regular" },
+      { value: "base", label: "Large" },
+    ]),
+  ],
+  tokens: {
+    paragraphSm: { base: "whitespace-pre-line text-sm leading-relaxed", light: "text-slate-600", dark: "text-slate-400" },
+    paragraphBase: { base: "whitespace-pre-line text-base leading-relaxed", light: "text-slate-600", dark: "text-slate-400" },
+  },
+  render({ f, s }) {
+    return <p className={s[dtlParagraphToken(f)]}>{f.content}</p>;
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    const cls = "<p className=" + q(s[dtlParagraphToken(f)]);
+    if (!f.content) {
+      ctx.line(cls + " />");
+      return;
+    }
+    ctx.line(cls + ">");
+    ctx.line(dtlText(ctx, f.content), 1);
+    ctx.line("</p>");
+  },
+});
+
+/** Callout tones: box token, icon token and the lucide icon (component + name). */
+const dtlCalloutTones = {
+  info: { box: "calloutInfo", mark: "calloutInfoIcon", Icon: Info, iconName: "Info" },
+  success: { box: "calloutSuccess", mark: "calloutSuccessIcon", Icon: CircleCheck, iconName: "CircleCheck" },
+  warning: { box: "calloutWarning", mark: "calloutWarningIcon", Icon: TriangleAlert, iconName: "TriangleAlert" },
+  danger: { box: "calloutDanger", mark: "calloutDangerIcon", Icon: OctagonAlert, iconName: "OctagonAlert" },
+};
+const dtlCalloutBox = "flex gap-3 rounded-lg border px-4 py-3.5";
+const dtlCalloutMark = "mt-0.5 h-4 w-4 shrink-0";
+
+defineType({
+  type: "callout",
+  name: "Callout",
+  blurb: "Tinted notice box",
+  group: "Layout",
+  icon: MessageSquareWarning,
+  keywords: ["alert", "notice", "banner", "warning", "tip", "info"],
+  kind: "static",
+  common: ["width"],
+  defaults: { label: "Callout", width: "full" },
+  settings: [
+    S.select("tone", "Tone", "info", [
+      { value: "info", label: "Info" },
+      { value: "success", label: "Success" },
+      { value: "warning", label: "Warning" },
+      { value: "danger", label: "Danger" },
+    ]),
+    S.text("title", "Title", "Before you start"),
+    S.textarea("content", "Text", "Have your company website and rough team size to hand — the form takes about two minutes."),
+  ],
+  tokens: {
+    calloutInfo: { base: dtlCalloutBox, light: "border-sky-200 bg-sky-50", dark: "border-sky-400/20 bg-sky-400/10" },
+    calloutInfoIcon: { base: dtlCalloutMark, light: "text-sky-600", dark: "text-sky-400" },
+    calloutSuccess: { base: dtlCalloutBox, light: "border-emerald-200 bg-emerald-50", dark: "border-emerald-400/20 bg-emerald-400/10" },
+    calloutSuccessIcon: { base: dtlCalloutMark, light: "text-emerald-600", dark: "text-emerald-400" },
+    calloutWarning: { base: dtlCalloutBox, light: "border-amber-200 bg-amber-50", dark: "border-amber-400/20 bg-amber-400/10" },
+    calloutWarningIcon: { base: dtlCalloutMark, light: "text-amber-600", dark: "text-amber-400" },
+    calloutDanger: { base: dtlCalloutBox, light: "border-rose-200 bg-rose-50", dark: "border-rose-400/20 bg-rose-400/10" },
+    calloutDangerIcon: { base: dtlCalloutMark, light: "text-rose-600", dark: "text-rose-400" },
+    calloutTitle: { base: "text-sm font-semibold tracking-tight", light: "text-slate-900", dark: "text-slate-100" },
+    calloutBody: { base: "whitespace-pre-line text-sm leading-relaxed", light: "text-slate-600", dark: "text-slate-300" },
+  },
+  render({ f, s }) {
+    const tone = dtlCalloutTones[f.tone] || dtlCalloutTones.info;
+    const ToneIcon = tone.Icon;
+    return (
+      <div role="note" className={s[tone.box]}>
+        <ToneIcon className={s[tone.mark]} aria-hidden="true" />
+        <div className="min-w-0 space-y-1">
+          {f.title ? <p className={s.calloutTitle}>{f.title}</p> : null}
+          {f.content ? <p className={s.calloutBody}>{f.content}</p> : null}
+        </div>
+      </div>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    const tone = dtlCalloutTones[f.tone] || dtlCalloutTones.info;
+    ctx.line('<div role="note" className=' + q(s[tone.box]) + ">");
+    ctx.line("<" + ctx.icon(tone.iconName) + " className=" + q(s[tone.mark]) + ' aria-hidden="true" />', 1);
+    if (!f.title && !f.content) {
+      ctx.line('<div className="min-w-0 space-y-1" />', 1);
+      ctx.line("</div>");
+      return;
+    }
+    ctx.line('<div className="min-w-0 space-y-1">', 1);
+    if (f.title) ctx.line("<p className=" + q(s.calloutTitle) + ">" + dtlText(ctx, f.title) + "</p>", 2);
+    if (f.content) {
+      ctx.line("<p className=" + q(s.calloutBody) + ">", 2);
+      ctx.line(dtlText(ctx, f.content), 3);
+      ctx.line("</p>", 2);
+    }
+    ctx.line("</div>", 1);
+    ctx.line("</div>");
+  },
+});
+
+const dtlSpacerHeights = { sm: "h-2", md: "h-6", lg: "h-12" };
+
+defineType({
+  type: "spacer",
+  name: "Spacer",
+  blurb: "Vertical breathing room",
+  group: "Layout",
+  icon: MoveVertical,
+  keywords: ["gap", "space", "whitespace", "margin", "padding"],
+  kind: "static",
+  defaults: { label: "Spacer", width: "full" },
+  settings: [
+    S.select("size", "Height", "md", [
+      { value: "sm", label: "Small" },
+      { value: "md", label: "Medium" },
+      { value: "lg", label: "Large" },
+    ]),
+  ],
+  render({ f }) {
+    return <div aria-hidden="true" className={dtlSpacerHeights[f.size] || dtlSpacerHeights.md} />;
+  },
+  emit(ctx) {
+    ctx.line('<div aria-hidden="true" className=' + ctx.q(dtlSpacerHeights[ctx.f.size] || dtlSpacerHeights.md) + " />");
+  },
+});
+
+/** The image URL to show: absolute http(s), root- or dot-relative paths and data:image URLs only. */
+const dtlImageSrc = (f) => {
+  const src = String(f.src || "").trim();
+  return /^(https?:\/\/|\/|\.{1,2}\/|data:image\/)/i.test(src) ? src : "";
+};
+const dtlImagePlaceholder = "Add an image URL in the Inspector";
+
+defineType({
+  type: "imageBlock",
+  name: "Image",
+  blurb: "Static picture",
+  group: "Layout",
+  icon: ImageIcon,
+  keywords: ["picture", "photo", "illustration", "banner", "logo", "img"],
+  kind: "static",
+  common: ["width"],
+  defaults: { label: "Image", width: "full" },
+  settings: [
+    S.text("src", "Image URL", "", { mono: true, hint: "https:// or /path", placeholder: "https://…" }),
+    S.text("alt", "Alt text", "Screenshot of the product dashboard", { hint: "for screen readers" }),
+    S.text("caption", "Caption", "", { hint: "optional" }),
+  ],
+  tokens: {
+    imageBlockImg: {
+      base: "block max-h-80 w-full rounded-lg border object-cover",
+      light: "border-slate-200 bg-slate-100",
+      dark: "border-slate-800 bg-slate-900",
+    },
+    imageBlockEmpty: {
+      base: "flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 text-center text-xs",
+      light: "border-slate-300 bg-slate-50 text-slate-500",
+      dark: "border-slate-700 bg-slate-900/40 text-slate-400",
+    },
+  },
+  render({ f, s }) {
+    const src = dtlImageSrc(f);
+    return (
+      <figure>
+        {src ? (
+          <img src={src} alt={f.alt} loading="lazy" className={s.imageBlockImg} />
+        ) : (
+          <div className={s.imageBlockEmpty}>
+            <ImageIcon className="h-6 w-6" aria-hidden="true" />
+            <p>{dtlImagePlaceholder}</p>
+          </div>
+        )}
+        {f.caption ? <figcaption className={s.helper}>{f.caption}</figcaption> : null}
+      </figure>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    const src = dtlImageSrc(f);
+    ctx.line("<figure>");
+    if (src) {
+      ctx.line("<img", 1);
+      ctx.line(dtlAttr(ctx, "src", src), 2);
+      ctx.line(dtlAttr(ctx, "alt", f.alt), 2);
+      ctx.line('loading="lazy"', 2);
+      ctx.line("className=" + q(s.imageBlockImg), 2);
+      ctx.line("/>", 1);
+    } else {
+      ctx.line("{/* Placeholder: set an image URL on this element in Formcraft. */}", 1);
+      ctx.line("<div className=" + q(s.imageBlockEmpty) + ">", 1);
+      ctx.line("<" + ctx.icon("ImageIcon") + ' className="h-6 w-6" aria-hidden="true" />', 2);
+      ctx.line("<p>" + dtlImagePlaceholder + "</p>", 2);
+      ctx.line("</div>", 1);
+    }
+    if (f.caption) ctx.line("<figcaption className=" + q(s.helper) + ">" + dtlText(ctx, f.caption) + "</figcaption>", 1);
+    ctx.line("</figure>");
+  },
+});
+
+const dtlResetLabel = (f) => String(f.label || "").trim() || "Clear form";
+
+defineType({
+  type: "reset",
+  name: "Reset Button",
+  blurb: "Clears every field",
+  group: "Layout",
+  icon: Eraser,
+  keywords: ["clear", "reset", "start over", "button", "undo"],
+  kind: "action",
+  inspect: { label: "Button text" },
+  cell: "pt-2",
+  defaults: { label: "Clear form", width: "full" },
+  tokens: {
+    resetButton: {
+      base:
+        "inline-flex w-full items-center justify-center gap-2 rounded-lg border px-5 py-2.5 text-sm font-medium tracking-tight outline-none transition duration-150 focus-visible:ring-4 active:translate-y-px",
+      light: "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-indigo-500/20",
+      dark: "border-slate-700 bg-transparent text-slate-300 hover:border-slate-600 hover:bg-slate-800/60 hover:text-white focus-visible:ring-indigo-500/25",
+    },
+  },
+  render({ f, s, reset }) {
+    return (
+      <button type="button" onClick={() => reset()} className={s.resetButton}>
+        <RotateCcw className="h-4 w-4" aria-hidden="true" />
+        {dtlResetLabel(f)}
+      </button>
+    );
+  },
+  emit(ctx) {
+    const { f, s, q } = ctx;
+    ctx.use("resetForm");
+    ctx.line('<button type="button" onClick={resetForm} className=' + q(s.resetButton) + ">");
+    ctx.line("<" + ctx.icon("RotateCcw") + ' className="h-4 w-4" aria-hidden="true" />', 1);
+    ctx.line(dtlText(ctx, dtlResetLabel(f)), 1);
+    ctx.line("</button>");
+  },
+});
+
+/* ---- end of element definitions ---- */
+
+/* ============================================================================
+ * 5. Registry finalisation
+ * ==========================================================================*/
+
 /** `auto` is an export-only mode; on screen it renders as the dark set. */
 const STYLES = { dark: buildStyles("dark"), light: buildStyles("light"), auto: buildStyles("auto") };
 const renderStyles = (mode) => (mode === "light" ? STYLES.light : STYLES.dark);
 
+const TOOLBOX_GROUPS = GROUPS.map((name) => ({
+  name,
+  items: TYPE_ORDER.map((type) => TYPES[type]).filter((def) => def.group === name),
+})).filter((group) => group.items.length);
+
+/* ============================================================================
+ * 6. Document model
+ * ==========================================================================*/
+
 const STORAGE_KEY = "formcraft.document.v1";
-const SCHEMA_VERSION = 2;
-
-/** Injected once so the file stays portable with zero extra config. */
-const RUNTIME_STYLES = `
-  .fc-display { font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif; }
-  .fc-body { font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif; }
-  .fc-mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .fc-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
-  .fc-scroll::-webkit-scrollbar-track { background: transparent; }
-  .fc-scroll::-webkit-scrollbar-thumb { background: #2a3145; border: 3px solid transparent; background-clip: content-box; border-radius: 999px; }
-  .fc-scroll::-webkit-scrollbar-thumb:hover { background: #3c455f; background-clip: content-box; }
-  .fc-scroll { scrollbar-width: thin; scrollbar-color: #2a3145 transparent; }
-  .fc-grid-bg {
-    background-image:
-      linear-gradient(to right, rgba(148,163,184,0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(148,163,184,0.05) 1px, transparent 1px);
-    background-size: 28px 28px;
-  }
-  @keyframes fc-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  @keyframes fc-pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
-  @keyframes fc-toast { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-  .fc-rise { animation: fc-rise .28s cubic-bezier(.22,1,.36,1) both; }
-  .fc-pop { animation: fc-pop .2s cubic-bezier(.22,1,.36,1) both; }
-  .fc-toast { animation: fc-toast .24s cubic-bezier(.22,1,.36,1) both; }
-  @media (prefers-reduced-motion: reduce) {
-    .fc-rise, .fc-pop, .fc-toast { animation: none !important; }
-  }
-`;
-
-/* ============================================================================
- * 2. Field blueprints
- * ==========================================================================*/
-
-const BLUEPRINTS = [
-  {
-    type: "text",
-    name: "Short Text",
-    blurb: "Single-line input",
-    group: "Input",
-    icon: Type,
-    defaults: { label: "Full name", placeholder: "Jane Cooper" },
-  },
-  {
-    type: "textarea",
-    name: "Long Text",
-    blurb: "Multi-line textarea",
-    group: "Input",
-    icon: AlignLeft,
-    defaults: { label: "Tell us more", placeholder: "Share the details…", width: "full" },
-  },
-  {
-    type: "email",
-    name: "Email",
-    blurb: "Validated address",
-    group: "Input",
-    icon: Mail,
-    defaults: { label: "Work email", placeholder: "jane@company.com", helper: "We never share this." },
-  },
-  {
-    type: "tel",
-    name: "Phone",
-    blurb: "Telephone number",
-    group: "Input",
-    icon: Phone,
-    defaults: { label: "Phone", placeholder: "+46 70 123 45 67" },
-  },
-  {
-    type: "url",
-    name: "Website",
-    blurb: "Link input",
-    group: "Input",
-    icon: Link2,
-    defaults: { label: "Website", placeholder: "https://example.com" },
-  },
-  {
-    type: "password",
-    name: "Password",
-    blurb: "Masked input",
-    group: "Input",
-    icon: KeyRound,
-    defaults: { label: "Password", placeholder: "••••••••", helper: "At least 8 characters." },
-  },
-  {
-    type: "number",
-    name: "Number",
-    blurb: "Numeric input",
-    group: "Input",
-    icon: Hash,
-    defaults: { label: "Team size", placeholder: "12" },
-  },
-  {
-    type: "range",
-    name: "Slider",
-    blurb: "Bounded number",
-    group: "Input",
-    icon: SlidersHorizontal,
-    defaults: { label: "Monthly budget", width: "full", min: 0, max: 100, step: 5 },
-  },
-  {
-    type: "select",
-    name: "Dropdown",
-    blurb: "Single choice list",
-    group: "Choice",
-    icon: ChevronDown,
-    defaults: { label: "Plan", placeholder: "Choose a plan", options: ["Starter", "Growth", "Enterprise"] },
-  },
-  {
-    type: "radio",
-    name: "Radio Group",
-    blurb: "One of many",
-    group: "Choice",
-    icon: CircleDot,
-    defaults: {
-      label: "How did you hear about us?",
-      width: "full",
-      options: ["Search", "A friend", "Conference"],
-    },
-  },
-  {
-    type: "checkboxes",
-    name: "Checkbox Group",
-    blurb: "Many of many",
-    group: "Choice",
-    icon: ListChecks,
-    defaults: {
-      label: "What should we cover?",
-      width: "full",
-      options: ["Pricing", "Security review", "Migration"],
-    },
-  },
-  {
-    type: "checkbox",
-    name: "Toggle",
-    blurb: "Single boolean",
-    group: "Choice",
-    icon: ToggleRight,
-    defaults: { label: "Subscribe to the product newsletter", width: "full" },
-  },
-  {
-    type: "date",
-    name: "Date",
-    blurb: "Calendar value",
-    group: "Date & files",
-    icon: CalendarDays,
-    defaults: { label: "Preferred start date" },
-  },
-  {
-    type: "time",
-    name: "Time",
-    blurb: "Clock value",
-    group: "Date & files",
-    icon: Clock,
-    defaults: { label: "Preferred time" },
-  },
-  {
-    type: "file",
-    name: "File Upload",
-    blurb: "Attachment picker",
-    group: "Date & files",
-    icon: Upload,
-    defaults: { label: "Attach a brief", helper: "PDF or DOCX, up to 10 MB.", width: "full", accept: ".pdf,.docx" },
-  },
-  {
-    type: "heading",
-    name: "Section Heading",
-    blurb: "Groups the fields below",
-    group: "Layout",
-    icon: Heading,
-    defaults: { label: "About your team", helper: "", width: "full" },
-  },
-  {
-    type: "divider",
-    name: "Divider",
-    blurb: "Horizontal rule",
-    group: "Layout",
-    icon: Minus,
-    defaults: { label: "Divider", width: "full" },
-  },
-  {
-    type: "submit",
-    name: "Submit Button",
-    blurb: "Ends the form",
-    group: "Layout",
-    icon: Send,
-    defaults: { label: "Send request", width: "full" },
-  },
-];
-
-const BLUEPRINT_MAP = BLUEPRINTS.reduce((acc, bp) => {
-  acc[bp.type] = bp;
-  return acc;
-}, {});
-
-const TOOLBOX_GROUPS = BLUEPRINTS.reduce((acc, bp) => {
-  const group = acc.find((g) => g.name === bp.group);
-  if (group) group.items.push(bp);
-  else acc.push({ name: bp.group, items: [bp] });
-  return acc;
-}, []);
-
-/** Types that never hold a value. */
-const STATIC_TYPES = new Set(["heading", "divider", "submit"]);
-/** Types whose options list is editable. */
-const CHOICE_TYPES = new Set(["select", "radio", "checkboxes"]);
-/** Types that accept placeholder text. */
-const PLACEHOLDER_TYPES = new Set(["text", "email", "tel", "url", "password", "number", "textarea", "select"]);
-/** Types rendered by the generic <input> branch. */
-const PLAIN_INPUT_TYPES = new Set(["text", "email", "tel", "url", "password", "number", "date", "time"]);
-/** Types with no editable label. */
-const NO_LABEL_TYPES = new Set(["divider"]);
-
-/* ============================================================================
- * 3. Utilities
- * ==========================================================================*/
+const SCHEMA_VERSION = 3;
 
 let seq = 0;
 const uid = () =>
@@ -403,58 +6993,60 @@ function uniqueKey(desired, fields, selfId) {
   return candidate;
 }
 
-function createField(type, fields) {
-  const bp = BLUEPRINT_MAP[type] || BLUEPRINT_MAP.text;
-  const d = bp.defaults || {};
+const defOf = (type) => TYPES[type] || TYPES.text;
+const sanitizeField = (def, field) => (def.sanitize ? def.sanitize(field) : field);
+
+function createField(type, siblings) {
+  const def = defOf(type);
+  const d = def.defaults;
   const id = uid();
-  return {
+  const label = typeof d.label === "string" ? d.label : def.name;
+  const field = {
     id,
-    type: bp.type,
-    label: d.label || bp.name,
-    key: uniqueKey(d.label || bp.name, fields, id),
-    placeholder: d.placeholder || "",
-    helper: d.helper || "",
-    required: false,
-    width: d.width || "half",
-    options: Array.isArray(d.options) ? d.options.slice() : [],
-    min: d.min == null ? 0 : d.min,
-    max: d.max == null ? 100 : d.max,
-    step: d.step == null ? 1 : d.step,
-    accept: d.accept || "",
+    type: def.type,
+    key: uniqueKey(label || def.name, siblings, id),
     autoKey: true,
+    label,
+    helper: typeof d.helper === "string" ? d.helper : "",
+    required: def.common.indexOf("required") !== -1 && d.required === true,
+    width: d.width === "full" ? "full" : "half",
   };
+  def.settings.forEach((setting) => {
+    field[setting.prop] = cloneValue(setting.default);
+  });
+  return sanitizeField(def, field);
 }
 
-const toNumber = (value, fallback) => {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-};
-
-/** Defensive: anything coming out of localStorage is treated as hostile. */
+/** Defensive: anything from storage or an import is treated as hostile. */
 function normalizeField(raw, siblings) {
   if (!raw || typeof raw !== "object") return null;
-  const type = BLUEPRINT_MAP[raw.type] ? raw.type : "text";
-  const label =
-    typeof raw.label === "string" && raw.label.trim() ? raw.label : BLUEPRINT_MAP[type].name;
-  const id = typeof raw.id === "string" && raw.id ? raw.id : uid();
-  const min = toNumber(raw.min, 0);
-  const max = toNumber(raw.max, 100);
-  return {
+  const def = defOf(raw.type);
+  const label = typeof raw.label === "string" ? raw.label : typeof def.defaults.label === "string" ? def.defaults.label : def.name;
+  let id = typeof raw.id === "string" && raw.id ? raw.id : uid();
+  if (siblings.some((f) => f.id === id)) id = uid();
+  const field = {
     id,
-    type,
-    label,
-    key: uniqueKey(typeof raw.key === "string" && raw.key ? raw.key : label, siblings, id),
-    placeholder: typeof raw.placeholder === "string" ? raw.placeholder : "",
-    helper: typeof raw.helper === "string" ? raw.helper : "",
-    required: raw.required === true,
-    width: raw.width === "full" ? "full" : "half",
-    options: Array.isArray(raw.options) ? raw.options.filter((o) => typeof o === "string") : [],
-    min,
-    max: max > min ? max : min + 1,
-    step: Math.max(toNumber(raw.step, 1), 0.0001),
-    accept: typeof raw.accept === "string" ? raw.accept : "",
+    type: def.type,
+    key: uniqueKey(typeof raw.key === "string" && raw.key ? raw.key : label || def.name, siblings, id),
     autoKey: raw.autoKey !== false,
+    label,
+    helper: typeof raw.helper === "string" ? raw.helper : "",
+    required: def.common.indexOf("required") !== -1 && raw.required === true,
+    width: raw.width === "full" || raw.width === "half" ? raw.width : def.defaults.width === "full" ? "full" : "half",
   };
+  def.settings.forEach((setting) => {
+    field[setting.prop] = coerceSetting(setting, raw[setting.prop]);
+  });
+  return sanitizeField(def, field);
+}
+
+function normalizeFields(list) {
+  const fields = [];
+  (Array.isArray(list) ? list : []).forEach((item) => {
+    const field = normalizeField(item, fields);
+    if (field) fields.push(field);
+  });
+  return fields;
 }
 
 const DEFAULT_META = { title: "Untitled form", description: "", theme: "dark" };
@@ -468,56 +7060,77 @@ function normalizeMeta(raw) {
   };
 }
 
+/** Accepts a stored document, a schema export, or a bare field array. */
+function normalizeDocument(parsed) {
+  if (Array.isArray(parsed)) return { meta: { ...DEFAULT_META }, fields: normalizeFields(parsed) };
+  if (!parsed || typeof parsed !== "object") return null;
+  const metaSource = parsed.meta && typeof parsed.meta === "object" ? parsed.meta : parsed;
+  return { meta: normalizeMeta(metaSource), fields: normalizeFields(parsed.fields) };
+}
+
 function loadDocument() {
   const empty = { meta: { ...DEFAULT_META }, fields: [] };
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return empty;
-    const parsed = JSON.parse(raw);
-    const rawFields = Array.isArray(parsed)
-      ? parsed
-      : parsed && Array.isArray(parsed.fields)
-      ? parsed.fields
-      : [];
-    const fields = [];
-    rawFields.forEach((item) => {
-      const field = normalizeField(item, fields);
-      if (field) fields.push(field);
-    });
-    return { meta: normalizeMeta(parsed && parsed.meta), fields };
+    return normalizeDocument(JSON.parse(raw)) || empty;
   } catch (err) {
     return empty;
   }
 }
 
-function starterFields() {
-  const built = [];
-  ["heading", "text", "email", "select", "checkboxes", "textarea", "checkbox", "submit"].forEach((type) => {
-    built.push(createField(type, built));
-  });
-  built[1].required = true;
-  built[2].required = true;
-  built[3].required = true;
-  return built;
-}
-
 function emptyValueFor(field) {
-  if (field.type === "checkbox") return false;
-  if (field.type === "checkboxes") return [];
-  if (field.type === "range") return field.min;
-  return "";
+  const def = defOf(field.type);
+  if (def.kind !== "input") return undefined;
+  return def.empty ? def.empty(field) : "";
 }
 
-function isBlank(field, value) {
-  if (field.type === "checkbox") return value !== true;
-  if (field.type === "checkboxes") return !Array.isArray(value) || value.length === 0;
-  if (field.type === "range") return false;
-  if (field.type === "file") return !value;
-  return String(value == null ? "" : value).trim() === "";
+const isFieldBlank = (field, value) => {
+  const def = defOf(field.type);
+  return def.blank ? def.blank.test(field, value) : isBlankValue(value);
+};
+
+/** "Email is required" — or, for question-style labels, a sentence that reads naturally. */
+function requiredMessage(field) {
+  const def = defOf(field.type);
+  if (def.requiredText) return def.requiredText(field);
+  const label = String(field.label || "").trim();
+  if (!label) return "This field is required";
+  if (/\?$/.test(label)) return "Please answer this question";
+  return label + " is required";
+}
+
+/** Does this field's format rule apply? A rule may switch itself off per field with validate.when(f). */
+const validateActive = (def, field) => Boolean(def.validate) && (!def.validate.when || def.validate.when(field));
+
+/** The error a value would show, or null. Mirrors the exported handleSubmit. */
+function fieldError(field, value) {
+  const def = defOf(field.type);
+  if (def.kind !== "input") return null;
+  if (isFieldBlank(field, value)) {
+    return field.required && !def.alwaysFilled ? requiredMessage(field) : null;
+  }
+  if (validateActive(def, field) && !def.validate.test(field, value)) return def.validate.message(field);
+  return null;
+}
+
+/** Make a value JSON-friendly for the "submitted" panel (Files become names). */
+function toDisplay(value) {
+  if (typeof File !== "undefined" && value instanceof File) return value.name;
+  if (typeof Blob !== "undefined" && value instanceof Blob) return "[" + (value.type || "binary") + " blob]";
+  if (Array.isArray(value)) return value.map(toDisplay);
+  if (value && typeof value === "object") {
+    const out = {};
+    Object.keys(value).forEach((k) => {
+      out[k] = toDisplay(value[k]);
+    });
+    return out;
+  }
+  return value;
 }
 
 /* ============================================================================
- * 4. Exporters
+ * 7. Exporters
  * ==========================================================================*/
 
 function buildSchema(meta, fields) {
@@ -527,263 +7140,45 @@ function buildSchema(meta, fields) {
     description: meta.description,
     theme: meta.theme,
     fields: fields.map((f) => {
-      const node = { id: f.id, type: f.type, width: f.width };
-      if (f.type === "divider") return node;
-      node.label = f.label;
-      if (f.type === "heading") {
-        if (f.helper) node.note = f.helper;
-        return node;
+      const def = defOf(f.type);
+      const node = { id: f.id, type: f.type };
+      if (def.common.indexOf("label") !== -1) node.label = f.label;
+      if (def.kind === "input") {
+        node.key = f.key;
+        if (!def.alwaysFilled) node.required = f.required;
       }
-      if (f.type === "submit") return node;
-      node.key = f.key;
-      node.required = f.required;
-      if (PLACEHOLDER_TYPES.has(f.type) && f.placeholder) node.placeholder = f.placeholder;
-      if (f.helper) node.helper = f.helper;
-      if (CHOICE_TYPES.has(f.type)) node.options = f.options;
-      if (f.type === "range") {
-        node.min = f.min;
-        node.max = f.max;
-        node.step = f.step;
-      }
-      if (f.type === "file" && f.accept) node.accept = f.accept;
+      if (def.common.indexOf("helper") !== -1 && f.helper) node.helper = f.helper;
+      node.width = f.width;
+      def.settings.forEach((setting) => {
+        node[setting.prop] = cloneValue(f[setting.prop]);
+      });
       return node;
     }),
   };
 }
 
-const q = (value) => JSON.stringify(String(value == null ? "" : value));
-const jsxText = (value) =>
-  /[<>{}]/.test(String(value == null ? "" : value)) ? "{" + q(value) + "}" : String(value == null ? "" : value);
-const pad = (depth) => "  ".repeat(depth);
+const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 
-const CHECK_SVG =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-2.5 w-2.5 text-white"><path d="M20 6 9 17l-5-5" /></svg>';
-
-function emitLabel(field, s, d, out) {
-  out.push(pad(d) + "<label htmlFor=" + q(field.key) + " className=" + q(s.label) + ">");
-  out.push(pad(d + 1) + jsxText(field.label));
-  if (field.required) out.push(pad(d + 1) + "<span className=" + q(s.required) + ">*</span>");
-  out.push(pad(d) + "</label>");
+/** Source code for a JSON-like value, formatted the way a person would write it. */
+function toLiteral(value) {
+  if (value === undefined) return "undefined";
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return "[" + value.map(toLiteral).join(", ") + "]";
+  const keys = Object.keys(value);
+  if (!keys.length) return "{}";
+  return "{ " + keys.map((k) => (IDENTIFIER.test(k) ? k : JSON.stringify(k)) + ": " + toLiteral(value[k])).join(", ") + " }";
 }
 
-function emitTail(field, s, d, out) {
-  if (field.helper) {
-    out.push(pad(d) + "<p id=" + q(field.key + "-help") + " className=" + q(s.helper) + ">" + jsxText(field.helper) + "</p>");
-  }
-  if (field.required) {
-    out.push(pad(d) + "{errors." + field.key + " && <p className=" + q(s.error) + ">{errors." + field.key + "}</p>}");
-  }
+function cellClass(field) {
+  const def = defOf(field.type);
+  const base = def.cell != null ? def.cell : def.kind === "input" ? "min-w-0" : "";
+  return [base, field.width === "full" ? "sm:col-span-2" : ""].filter(Boolean).join(" ");
 }
 
-function emitControl(field, s, d, out) {
-  const cls = (extra) => {
-    const base = field.required
-      ? "errors." + field.key + " ? " + q(s.inputError) + " : " + q(s.input)
-      : q(s.input);
-    if (extra) return "{(" + base + ") + " + q(extra) + "}";
-    return field.required ? "{" + base + "}" : base;
-  };
-
-  if (field.type === "textarea") {
-    out.push(pad(d) + "<textarea");
-    out.push(pad(d + 1) + "id=" + q(field.key));
-    out.push(pad(d + 1) + "name=" + q(field.key));
-    if (field.helper) out.push(pad(d + 1) + "aria-describedby=" + q(field.key + "-help"));
-    out.push(pad(d + 1) + "rows={4}");
-    out.push(pad(d + 1) + "value={values." + field.key + "}");
-    if (field.placeholder) out.push(pad(d + 1) + "placeholder=" + q(field.placeholder));
-    out.push(pad(d + 1) + "onChange={(event) => setField(" + q(field.key) + ", event.target.value)}");
-    out.push(pad(d + 1) + "className=" + cls(" min-h-[112px] resize-y"));
-    out.push(pad(d) + "/>");
-    return;
-  }
-
-  if (field.type === "select") {
-    out.push(pad(d) + '<div className="relative">');
-    out.push(pad(d + 1) + "<select");
-    out.push(pad(d + 2) + "id=" + q(field.key));
-    out.push(pad(d + 2) + "name=" + q(field.key));
-    if (field.helper) out.push(pad(d + 2) + "aria-describedby=" + q(field.key + "-help"));
-    out.push(pad(d + 2) + "value={values." + field.key + "}");
-    out.push(pad(d + 2) + "onChange={(event) => setField(" + q(field.key) + ", event.target.value)}");
-    out.push(pad(d + 2) + "className=" + cls(" cursor-pointer appearance-none pr-10"));
-    out.push(pad(d + 1) + ">");
-    out.push(pad(d + 2) + '<option value="">' + jsxText(field.placeholder || "Select an option") + "</option>");
-    field.options.forEach((opt) => {
-      out.push(pad(d + 2) + "<option value=" + q(opt) + ">" + jsxText(opt) + "</option>");
-    });
-    out.push(pad(d + 1) + "</select>");
-    out.push(
-      pad(d + 1) +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60">'
-    );
-    out.push(pad(d + 2) + '<path d="m6 9 6 6 6-6" />');
-    out.push(pad(d + 1) + "</svg>");
-    out.push(pad(d) + "</div>");
-    return;
-  }
-
-  if (field.type === "radio") {
-    out.push(pad(d) + '<div role="radiogroup" aria-label=' + q(field.label) + ' className="grid gap-2">');
-    field.options.forEach((opt) => {
-      const match = "values." + field.key + " === " + q(opt);
-      out.push(pad(d + 1) + "<label");
-      out.push(pad(d + 2) + "key=" + q(opt));
-      out.push(pad(d + 2) + "className={" + match + " ? " + q(s.choiceActive) + " : " + q(s.choice) + "}");
-      out.push(pad(d + 1) + ">");
-      out.push(pad(d + 2) + "<input");
-      out.push(pad(d + 3) + 'type="radio"');
-      out.push(pad(d + 3) + "name=" + q(field.key));
-      out.push(pad(d + 3) + "value=" + q(opt));
-      out.push(pad(d + 3) + "checked={" + match + "}");
-      out.push(pad(d + 3) + "onChange={() => setField(" + q(field.key) + ", " + q(opt) + ")}");
-      out.push(pad(d + 3) + 'className="sr-only"');
-      out.push(pad(d + 2) + "/>");
-      out.push(
-        pad(d + 2) +
-          "<span className={" +
-          match +
-          " ? " +
-          q(s.markActive + " h-4 w-4 rounded-full") +
-          " : " +
-          q(s.mark + " h-4 w-4 rounded-full") +
-          "}>"
-      );
-      out.push(pad(d + 3) + "{" + match + " && <span className=" + q(s.markDot + " h-1.5 w-1.5") + " />}");
-      out.push(pad(d + 2) + "</span>");
-      out.push(pad(d + 2) + jsxText(opt));
-      out.push(pad(d + 1) + "</label>");
-    });
-    out.push(pad(d) + "</div>");
-    return;
-  }
-
-  if (field.type === "checkboxes") {
-    out.push(pad(d) + '<div role="group" aria-label=' + q(field.label) + ' className="grid gap-2">');
-    field.options.forEach((opt) => {
-      const match = "values." + field.key + ".includes(" + q(opt) + ")";
-      out.push(pad(d + 1) + "<label");
-      out.push(pad(d + 2) + "key=" + q(opt));
-      out.push(pad(d + 2) + "className={" + match + " ? " + q(s.choiceActive) + " : " + q(s.choice) + "}");
-      out.push(pad(d + 1) + ">");
-      out.push(pad(d + 2) + "<input");
-      out.push(pad(d + 3) + 'type="checkbox"');
-      out.push(pad(d + 3) + "name=" + q(field.key));
-      out.push(pad(d + 3) + "value=" + q(opt));
-      out.push(pad(d + 3) + "checked={" + match + "}");
-      out.push(pad(d + 3) + "onChange={() => toggleOption(" + q(field.key) + ", " + q(opt) + ")}");
-      out.push(pad(d + 3) + 'className="sr-only"');
-      out.push(pad(d + 2) + "/>");
-      out.push(
-        pad(d + 2) +
-          "<span className={" +
-          match +
-          " ? " +
-          q(s.markFill + " h-4 w-4") +
-          " : " +
-          q(s.mark + " h-4 w-4 rounded") +
-          "}>"
-      );
-      out.push(pad(d + 3) + "{" + match + " && " + CHECK_SVG + "}");
-      out.push(pad(d + 2) + "</span>");
-      out.push(pad(d + 2) + jsxText(opt));
-      out.push(pad(d + 1) + "</label>");
-    });
-    out.push(pad(d) + "</div>");
-    return;
-  }
-
-  if (field.type === "checkbox") {
-    const on = "values." + field.key;
-    out.push(pad(d) + "<label className=" + q(s.choice) + ">");
-    out.push(pad(d + 1) + "<input");
-    out.push(pad(d + 2) + 'type="checkbox"');
-    out.push(pad(d + 2) + "id=" + q(field.key));
-    out.push(pad(d + 2) + "name=" + q(field.key));
-    out.push(pad(d + 2) + "checked={" + on + "}");
-    out.push(pad(d + 2) + "onChange={(event) => setField(" + q(field.key) + ", event.target.checked)}");
-    out.push(pad(d + 2) + 'className="sr-only"');
-    out.push(pad(d + 1) + "/>");
-    out.push(pad(d + 1) + "<span className={" + on + " ? " + q(s.switchOn) + " : " + q(s.switchOff) + "}>");
-    out.push(
-      pad(d + 2) +
-        "<span className={" +
-        on +
-        " ? " +
-        q(s.switchKnob + " left-[18px]") +
-        " : " +
-        q(s.switchKnob + " left-0.5") +
-        "} />"
-    );
-    out.push(pad(d + 1) + "</span>");
-    out.push(pad(d + 1) + "<span>");
-    out.push(pad(d + 2) + jsxText(field.label));
-    if (field.required) out.push(pad(d + 2) + "<span className=" + q(s.required) + ">*</span>");
-    out.push(pad(d + 1) + "</span>");
-    out.push(pad(d) + "</label>");
-    return;
-  }
-
-  if (field.type === "range") {
-    out.push(pad(d) + '<div className="flex items-center gap-3">');
-    out.push(pad(d + 1) + "<input");
-    out.push(pad(d + 2) + "id=" + q(field.key));
-    out.push(pad(d + 2) + "name=" + q(field.key));
-    out.push(pad(d + 2) + 'type="range"');
-    if (field.helper) out.push(pad(d + 2) + "aria-describedby=" + q(field.key + "-help"));
-    out.push(pad(d + 2) + "min={" + field.min + "}");
-    out.push(pad(d + 2) + "max={" + field.max + "}");
-    out.push(pad(d + 2) + "step={" + field.step + "}");
-    out.push(pad(d + 2) + "value={values." + field.key + "}");
-    out.push(pad(d + 2) + "onChange={(event) => setField(" + q(field.key) + ", Number(event.target.value))}");
-    out.push(pad(d + 2) + "className=" + q(s.range));
-    out.push(pad(d + 1) + "/>");
-    out.push(pad(d + 1) + "<span className=" + q(s.rangeValue) + ">{values." + field.key + "}</span>");
-    out.push(pad(d) + "</div>");
-    out.push(pad(d) + '<div className="mt-1 flex justify-between">');
-    out.push(pad(d + 1) + "<span className=" + q(s.rangeBound) + ">" + field.min + "</span>");
-    out.push(pad(d + 1) + "<span className=" + q(s.rangeBound) + ">" + field.max + "</span>");
-    out.push(pad(d) + "</div>");
-    return;
-  }
-
-  if (field.type === "file") {
-    out.push(pad(d) + "<input");
-    out.push(pad(d + 1) + "id=" + q(field.key));
-    out.push(pad(d + 1) + "name=" + q(field.key));
-    out.push(pad(d + 1) + 'type="file"');
-    if (field.accept) out.push(pad(d + 1) + "accept=" + q(field.accept));
-    if (field.helper) out.push(pad(d + 1) + "aria-describedby=" + q(field.key + "-help"));
-    out.push(
-      pad(d + 1) + "onChange={(event) => setField(" + q(field.key) + ", event.target.files[0] || null)}"
-    );
-    out.push(pad(d + 1) + "className=" + q(s.file));
-    out.push(pad(d) + "/>");
-    return;
-  }
-
-  out.push(pad(d) + "<input");
-  out.push(pad(d + 1) + "id=" + q(field.key));
-  out.push(pad(d + 1) + "name=" + q(field.key));
-  if (field.helper) out.push(pad(d + 1) + "aria-describedby=" + q(field.key + "-help"));
-  out.push(pad(d + 1) + "type=" + q(field.type));
-  out.push(pad(d + 1) + "value={values." + field.key + "}");
-  if (field.placeholder && PLACEHOLDER_TYPES.has(field.type)) {
-    out.push(pad(d + 1) + "placeholder=" + q(field.placeholder));
-  }
-  out.push(pad(d + 1) + "onChange={(event) => setField(" + q(field.key) + ", event.target.value)}");
-  const dateish = field.type === "date" || field.type === "time";
-  out.push(pad(d + 1) + "className=" + cls(dateish ? " " + s.dateScheme : ""));
-  out.push(pad(d) + "/>");
-}
-
-function initialValueLiteral(field) {
-  if (field.type === "checkbox") return "false";
-  if (field.type === "checkboxes") return "[]";
-  if (field.type === "range") return String(field.min);
-  if (field.type === "file") return "null";
-  return '""';
-}
+const hasErrorSlot = (field) => {
+  const def = defOf(field.type);
+  return def.kind === "input" && ((field.required && !def.alwaysFilled) || validateActive(def, field));
+};
 
 function generateReactCode(meta, fields) {
   if (!fields.length) {
@@ -794,25 +7189,134 @@ function generateReactCode(meta, fields) {
   }
 
   const s = STYLES[meta.theme] || STYLES.dark;
-  const inputs = fields.filter((f) => !STATIC_TYPES.has(f.type));
-  const hasSubmit = fields.some((f) => f.type === "submit");
-  const hasCheckboxGroup = fields.some((f) => f.type === "checkboxes");
-  const required = inputs.filter((f) => f.required);
-  const out = [];
+  const helpers = new Set();
+  const hooks = new Set(["useState"]);
+  const icons = new Set();
+  const use = (name) => {
+    const helper = CODE_HELPERS[name];
+    if (!helper) throw new Error("Unknown code helper '" + name + "'");
+    if (helpers.has(name)) return;
+    helper.requires.forEach(use);
+    helper.hooks.forEach((h) => hooks.add(h));
+    helpers.add(name);
+  };
+  const hook = (name) => {
+    hooks.add(name);
+  };
+  const icon = (name) => {
+    icons.add(name);
+    return name;
+  };
 
-  out.push('import { useState } from "react";');
+  /* ---- markup ---- */
+  const body = [];
+  fields.forEach((f) => {
+    const def = defOf(f.type);
+    const cc = cellClass(f);
+    body.push(pad(4) + (cc ? "<div className=" + q(cc) + ">" : "<div>"));
+    const line = (text, offset = 0) => body.push(pad(5 + offset) + text);
+    const base = { f, s, line, q, qa, jsxText, use, hook, icon };
+
+    if (def.kind !== "input") {
+      def.emit(base);
+      body.push(pad(4) + "</div>");
+      return;
+    }
+
+    const k = f.key;
+    const hasError = hasErrorSlot(f);
+    const required = f.required && !def.alwaysFilled;
+    const ctx = {
+      ...base,
+      key: k,
+      v: "values." + k,
+      hasError,
+      set: (expr) => "setField(" + q(k) + ", " + expr + ")",
+      onChange: (expr) => "onChange={(event) => setField(" + q(k) + ", " + expr + ")}",
+      idAttr: "id=" + q(k),
+      nameAttr: "name=" + q(k),
+      describedAttr: f.helper ? "aria-describedby=" + q(k + "-help") : null,
+      labelledAttr: "aria-labelledby=" + q(k + "-label"),
+      clsValue: (extra = "", ok = "input", err = "inputError") => {
+        if (!s[ok] || !s[err]) throw new Error("Unknown style token in clsValue: " + ok + "/" + err);
+        if (!hasError) return q(s[ok] + extra);
+        return "{errors." + k + " ? " + q(s[err] + extra) + " : " + q(s[ok] + extra) + "}";
+      },
+    };
+
+    if (def.labelMode === "outer" || def.labelMode === "group") {
+      body.push(
+        pad(5) +
+          (def.labelMode === "outer"
+            ? "<label htmlFor=" + q(k) + " className=" + q(s.label) + ">"
+            : "<p id=" + q(k + "-label") + " className=" + q(s.label) + ">")
+      );
+      body.push(pad(6) + jsxText(f.label));
+      if (required) body.push(pad(6) + "<span className=" + q(s.required) + ">*</span>");
+      body.push(pad(5) + (def.labelMode === "outer" ? "</label>" : "</p>"));
+    }
+    def.emit(ctx);
+    if (f.helper) body.push(pad(5) + "<p id=" + q(k + "-help") + " className=" + q(s.helper) + ">" + jsxText(f.helper) + "</p>");
+    if (hasError) body.push(pad(5) + "{errors." + k + " && <p className=" + q(s.error) + ">{errors." + k + "}</p>}");
+    body.push(pad(4) + "</div>");
+  });
+
+  /* ---- validation ---- */
+  const checks = [];
+  const inputs = fields.filter((f) => defOf(f.type).kind === "input");
+  inputs.forEach((f) => {
+    const def = defOf(f.type);
+    const k = f.key;
+    const vctx = { f, s, key: k, v: "values." + k, q, use, hook, icon };
+    const required = f.required && !def.alwaysFilled;
+    const validates = validateActive(def, f);
+    if (!required && !validates) return;
+    const blank = def.blank ? def.blank.code(vctx) : (use("isBlank"), "isBlank(" + vctx.v + ")");
+    if (required) checks.push(pad(2) + "if (" + blank + ") nextErrors." + k + " = " + q(requiredMessage(f)) + ";");
+    if (validates) {
+      const invalid = def.validate.code(vctx);
+      const message = q(def.validate.message(f));
+      checks.push(
+        pad(2) +
+          (required ? "else if (" + invalid + ")" : "if (!(" + blank + ") && (" + invalid + "))") +
+          " nextErrors." +
+          k +
+          " = " +
+          message +
+          ";"
+      );
+    }
+  });
+
+  /* ---- assembly ---- */
+  const out = [];
+  const hookList = ["useState"].concat(Array.from(hooks).filter((h) => h !== "useState").sort());
+  out.push("import { " + hookList.join(", ") + ' } from "react";');
+  if (icons.size) out.push("import { " + Array.from(icons).sort().join(", ") + ' } from "lucide-react";');
   out.push("");
-  if (meta.theme === "auto") {
-    out.push("// Light by default, dark under Tailwind's `dark` variant.");
-  }
-  out.push("export default function GeneratedForm({ onSubmit }) {");
+
+  const moduleHelpers = Array.from(helpers).filter((h) => CODE_HELPERS[h].scope === "module");
+  const componentHelpers = Array.from(helpers).filter((h) => CODE_HELPERS[h].scope === "component");
+  moduleHelpers.forEach((h) => {
+    CODE_HELPERS[h].lines.forEach((l) => out.push(l));
+    out.push("");
+  });
+
   if (inputs.length) {
-    out.push(pad(1) + "const [values, setValues] = useState({");
-    inputs.forEach((f) => out.push(pad(2) + f.key + ": " + initialValueLiteral(f) + ","));
-    out.push(pad(1) + "});");
+    out.push("const initialValues = {");
+    inputs.forEach((f) => {
+      const def = defOf(f.type);
+      out.push(pad(1) + f.key + ": " + (def.literal ? def.literal(f) : toLiteral(emptyValueFor(f))) + ",");
+    });
+    out.push("};");
   } else {
-    out.push(pad(1) + "const [values, setValues] = useState({});");
+    out.push("const initialValues = {};");
   }
+  out.push("");
+
+  if (meta.theme === "auto") out.push("// Light by default, dark under Tailwind's `dark` variant.");
+  out.push("export default function GeneratedForm({ onSubmit }) {");
+  out.push(pad(1) + "const [values, setValues] = useState(initialValues);");
   out.push(pad(1) + "const [errors, setErrors] = useState({});");
   out.push("");
   out.push(pad(1) + "const setField = (key, value) => {");
@@ -820,30 +7324,14 @@ function generateReactCode(meta, fields) {
   out.push(pad(2) + "setErrors((prev) => (prev[key] ? { ...prev, [key]: undefined } : prev));");
   out.push(pad(1) + "};");
   out.push("");
-  if (hasCheckboxGroup) {
-    out.push(pad(1) + "const toggleOption = (key, option) => {");
-    out.push(pad(2) + "const current = values[key];");
-    out.push(
-      pad(2) + "setField(key, current.includes(option) ? current.filter((v) => v !== option) : current.concat(option));"
-    );
-    out.push(pad(1) + "};");
+  componentHelpers.forEach((h) => {
+    CODE_HELPERS[h].lines.forEach((l) => out.push(pad(1) + l));
     out.push("");
-  }
+  });
   out.push(pad(1) + "const handleSubmit = (event) => {");
   out.push(pad(2) + "event.preventDefault();");
   out.push(pad(2) + "const nextErrors = {};");
-  required.forEach((f) => {
-    const message = f.label + " is required";
-    if (f.type === "checkbox") {
-      out.push(pad(2) + "if (!values." + f.key + ") nextErrors." + f.key + " = " + q(message) + ";");
-    } else if (f.type === "checkboxes") {
-      out.push(pad(2) + "if (values." + f.key + ".length === 0) nextErrors." + f.key + " = " + q(message) + ";");
-    } else if (f.type === "file") {
-      out.push(pad(2) + "if (!values." + f.key + ") nextErrors." + f.key + " = " + q(message) + ";");
-    } else {
-      out.push(pad(2) + "if (!String(values." + f.key + ").trim()) nextErrors." + f.key + " = " + q(message) + ";");
-    }
-  });
+  checks.forEach((c) => out.push(c));
   out.push(pad(2) + "setErrors(nextErrors);");
   out.push(pad(2) + "if (Object.keys(nextErrors).length > 0) return;");
   out.push(pad(2) + "if (onSubmit) onSubmit(values);");
@@ -853,50 +7341,12 @@ function generateReactCode(meta, fields) {
   out.push(pad(2) + '<form onSubmit={handleSubmit} noValidate className="mx-auto w-full max-w-xl">');
   out.push(pad(3) + '<header className="mb-8">');
   out.push(pad(4) + "<h2 className=" + q(s.title) + ">" + jsxText(meta.title || "Untitled form") + "</h2>");
-  if (meta.description) {
-    out.push(pad(4) + "<p className=" + q(s.description) + ">" + jsxText(meta.description) + "</p>");
-  }
+  if (meta.description) out.push(pad(4) + "<p className=" + q(s.description) + ">" + jsxText(meta.description) + "</p>");
   out.push(pad(3) + "</header>");
   out.push(pad(3) + '<div className="grid grid-cols-1 gap-6 sm:grid-cols-2">');
-
-  fields.forEach((field) => {
-    const span = field.width === "half" ? "" : " sm:col-span-2";
-
-    if (field.type === "divider") {
-      out.push(pad(4) + "<div className=" + q("py-1" + span) + ">");
-      out.push(pad(5) + "<hr className=" + q(s.divider) + " />");
-      out.push(pad(4) + "</div>");
-      return;
-    }
-
-    if (field.type === "heading") {
-      out.push(pad(4) + "<div className=" + q("pt-2" + span) + ">");
-      out.push(pad(5) + "<h3 className=" + q(s.heading) + ">" + jsxText(field.label) + "</h3>");
-      if (field.helper) {
-        out.push(pad(5) + "<p className=" + q(s.headingNote) + ">" + jsxText(field.helper) + "</p>");
-      }
-      out.push(pad(4) + "</div>");
-      return;
-    }
-
-    if (field.type === "submit") {
-      out.push(pad(4) + "<div className=" + q("pt-2" + span) + ">");
-      out.push(pad(5) + '<button type="submit" className=' + q(s.submit) + ">");
-      out.push(pad(6) + jsxText(field.label));
-      out.push(pad(5) + "</button>");
-      out.push(pad(4) + "</div>");
-      return;
-    }
-
-    out.push(pad(4) + "<div className=" + q("min-w-0" + span) + ">");
-    if (field.type !== "checkbox") emitLabel(field, s, 5, out);
-    emitControl(field, s, 5, out);
-    emitTail(field, s, 5, out);
-    out.push(pad(4) + "</div>");
-  });
-
+  body.forEach((l) => out.push(l));
   out.push(pad(3) + "</div>");
-  if (!hasSubmit) {
+  if (!fields.some((f) => f.type === "submit")) {
     out.push(pad(3) + "{/* Add a Submit Button element to render the form action. */}");
   }
   out.push(pad(2) + "</form>");
@@ -906,8 +7356,127 @@ function generateReactCode(meta, fields) {
 }
 
 /* ============================================================================
- * 5. Primitives
+ * 8. Rendered element (shared by the canvas and the live preview)
  * ==========================================================================*/
+
+const noop = () => {};
+
+/** Keeps canvas previews out of the tab order (React 18/19 spell `inert` differently). */
+const setInert = (node) => {
+  if (node) node.setAttribute("inert", "");
+};
+
+/** Renders a definition's output as its own component, so it may use hooks. */
+function DefinitionRender({ def, ctx }) {
+  return def.render(ctx);
+}
+
+function FieldBody({ field, value, onChange, error, idPrefix, s, onReset }) {
+  const def = defOf(field.type);
+  if (def.kind !== "input") {
+    return <DefinitionRender def={def} ctx={{ f: field, s, reset: onReset || noop }} />;
+  }
+  const id = idPrefix + field.key;
+  const labelId = id + "-label";
+  const describedBy = field.helper ? id + "-help" : undefined;
+  const ctx = {
+    f: field,
+    value,
+    set: onChange,
+    error,
+    id,
+    labelId,
+    describedBy,
+    s,
+    cls: error ? s.inputError : s.input,
+    clsOf: (ok, err) => (error ? s[err] : s[ok]),
+  };
+  const required = field.required && !def.alwaysFilled ? <span className={s.required}>*</span> : null;
+  return (
+    <>
+      {def.labelMode === "outer" ? (
+        <label htmlFor={id} className={s.label}>
+          {field.label}
+          {required}
+        </label>
+      ) : null}
+      {def.labelMode === "group" ? (
+        <p id={labelId} className={s.label}>
+          {field.label}
+          {required}
+        </p>
+      ) : null}
+      <DefinitionRender def={def} ctx={ctx} />
+      {field.helper ? (
+        <p id={id + "-help"} className={s.helper}>
+          {field.helper}
+        </p>
+      ) : null}
+      {error ? <p className={s.error}>{error}</p> : null}
+    </>
+  );
+}
+
+function FieldCell(props) {
+  const cc = cellClass(props.field);
+  return (
+    <div className={cc || undefined}>
+      <FieldBody {...props} />
+    </div>
+  );
+}
+
+/* ============================================================================
+ * 9. Builder UI primitives
+ * ==========================================================================*/
+
+/** Injected once so the file stays portable with zero extra config. */
+const RUNTIME_STYLES = `
+  .fc-display { font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif; }
+  .fc-body { font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif; }
+  .fc-mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .fc-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+  .fc-scroll::-webkit-scrollbar-track { background: transparent; }
+  .fc-scroll::-webkit-scrollbar-thumb { background: #2a3145; border: 3px solid transparent; background-clip: content-box; border-radius: 999px; }
+  .fc-scroll::-webkit-scrollbar-thumb:hover { background: #3c455f; background-clip: content-box; }
+  .fc-scroll { scrollbar-width: thin; scrollbar-color: #2a3145 transparent; }
+  .fc-grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(148,163,184,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148,163,184,0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  @keyframes fc-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes fc-pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes fc-toast { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes fc-flash { 0% { box-shadow: 0 0 0 0 rgba(129,140,248,.55); } 100% { box-shadow: 0 0 0 10px rgba(129,140,248,0); } }
+  .fc-rise { animation: fc-rise .28s cubic-bezier(.22,1,.36,1) both; }
+  .fc-pop { animation: fc-pop .2s cubic-bezier(.22,1,.36,1) both; }
+  .fc-toast { animation: fc-toast .24s cubic-bezier(.22,1,.36,1) both; }
+  .fc-flash { animation: fc-flash .9s ease-out 1; }
+  @keyframes fc-breathe { 0%, 100% { border-color: rgba(129,140,248,.38); } 50% { border-color: rgba(129,140,248,.8); } }
+  @keyframes fc-slot-in { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+  .fc-ghost {
+    border-radius: 12px;
+    transform-origin: 50% 40%;
+    transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .24s ease, opacity .2s ease;
+  }
+  .fc-ghost-lifted { box-shadow: 0 30px 60px -20px rgba(0,0,0,.9), 0 0 0 1px rgba(129,140,248,.55), 0 0 40px -10px rgba(99,102,241,.45); }
+  .fc-ghost-chip { background: #151A26; }
+  .fc-placeholder {
+    border-style: dashed !important;
+    background: rgba(99,102,241,.05) !important;
+    box-shadow: inset 0 0 24px -12px rgba(99,102,241,.5) !important;
+    animation: fc-breathe 1.6s ease-in-out infinite;
+  }
+  .fc-placeholder > * { visibility: hidden; }
+  .fc-slot { animation: fc-slot-in .22s cubic-bezier(.34,1.36,.64,1) both, fc-breathe 1.6s ease-in-out .22s infinite; }
+  body.fc-dragging, body.fc-dragging * { cursor: grabbing !important; user-select: none !important; -webkit-user-select: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .fc-rise, .fc-pop, .fc-toast, .fc-flash, .fc-placeholder, .fc-slot { animation: none !important; }
+    .fc-ghost { transition: none !important; }
+  }
+`;
 
 const PANEL_INPUT =
   "w-full rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-[13px] text-slate-100 placeholder-slate-600 outline-none transition duration-150 hover:border-slate-700 focus:border-indigo-500/80 focus:ring-4 focus:ring-indigo-500/10";
@@ -917,16 +7486,14 @@ function SectionTitle({ icon: Icon, children, aside }) {
     <div className="flex items-center justify-between gap-2 px-5 pb-3 pt-5">
       <div className="flex items-center gap-2">
         {Icon ? <Icon className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" /> : null}
-        <h2 className="fc-display text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-          {children}
-        </h2>
+        <h2 className="fc-display text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{children}</h2>
       </div>
       {aside}
     </div>
   );
 }
 
-function IconButton({ icon: Icon, label, onClick, disabled, tone = "default" }) {
+function IconButton({ icon: Icon, label, onClick, disabled, tone = "default", active }) {
   const tones = {
     default: "text-slate-400 hover:bg-slate-800 hover:text-slate-100 focus-visible:ring-slate-600",
     danger: "text-slate-400 hover:bg-rose-500/15 hover:text-rose-300 focus-visible:ring-rose-500/60",
@@ -936,6 +7503,7 @@ function IconButton({ icon: Icon, label, onClick, disabled, tone = "default" }) 
       type="button"
       title={label}
       aria-label={label}
+      aria-pressed={active === undefined ? undefined : active}
       disabled={disabled}
       onClick={(event) => {
         event.stopPropagation();
@@ -943,6 +7511,7 @@ function IconButton({ icon: Icon, label, onClick, disabled, tone = "default" }) 
       }}
       className={
         "inline-flex h-7 w-7 items-center justify-center rounded-md outline-none transition duration-150 focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-25 " +
+        (active ? "bg-amber-500/15 text-amber-300 " : "") +
         tones[tone]
       }
     >
@@ -965,7 +7534,7 @@ function LabeledField({ label, hint, htmlFor, children }) {
   );
 }
 
-function TextControl({ label, hint, value, onChange, placeholder, mono, multiline, id }) {
+function TextControl({ label, hint, value, onChange, placeholder, mono, multiline, id, inputRef }) {
   const cls = PANEL_INPUT + (mono ? " fc-mono text-[12px]" : "");
   return (
     <LabeledField label={label} hint={hint} htmlFor={id}>
@@ -981,6 +7550,7 @@ function TextControl({ label, hint, value, onChange, placeholder, mono, multilin
       ) : (
         <input
           id={id}
+          ref={inputRef}
           type="text"
           value={value}
           placeholder={placeholder}
@@ -992,15 +7562,40 @@ function TextControl({ label, hint, value, onChange, placeholder, mono, multilin
   );
 }
 
-function NumberControl({ label, value, onChange, id, step }) {
+/**
+ * Number input that keeps its own draft text, so typing "-", "1." or clearing
+ * the box never snaps back mid-edit. Valid numbers commit as you type.
+ */
+function NumberControl({ label, hint, value, onChange, id, optional, min, max, step }) {
+  const [draft, setDraft] = useState(value == null ? "" : String(value));
+  const focused = useRef(false);
+  useEffect(() => {
+    if (!focused.current) setDraft(value == null ? "" : String(value));
+  }, [value]);
   return (
-    <LabeledField label={label} htmlFor={id}>
+    <LabeledField label={label} hint={hint} htmlFor={id}>
       <input
         id={id}
         type="number"
+        inputMode="decimal"
+        min={min}
+        max={max}
         step={step || "any"}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
+        value={draft}
+        placeholder={optional ? "none" : undefined}
+        onFocus={() => {
+          focused.current = true;
+        }}
+        onBlur={() => {
+          focused.current = false;
+          setDraft(value == null ? "" : String(value));
+        }}
+        onChange={(event) => {
+          const text = event.target.value;
+          setDraft(text);
+          if (text === "" && optional) onChange(null);
+          else if (text !== "" && Number.isFinite(Number(text))) onChange(Number(text));
+        }}
         className={PANEL_INPUT + " fc-mono text-[12px] tabular-nums"}
       />
     </LabeledField>
@@ -1037,17 +7632,39 @@ function Switch({ checked, onChange, title, description }) {
   );
 }
 
-function Segmented({ value, onChange, options, size = "md" }) {
+/**
+ * Arrow-key model shared by radio groups and tab lists (WAI-ARIA APG):
+ * arrows move and select, Home/End jump, focus follows the selection.
+ */
+function rovingKeyDown(event, index, count, select) {
+  const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+  let next = null;
+  if (keys[event.key]) next = (index + keys[event.key] + count) % count;
+  else if (event.key === "Home") next = 0;
+  else if (event.key === "End") next = count - 1;
+  if (next === null) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const siblings = event.currentTarget.parentElement.querySelectorAll('[role="radio"], [role="tab"]');
+  select(next);
+  if (siblings[next]) siblings[next].focus();
+}
+
+function Segmented({ value, onChange, options, size = "md", label }) {
   return (
-    <div className="flex gap-1 rounded-lg border border-slate-800 bg-slate-950/50 p-1">
-      {options.map((opt) => {
+    <div role="radiogroup" aria-label={label} className="flex gap-1 rounded-lg border border-slate-800 bg-slate-950/50 p-1">
+      {options.map((opt, i) => {
         const active = opt.value === value;
         return (
           <button
-            key={opt.value}
+            key={String(opt.value)}
             type="button"
+            role="radio"
+            aria-checked={active}
+            tabIndex={active || (value === undefined && i === 0) ? 0 : -1}
             title={opt.title}
             onClick={() => onChange(opt.value)}
+            onKeyDown={(event) => rovingKeyDown(event, i, options.length, (n) => onChange(options[n].value))}
             className={
               "flex-1 rounded-md outline-none transition duration-150 focus-visible:ring-2 focus-visible:ring-indigo-500/60 " +
               (size === "sm" ? "px-2 py-1 text-[11px] font-medium " : "px-2 py-1.5 text-[12px] font-medium ") +
@@ -1062,277 +7679,871 @@ function Segmented({ value, onChange, options, size = "md" }) {
   );
 }
 
-/* ============================================================================
- * 6. Rendered form field (shared by canvas + live preview)
- * ==========================================================================*/
-
-function FieldControl({ field, value, onChange, error, idPrefix, s }) {
-  const id = idPrefix + field.key;
-  const describedBy = field.helper ? id + "-help" : undefined;
-  const cls = error ? s.inputError : s.input;
-
-  if (field.type === "textarea") {
-    return (
-      <textarea
-        id={id}
-        name={field.key}
-        rows={4}
-        aria-describedby={describedBy}
-        value={value}
-        placeholder={field.placeholder}
-        onChange={(event) => onChange(event.target.value)}
-        className={cls + " min-h-[112px] resize-y"}
-      />
-    );
-  }
-
-  if (field.type === "select") {
-    return (
+function SelectControl({ label, value, onChange, choices, id }) {
+  return (
+    <LabeledField label={label} htmlFor={id}>
       <div className="relative">
         <select
           id={id}
-          name={field.key}
-          aria-describedby={describedBy}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className={cls + " cursor-pointer appearance-none pr-10"}
+          className={PANEL_INPUT + " cursor-pointer appearance-none pr-8"}
         >
-          <option value="">{field.placeholder || "Select an option"}</option>
-          {field.options.map((opt, i) => (
-            <option key={opt + i} value={opt}>
-              {opt}
+          {choices.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
             </option>
           ))}
         </select>
-        <ChevronDown
-          className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60"
-          aria-hidden="true"
-        />
+        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" aria-hidden="true" />
       </div>
-    );
-  }
-
-  if (field.type === "radio" || field.type === "checkboxes") {
-    if (!field.options.length) {
-      return (
-        <p className={s.helper + " rounded-lg border border-dashed border-slate-500/40 px-3.5 py-3 opacity-70"}>
-          No options yet — add some in the Inspector.
-        </p>
-      );
-    }
-    const multi = field.type === "checkboxes";
-    const list = Array.isArray(value) ? value : [];
-    return (
-      <div
-        role={multi ? "group" : "radiogroup"}
-        aria-label={field.label}
-        className="grid gap-2"
-      >
-        {field.options.map((opt, i) => {
-          const active = multi ? list.indexOf(opt) !== -1 : value === opt;
-          return (
-            <label key={opt + i} className={active ? s.choiceActive : s.choice}>
-              <input
-                type={multi ? "checkbox" : "radio"}
-                name={multi ? id + "-" + i : id}
-                value={opt}
-                checked={active}
-                onChange={() => {
-                  if (!multi) return onChange(opt);
-                  onChange(active ? list.filter((v) => v !== opt) : list.concat(opt));
-                }}
-                className="sr-only"
-              />
-              <span
-                className={
-                  multi
-                    ? active
-                      ? s.markFill + " h-4 w-4"
-                      : s.mark + " h-4 w-4 rounded"
-                    : active
-                    ? s.markActive + " h-4 w-4 rounded-full"
-                    : s.mark + " h-4 w-4 rounded-full"
-                }
-              >
-                {active ? (
-                  multi ? (
-                    <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} aria-hidden="true" />
-                  ) : (
-                    <span className={s.markDot + " h-1.5 w-1.5"} />
-                  )
-                ) : null}
-              </span>
-              {opt}
-            </label>
-          );
-        })}
-      </div>
-    );
-  }
-
-  if (field.type === "checkbox") {
-    const on = value === true;
-    return (
-      <label className={s.choice}>
-        <input
-          type="checkbox"
-          id={id}
-          name={field.key}
-          checked={on}
-          onChange={(event) => onChange(event.target.checked)}
-          className="sr-only"
-        />
-        <span className={on ? s.switchOn : s.switchOff}>
-          <span className={s.switchKnob + (on ? " left-[18px]" : " left-0.5")} />
-        </span>
-        <span>
-          {field.label}
-          {field.required ? <span className={s.required}>*</span> : null}
-        </span>
-      </label>
-    );
-  }
-
-  if (field.type === "range") {
-    return (
-      <div>
-        <div className="flex items-center gap-3">
-          <input
-            id={id}
-            name={field.key}
-            type="range"
-            aria-describedby={describedBy}
-            min={field.min}
-            max={field.max}
-            step={field.step}
-            value={value}
-            onChange={(event) => onChange(Number(event.target.value))}
-            className={s.range}
-          />
-          <span className={s.rangeValue}>{value}</span>
-        </div>
-        <div className="mt-1 flex justify-between">
-          <span className={s.rangeBound}>{field.min}</span>
-          <span className={s.rangeBound}>{field.max}</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (field.type === "file") {
-    return (
-      <input
-        id={id}
-        name={field.key}
-        type="file"
-        accept={field.accept || undefined}
-        aria-describedby={describedBy}
-        onChange={(event) => onChange(event.target.files && event.target.files[0] ? event.target.files[0] : null)}
-        className={s.file}
-      />
-    );
-  }
-
-  const dateish = field.type === "date" || field.type === "time";
-  return (
-    <input
-      id={id}
-      name={field.key}
-      type={field.type}
-      aria-describedby={describedBy}
-      value={value}
-      placeholder={PLACEHOLDER_TYPES.has(field.type) ? field.placeholder : undefined}
-      onChange={(event) => onChange(event.target.value)}
-      className={cls + (dateish ? " " + s.dateScheme : "")}
-    />
+    </LabeledField>
   );
 }
 
-function RenderedField({ field, value, onChange, error, idPrefix, s }) {
-  if (field.type === "divider") return <hr className={s.divider} />;
+function OptionsEditor({ label, options, onChange }) {
+  const update = (index, value) => {
+    const next = options.slice();
+    next[index] = value;
+    onChange(next);
+  };
+  const list = useRef(null);
+  const remove = (index) => onChange(options.filter((_, i) => i !== index));
+  /* Rows are keyed by position, so after a move put focus on the moved option's button. */
+  const move = (index, delta, label) => {
+    const target = index + delta;
+    if (target < 0 || target >= options.length) return;
+    const next = options.slice();
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item);
+    onChange(next);
+    window.setTimeout(() => {
+      const row = list.current && list.current.children[target];
+      if (!row) return;
+      const button = row.querySelector('button[aria-label="' + label + '"]');
+      const fallback = row.querySelector("input");
+      if (button && !button.disabled) button.focus();
+      else if (fallback) fallback.focus();
+    }, 0);
+  };
 
-  if (field.type === "heading") {
-    return (
-      <div>
-        <h3 className={s.heading}>{field.label}</h3>
-        {field.helper ? <p className={s.headingNote}>{field.helper}</p> : null}
-      </div>
-    );
-  }
-
-  if (field.type === "submit") {
-    return (
-      <button type="submit" className={s.submit}>
-        {field.label}
-        <Send className="h-4 w-4" aria-hidden="true" />
-      </button>
-    );
-  }
-
-  const id = idPrefix + field.key;
   return (
     <div>
-      {field.type !== "checkbox" ? (
-        <label htmlFor={id} className={s.label}>
-          {field.label}
-          {field.required ? <span className={s.required}>*</span> : null}
-        </label>
-      ) : null}
-      <FieldControl field={field} value={value} onChange={onChange} error={error} idPrefix={idPrefix} s={s} />
-      {field.helper ? (
-        <p id={id + "-help"} className={s.helper}>
-          {field.helper}
-        </p>
-      ) : null}
-      {error ? <p className={s.error}>{error}</p> : null}
+      <div className="mb-1.5 flex items-baseline justify-between">
+        <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">{label || "Options"}</span>
+        <span className="fc-mono text-[10px] text-slate-600">{options.length}</span>
+      </div>
+      <div ref={list} className="space-y-1.5">
+        {options.map((opt, i) => (
+          <div key={i} className="group flex items-center gap-1">
+            <span className="fc-mono w-5 shrink-0 text-center text-[10px] text-slate-600">{i + 1}</span>
+            <input
+              type="text"
+              value={opt}
+              aria-label={(label || "Option") + " " + (i + 1)}
+              placeholder="Option label"
+              onChange={(event) => update(i, event.target.value)}
+              className={PANEL_INPUT + " flex-1"}
+            />
+            <div className="flex shrink-0 opacity-0 transition duration-150 focus-within:opacity-100 group-hover:opacity-100">
+              <IconButton icon={ArrowUp} label="Move up" disabled={i === 0} onClick={() => move(i, -1, "Move up")} />
+              <IconButton icon={ArrowDown} label="Move down" disabled={i === options.length - 1} onClick={() => move(i, 1, "Move down")} />
+              <IconButton icon={X} label="Remove" tone="danger" onClick={() => remove(i)} />
+            </div>
+          </div>
+        ))}
+        {!options.length ? (
+          <p className="rounded-lg border border-dashed border-slate-800 px-3 py-2.5 text-[11px] text-slate-600">None yet.</p>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(options.concat("Option " + (options.length + 1)))}
+        className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-700 px-3 py-2 text-[12px] font-medium text-slate-400 outline-none transition duration-150 hover:border-indigo-500/60 hover:text-indigo-300 focus-visible:ring-2 focus-visible:ring-indigo-400"
+      >
+        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+        Add
+      </button>
     </div>
   );
 }
 
+/** One Inspector control, chosen from a setting descriptor. */
+function SettingControl(props) {
+  return (
+    <div data-setting={props.setting.prop}>
+      <SettingInput {...props} />
+    </div>
+  );
+}
+
+function SettingInput({ setting, field, onChange }) {
+  const id = "insp-" + setting.prop;
+  const value = field[setting.prop];
+  switch (setting.control) {
+    case "textarea":
+      return <TextControl id={id} label={setting.label} hint={setting.hint} value={value} placeholder={setting.placeholder} multiline onChange={onChange} />;
+    case "number":
+      return (
+        <NumberControl
+          id={id}
+          label={setting.label}
+          hint={setting.hint}
+          value={value}
+          optional={setting.optional}
+          min={setting.min}
+          max={setting.max}
+          step={setting.step}
+          onChange={onChange}
+        />
+      );
+    case "toggle":
+      return <Switch checked={Boolean(value)} onChange={onChange} title={setting.label} description={setting.hint} />;
+    case "select":
+      return setting.choices.length <= 3 ? (
+        <LabeledField label={setting.label}>
+          <Segmented label={setting.label} value={value} onChange={onChange} options={setting.choices} />
+        </LabeledField>
+      ) : (
+        <SelectControl id={id} label={setting.label} value={value} onChange={onChange} choices={setting.choices} />
+      );
+    case "options":
+      return <OptionsEditor label={setting.label} options={value} onChange={onChange} />;
+    default:
+      return (
+        <TextControl
+          id={id}
+          label={setting.label}
+          hint={setting.hint}
+          value={value}
+          placeholder={setting.placeholder}
+          mono={setting.mono}
+          onChange={onChange}
+        />
+      );
+  }
+}
+
+
+function Kbd({ children }) {
+  return (
+    <kbd className="fc-mono inline-flex min-w-[1.5rem] items-center justify-center rounded-md border border-slate-700 bg-slate-900 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 shadow-[inset_0_-1px_0_rgba(0,0,0,0.4)]">
+      {children}
+    </kbd>
+  );
+}
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Dialog shell: traps Tab inside, closes on Escape or a backdrop click, and
+ * hands focus back to whatever was focused before it opened.
+ */
+function Modal({ title, subtitle, onClose, children, footer, width = "max-w-lg", icon: Icon, bare }) {
+  const panel = useRef(null);
+  const titleId = useRef("fc-dialog-" + Math.random().toString(36).slice(2, 8)).current;
+  /* Read during the first render — before any child's autoFocus moves focus. */
+  const [opener] = useState(() => (typeof document !== "undefined" ? document.activeElement : null));
+
+  useEffect(() => {
+    const previous = opener;
+    const node = panel.current;
+    if (node && !node.contains(document.activeElement)) {
+      const first = node.querySelector("[autofocus], [data-autofocus]") || node.querySelector(FOCUSABLE);
+      if (first) first.focus();
+    }
+    return () => {
+      if (previous && previous !== document.body && typeof previous.focus === "function" && document.contains(previous)) previous.focus();
+    };
+  }, [opener]);
+
+  const onKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      event.preventDefault();
+      onClose();
+      return;
+    }
+    if (event.key !== "Tab" || !panel.current) return;
+    const items = Array.from(panel.current.querySelectorAll(FOCUSABLE)).filter((el) => el.offsetParent !== null || el === document.activeElement);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 pt-[9vh] backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={panel}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onKeyDown={onKeyDown}
+        className={"fc-pop w-full overflow-hidden rounded-2xl border border-slate-800 bg-[#12151E] shadow-2xl shadow-black/60 outline-none " + width}
+      >
+        {bare ? (
+          <h2 id={titleId} className="sr-only">
+            {title}
+          </h2>
+        ) : (
+          <div className="flex items-start justify-between gap-4 border-b border-slate-800/80 px-6 py-4">
+            <div className="flex min-w-0 items-center gap-3">
+              {Icon ? (
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-300">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+              ) : null}
+              <div className="min-w-0">
+                <h2 id={titleId} className="fc-display text-base font-semibold tracking-tight text-white">
+                  {title}
+                </h2>
+                {subtitle ? <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p> : null}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="rounded-md p-1.5 text-slate-500 outline-none transition duration-150 hover:bg-slate-800 hover:text-slate-200 focus-visible:ring-2 focus-visible:ring-slate-600"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+        {children}
+        {footer ? <div className="flex items-center justify-end gap-2 border-t border-slate-800/80 bg-slate-950/40 px-6 py-3.5">{footer}</div> : null}
+      </div>
+    </div>
+  );
+}
+
+const BUTTON = {
+  primary:
+    "inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-indigo-500/25 outline-none transition duration-150 hover:bg-indigo-400 focus-visible:ring-4 focus-visible:ring-indigo-500/30 disabled:pointer-events-none disabled:opacity-40",
+  secondary:
+    "inline-flex items-center justify-center gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-2 text-[13px] font-medium text-slate-300 outline-none transition duration-150 hover:border-slate-700 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:pointer-events-none disabled:opacity-40",
+  danger:
+    "inline-flex items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-rose-500/25 outline-none transition duration-150 hover:bg-rose-400 focus-visible:ring-4 focus-visible:ring-rose-500/30",
+  ghost:
+    "inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-2.5 py-1.5 text-[12px] font-medium text-slate-300 outline-none transition duration-150 hover:border-slate-700 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:pointer-events-none disabled:opacity-40",
+};
+
 /* ============================================================================
- * 7. Toolbox (left)
+ * 10. Builder services — preferences, templates, checks, highlighting, files
  * ==========================================================================*/
 
-function Toolbox({ onAdd, count }) {
+const UI_KEY = "formcraft.ui.v1";
+const PANEL_MIN = 120;
+
+function loadUiPrefs() {
+  const fallback = { tab: "design", exportMode: "schema", panelOpen: true, panelHeight: 280, collapsed: [] };
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(UI_KEY) || "{}") || {};
+    return {
+      tab: raw.tab === "preview" ? "preview" : "design",
+      exportMode: raw.exportMode === "react" ? "react" : "schema",
+      panelOpen: raw.panelOpen !== false,
+      panelHeight: Number.isFinite(raw.panelHeight) ? Math.min(Math.max(raw.panelHeight, PANEL_MIN), 900) : fallback.panelHeight,
+      collapsed: Array.isArray(raw.collapsed) ? raw.collapsed.filter((g) => GROUPS.indexOf(g) !== -1) : [],
+    };
+  } catch (err) {
+    return fallback;
+  }
+}
+
+const isMacPlatform = () => typeof navigator !== "undefined" && /Mac|iP(hone|ad)/.test(navigator.platform || navigator.userAgent || "");
+
+/** Clipboard write with the legacy fallback. Resolves to true on success. */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    try {
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(area);
+      return ok;
+    } catch (err2) {
+      return false;
+    }
+  }
+}
+
+function downloadText(filename, text, mime) {
+  const url = URL.createObjectURL(new Blob([text], { type: mime }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+/**
+ * Starter forms. Each entry is a type plus overrides; everything goes through
+ * normalizeField, so a template can never produce an invalid field.
+ */
+const TEMPLATES = [
+  {
+    id: "demo",
+    name: "Request a demo",
+    blurb: "Qualify inbound sales leads",
+    icon: Sparkles,
+    meta: { title: "Request a demo", description: "Tell us a little about your team and we will be in touch within one business day." },
+    fields: [
+      { type: "heading", label: "About your team" },
+      { type: "text", label: "Full name", required: true },
+      { type: "email", label: "Work email", required: true },
+      { type: "select", label: "Plan", required: true },
+      { type: "checkboxes", label: "What should we cover?" },
+      { type: "textarea", label: "Tell us more" },
+      { type: "checkbox", label: "Subscribe to the product newsletter" },
+      { type: "submit", label: "Send request" },
+    ],
+  },
+  {
+    id: "contact",
+    name: "Contact us",
+    blurb: "General enquiries and support",
+    icon: Mail,
+    meta: { title: "Contact us", description: "Questions, feedback or partnership ideas — we usually reply the same day." },
+    fields: [
+      { type: "fullname", label: "Your name", required: true },
+      { type: "email", label: "Email", required: true, helper: "" },
+      { type: "phoneIntl", label: "Phone" },
+      {
+        type: "select",
+        label: "Topic",
+        required: true,
+        placeholder: "Choose a topic",
+        options: ["Sales", "Support", "Billing", "Press"],
+      },
+      { type: "textarea", label: "Message", required: true, placeholder: "How can we help?" },
+      { type: "consent", label: "Consent", required: true },
+      { type: "submit", label: "Send message" },
+    ],
+  },
+  {
+    id: "rsvp",
+    name: "Event RSVP",
+    blurb: "Guests, dietary needs, notes",
+    icon: PartyPopper,
+    meta: { title: "Product launch evening", description: "Thursday 14 May, 18:00 at the Stockholm office. Let us know if you can make it." },
+    fields: [
+      { type: "fullname", label: "Name", required: true },
+      { type: "email", label: "Email", required: true, helper: "We will send the invitation here." },
+      { type: "yesno", label: "Will you attend?", required: true },
+      { type: "stepper", label: "Guests, including you", min: 1, max: 6, step: 1 },
+      { type: "chips", label: "Dietary needs", options: ["Vegetarian", "Vegan", "Gluten-free", "Nut allergy"] },
+      { type: "textarea", label: "Anything else we should know?", placeholder: "Accessibility needs, arrival time…" },
+      { type: "submit", label: "Send RSVP" },
+    ],
+  },
+  {
+    id: "feedback",
+    name: "Customer feedback",
+    blurb: "NPS, ratings and open answers",
+    icon: MessagesSquare,
+    meta: { title: "How are we doing?", description: "Two minutes of your time helps us decide what to build next." },
+    fields: [
+      { type: "nps", label: "How likely are you to recommend us to a friend?", required: true },
+      { type: "rating", label: "How would you rate our support?" },
+      { type: "likert", label: "The product does what I need" },
+      { type: "textarea", label: "What should we improve?", placeholder: "Be as specific as you like." },
+      { type: "checkbox", label: "You can contact me about my answers" },
+      { type: "submit", label: "Share feedback" },
+    ],
+  },
+  {
+    id: "job",
+    name: "Job application",
+    blurb: "Candidates, resumes, consent",
+    icon: Briefcase,
+    meta: { title: "Apply to join the team", description: "We review every application and reply within two weeks." },
+    fields: [
+      { type: "fullname", label: "Name", required: true },
+      { type: "email", label: "Email", required: true, helper: "" },
+      { type: "phoneIntl", label: "Phone" },
+      { type: "url", label: "Portfolio or LinkedIn" },
+      {
+        type: "select",
+        label: "Role",
+        required: true,
+        placeholder: "Choose a role",
+        options: ["Product Designer", "Frontend Engineer", "Customer Success Manager"],
+      },
+      { type: "multifile", label: "Resume and cover letter", required: true, accept: ".pdf,.docx" },
+      { type: "textarea", label: "Why do you want to join us?" },
+      { type: "consent", label: "Consent", required: true },
+      { type: "submit", label: "Submit application" },
+    ],
+  },
+  {
+    id: "bug",
+    name: "Bug report",
+    blurb: "Steps, severity, screenshot",
+    icon: Bug,
+    meta: { title: "Report a bug", description: "Thanks for helping us fix it — the more detail, the faster we can." },
+    fields: [
+      { type: "text", label: "Summary", required: true, placeholder: "Export button does nothing on Safari" },
+      { type: "buttons", label: "Severity", required: true, options: ["Low", "Medium", "High", "Critical"] },
+      { type: "textarea", label: "Steps to reproduce", required: true, placeholder: "1. Open…\n2. Click…\n3. Expected… but got…" },
+      { type: "image", label: "Screenshot" },
+      { type: "select", label: "Browser", placeholder: "Choose a browser", options: ["Chrome", "Firefox", "Safari", "Edge"] },
+      { type: "email", label: "Where can we reach you?", helper: "" },
+      { type: "submit", label: "Report bug" },
+    ],
+  },
+  {
+    id: "signup",
+    name: "Create account",
+    blurb: "Sign-up with password rules",
+    icon: UserPlus,
+    meta: { title: "Create your account", description: "Free for 14 days. No credit card needed." },
+    fields: [
+      { type: "fullname", label: "Name", required: true },
+      { type: "email", label: "Email", required: true, helper: "" },
+      { type: "username", label: "Username", required: true },
+      { type: "passwordConfirm", label: "Password", required: true },
+      { type: "country", label: "Country" },
+      { type: "consent", label: "Consent", required: true },
+      { type: "submit", label: "Create account" },
+    ],
+  },
+];
+
+function buildTemplate(template) {
+  const fields = [];
+  template.fields.forEach((spec) => {
+    if (!TYPES[spec.type]) return;
+    const { type, ...overrides } = spec;
+    const base = createField(type, fields);
+    const field = normalizeField({ ...base, ...overrides, id: base.id, key: undefined }, fields);
+    if (field) fields.push(field);
+  });
+  return { meta: normalizeMeta({ ...DEFAULT_META, ...template.meta }), fields };
+}
+
+/** Human-sized checks on the document. Each issue can point at the element to fix. */
+function lintDocument(meta, fields) {
+  const issues = [];
+  const add = (level, message, fieldId) => issues.push({ key: issues.length + "-" + (fieldId || "form"), level, message, fieldId: fieldId || null });
+  const name = (f) => (String(f.label || "").trim() ? "“" + f.label.trim() + "”" : "A " + defOf(f.type).name.toLowerCase());
+  const inputs = fields.filter((f) => defOf(f.type).kind === "input" && defOf(f.type).labelMode !== "none");
+  const submits = fields.filter((f) => f.type === "submit");
+
+  if (!String(meta.title || "").trim()) add("info", "The form has no title", null);
+  if (inputs.length && !submits.length) add("warning", "Add a Submit Button so people can send the form", null);
+  if (submits.length > 1) add("info", "The form has " + submits.length + " submit buttons", submits[1].id);
+  if (submits.length) {
+    const lastSubmit = fields.lastIndexOf(submits[submits.length - 1]);
+    const after = fields.slice(lastSubmit + 1).find((f) => defOf(f.type).kind === "input" && defOf(f.type).labelMode !== "none");
+    if (after) add("info", name(after) + " sits below the submit button", after.id);
+  }
+  inputs.forEach((f) => {
+    if (!String(f.label || "").trim()) add("warning", "A " + defOf(f.type).name.toLowerCase() + " has no label", f.id);
+  });
+  const seen = Object.create(null);
+  inputs.forEach((f) => {
+    const label = String(f.label || "").trim().toLowerCase();
+    if (!label) return;
+    if (seen[label]) add("info", "Two fields are labelled " + name(f), f.id);
+    seen[label] = true;
+  });
+  fields.forEach((f) => {
+    defOf(f.type).settings.forEach((st) => {
+      if (st.control !== "options") return;
+      const list = Array.isArray(f[st.prop]) ? f[st.prop] : [];
+      const min = st.prop === "options" ? 2 : 1;
+      const noun = st.label.toLowerCase();
+      if (list.length < min) add("warning", name(f) + " needs at least " + min + " " + noun, f.id);
+      if (list.some((o) => !String(o).trim())) add("warning", name(f) + " has an empty entry in " + noun, f.id);
+      const trimmed = list.map((o) => String(o).trim().toLowerCase()).filter(Boolean);
+      if (new Set(trimmed).size !== trimmed.length) add("warning", name(f) + " lists the same entry twice in " + noun, f.id);
+    });
+  });
+  return issues;
+}
+
+/* ---- syntax highlighting for the code panel ---- */
+
+const JS_KEYWORDS = /^(?:import|from|export|default|function|const|let|return|if|else|new|typeof|instanceof|of|in)$/;
+const JS_LITERALS = /^(?:true|false|null|undefined)$/;
+const TOKEN_CLASS = {
+  comment: "text-slate-500 italic",
+  string: "text-emerald-300",
+  keyword: "text-violet-300",
+  literal: "text-orange-300",
+  number: "text-orange-300",
+  tag: "text-sky-300",
+  attr: "text-amber-200/90",
+  key: "text-indigo-300",
+  fn: "text-sky-200",
+};
+
+/** Splits one line into [text, tokenClass] segments. Small, fast, forgiving. */
+function tokenizeLine(line, mode) {
+  const out = [];
+  const push = (text, kind) => {
+    if (!text) return;
+    const last = out[out.length - 1];
+    if (last && last[1] === kind) last[0] += text;
+    else out.push([text, kind]);
+  };
+  const re =
+    mode === "json"
+      ? /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\b\d+(?:\.\d+)?\b)|\b(true|false|null)\b/g
+      : /(\/\/.*$|\/\*.*?\*\/)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(<\/?[A-Za-z][\w.]*)|([A-Za-z_$][\w$-]*)(?==)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_$][\w$]*)(?=\s*\()|([A-Za-z_$][\w$]*)/g;
+  let last = 0;
+  let m;
+  while ((m = re.exec(line))) {
+    push(line.slice(last, m.index), null);
+    if (mode === "json") {
+      if (m[1]) {
+        push(m[1], m[2] ? "key" : "string");
+        if (m[2]) push(m[2], null);
+      } else if (m[3]) push(m[3], "number");
+      else push(m[4], "literal");
+    } else if (m[1]) push(m[1], "comment");
+    else if (m[2]) push(m[2], "string");
+    else if (m[3]) push(m[3], "tag");
+    else if (m[4]) push(m[4], "attr");
+    else if (m[5]) push(m[5], "number");
+    else if (m[6]) push(m[6], JS_KEYWORDS.test(m[6]) ? "keyword" : "fn");
+    else if (m[7]) push(m[7], JS_KEYWORDS.test(m[7]) ? "keyword" : JS_LITERALS.test(m[7]) ? "literal" : null);
+    last = re.lastIndex;
+  }
+  push(line.slice(last), null);
+  return out;
+}
+
+/* ============================================================================
+ * 10b. Motion — FLIP reflow, pointer dragging, landing and exit animations
+ *
+ * Everything here is progressive: without Element.animate, or with
+ * prefers-reduced-motion, the same interactions happen instantly.
+ * ==========================================================================*/
+
+const EASE_OUT = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+const EASE_SPRING = "cubic-bezier(0.34, 1.36, 0.64, 1)";
+const NEW_SLOT = "__new__";
+
+const reducedMotion = () =>
+  typeof window !== "undefined" && Boolean(window.matchMedia) && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const canAnimate = (el) => Boolean(el) && typeof el.animate === "function" && !reducedMotion();
+
+/**
+ * FLIP: remembers where every [data-flip-id] child of the container sat after
+ * the last render and, when layout moves one, slides it from the old spot to
+ * the new one. Positions come from offsets, which ignore running transforms,
+ * and an interrupted slide continues from wherever it visually is.
+ */
+function useFlip(containerRef) {
+  const last = useRef(new Map());
+  const lastWidth = useRef(0);
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const next = new Map();
+    /* A resized canvas reflows everything at once; that is not a move. */
+    const width = container ? container.offsetWidth : 0;
+    const resized = width !== lastWidth.current;
+    lastWidth.current = width;
+    if (container) {
+      container.querySelectorAll("[data-flip-id]").forEach((el) => {
+        const id = el.getAttribute("data-flip-id");
+        const pos = { x: el.offsetLeft, y: el.offsetTop };
+        next.set(id, pos);
+        const prev = last.current.get(id);
+        if (!prev || resized || !canAnimate(el)) return;
+        let dx = prev.x - pos.x;
+        let dy = prev.y - pos.y;
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+        const running = el.getAnimations ? el.getAnimations().filter((a) => a.id === "fc-flip") : [];
+        if (running.length) {
+          const current = getComputedStyle(el).transform;
+          if (current && current !== "none" && typeof window.DOMMatrixReadOnly === "function") {
+            const m = new window.DOMMatrixReadOnly(current);
+            dx += m.m41;
+            dy += m.m42;
+          }
+          running.forEach((a) => a.cancel());
+        }
+        const anim = el.animate([{ transform: "translate(" + dx + "px, " + dy + "px)" }, { transform: "translate(0, 0)" }], {
+          duration: 300,
+          easing: EASE_OUT,
+        });
+        anim.id = "fc-flip";
+      });
+    }
+    last.current = next;
+  });
+}
+
+/** A visual copy of a node for overlays: no ids, no entrance animations. */
+function overlayClone(node) {
+  const clone = node.cloneNode(true);
+  [clone].concat(Array.from(clone.querySelectorAll("*"))).forEach((el) => {
+    el.removeAttribute("id");
+    if (el.classList) el.classList.remove("fc-rise", "fc-flash", "fc-pop");
+  });
+  return clone;
+}
+
+/** The lifted copy that follows the pointer while dragging. */
+function createDragGhost(source, rect, variant) {
+  const outer = document.createElement("div");
+  outer.setAttribute("aria-hidden", "true");
+  Object.assign(outer.style, {
+    position: "fixed",
+    left: "0px",
+    top: "0px",
+    width: rect.width + "px",
+    zIndex: "60",
+    pointerEvents: "none",
+    willChange: "transform",
+    transform: "translate3d(" + rect.left + "px, " + rect.top + "px, 0)",
+  });
+  const inner = document.createElement("div");
+  inner.className = "fc-ghost" + (variant ? " fc-ghost-" + variant : "");
+  inner.appendChild(overlayClone(source));
+  outer.appendChild(inner);
+  document.body.appendChild(outer);
+  return { outer, inner };
+}
+
+/** A removed card shrinks and fades in place while its neighbours slide up. */
+function animateExit(el) {
+  if (!canAnimate(el)) return;
+  const rect = el.getBoundingClientRect();
+  const clone = overlayClone(el);
+  Object.assign(clone.style, {
+    position: "fixed",
+    left: rect.left + "px",
+    top: rect.top + "px",
+    width: rect.width + "px",
+    height: rect.height + "px",
+    margin: "0",
+    zIndex: "55",
+    pointerEvents: "none",
+  });
+  document.body.appendChild(clone);
+  const anim = clone.animate(
+    [
+      { opacity: 1, transform: "scale(1)" },
+      { opacity: 0, transform: "scale(0.94) translateY(-4px)" },
+    ],
+    { duration: 200, easing: "cubic-bezier(0.4, 0, 1, 1)" }
+  );
+  anim.onfinish = () => clone.remove();
+}
+
+/**
+ * Where does a drop at (x, y) go among `rects` (in reading order)? Before the
+ * first card whose row lies below the pointer, or whose row contains the
+ * pointer and whose centre is to the right of it; otherwise at the end.
+ */
+function insertionIndex(rects, x, y) {
+  for (let i = 0; i < rects.length; i++) {
+    const r = rects[i];
+    if (y < r.top) return i;
+    if (y <= r.bottom && x < r.left + r.width / 2) return i;
+  }
+  return rects.length;
+}
+
+/** Swallows the click that the browser fires after a drag ends on an element. */
+function suppressNextClick() {
+  const stop = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+  };
+  window.addEventListener("click", stop, { capture: true, once: true });
+  window.setTimeout(() => window.removeEventListener("click", stop, { capture: true }), 0);
+}
+
+/* ============================================================================
+ * 11. Toolbox (left)
+ * ==========================================================================*/
+
+/** Lower-cased words of a text, split on anything that isn't a letter or digit. */
+const wordsOf = (text) =>
+  String(text || "")
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+
+/**
+ * Every query word must START some word of the text — so "date" finds
+ * "Date range" but not "Validated address".
+ */
+function prefixMatch(queryWords, textWords) {
+  return queryWords.every((q) => textWords.some((w) => w.indexOf(q) === 0));
+}
+
+function matchesQuery(def, query) {
+  return prefixMatch(wordsOf(query), wordsOf([def.name, def.blurb, def.group, def.type].concat(def.keywords).join(" ")));
+}
+
+function Toolbox({ onAdd, onDragPointer, count, collapsed, onToggleGroup, searchRef, anchorLabel }) {
+  const [query, setQuery] = useState("");
+  const term = query.trim().toLowerCase();
+  const searching = term.length > 0;
+  const groups = TOOLBOX_GROUPS.map((group) => ({
+    ...group,
+    items: searching ? group.items.filter((def) => matchesQuery(def, term)) : group.items,
+  })).filter((group) => group.items.length);
+  const firstMatch = searching && groups.length ? groups[0].items[0] : null;
+  const matchCount = groups.reduce((n, g) => n + g.items.length, 0);
+  const [announcement, setAnnouncement] = useState("");
+
+  /* Screen-reader users hear the result count and what Enter will do. */
+  useEffect(() => {
+    if (!searching) return setAnnouncement("");
+    const id = window.setTimeout(() => {
+      setAnnouncement(
+        matchCount
+          ? matchCount + (matchCount === 1 ? " element matches" : " elements match") + ". Press Enter to add " + firstMatch.name + "."
+          : "No elements match."
+      );
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [searching, matchCount, firstMatch]);
+
   return (
     <aside className="flex w-full shrink-0 flex-col border-b border-slate-800/80 bg-[#0E1119] lg:h-full lg:w-[268px] lg:border-b-0 lg:border-r">
-      <SectionTitle icon={LayoutGrid}>Elements</SectionTitle>
-      <p className="px-5 pb-4 text-xs leading-relaxed text-slate-500">
-        Click any element to append it to the canvas.
-      </p>
+      <SectionTitle icon={LayoutGrid} aside={<span className="fc-mono text-[10px] text-slate-600">{TYPE_ORDER.length}</span>}>
+        Elements
+      </SectionTitle>
+      <div className="px-3 pb-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+          <input
+            ref={searchRef}
+            type="search"
+            value={query}
+            aria-label="Search elements"
+            placeholder={"Search " + TYPE_ORDER.length + " elements"}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && query) {
+                event.stopPropagation();
+                setQuery("");
+              } else if (event.key === "Enter" && firstMatch) {
+                event.preventDefault();
+                onAdd(firstMatch.type);
+                setQuery("");
+                window.setTimeout(() => setAnnouncement("Added " + firstMatch.name + "."), 0);
+              }
+            }}
+            className={PANEL_INPUT + " pl-8 pr-9 [&::-webkit-search-cancel-button]:hidden"}
+          />
+          {!query ? (
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
+              <Kbd>/</Kbd>
+            </span>
+          ) : null}
+        </div>
+        <p role="status" aria-live="polite" className="sr-only">
+          {announcement}
+        </p>
+        <p className="mt-2 truncate px-0.5 text-[11px] text-slate-500">
+          {anchorLabel ? (
+            <>
+              Adds after <span className="text-slate-300">{anchorLabel}</span>
+            </>
+          ) : (
+            "Click or drag an element onto the canvas"
+          )}
+        </p>
+      </div>
       <div className="fc-scroll flex-1 overflow-y-auto px-3 pb-5">
-        {TOOLBOX_GROUPS.map((group) => (
-          <section key={group.name} className="mb-2">
-            <h3 className="fc-display sticky top-0 z-10 bg-[#0E1119] px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-              {group.name}
-            </h3>
-            <div className="space-y-1">
-              {group.items.map((bp) => {
-                const Icon = bp.icon;
-                return (
-                  <button
-                    key={bp.type}
-                    type="button"
-                    onClick={() => onAdd(bp.type)}
-                    className="group flex w-full items-center gap-3 rounded-xl border border-transparent px-2.5 py-2 text-left outline-none transition duration-150 hover:border-slate-800 hover:bg-slate-900/70 focus-visible:border-indigo-500/60 focus-visible:ring-4 focus-visible:ring-indigo-500/10"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 text-slate-400 transition duration-150 group-hover:border-indigo-500/40 group-hover:bg-indigo-500/10 group-hover:text-indigo-300">
-                      <Icon className="h-4 w-4" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-medium text-slate-200">{bp.name}</span>
-                      <span className="block truncate text-[11px] text-slate-500">{bp.blurb}</span>
-                    </span>
-                    <Plus
-                      className="h-4 w-4 shrink-0 text-slate-700 transition duration-150 group-hover:text-indigo-400"
-                      aria-hidden="true"
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+        {groups.map((group) => {
+          const open = searching || collapsed.indexOf(group.name) === -1;
+          return (
+            <section key={group.name} className="mb-1.5">
+              <h3 className="sticky top-0 z-10 bg-[#0E1119]">
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  disabled={searching}
+                  onClick={() => onToggleGroup(group.name)}
+                  className="fc-display flex w-full items-center gap-1.5 rounded-md px-2.5 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 outline-none transition duration-150 hover:text-slate-300 focus-visible:ring-2 focus-visible:ring-indigo-500/60 disabled:cursor-default disabled:hover:text-slate-500"
+                >
+                  <ChevronRight className={"h-3 w-3 shrink-0 transition-transform duration-150 " + (open ? "rotate-90" : "")} aria-hidden="true" />
+                  <span className="flex-1">{group.name}</span>
+                  <span className="fc-mono font-normal tracking-normal text-slate-600">{group.items.length}</span>
+                </button>
+              </h3>
+              {open ? (
+                <div className="space-y-0.5 pb-1">
+                  {group.items.map((def) => {
+                    const Icon = def.icon;
+                    return (
+                      <button
+                        key={def.type}
+                        type="button"
+                        onClick={(event) => onAdd(def.type, { from: event.currentTarget.querySelector("[data-toolbox-icon]") })}
+                        onPointerDown={(event) => {
+                          /* Mouse and pen can drag an element onto the canvas; touch keeps scrolling the list. */
+                          if (event.button !== 0 || event.pointerType === "touch") return;
+                          onDragPointer(event, def.type, event.currentTarget);
+                        }}
+                        className={
+                          "group flex w-full items-center gap-3 rounded-xl border px-2.5 py-2 text-left outline-none transition duration-150 hover:border-slate-800 hover:bg-slate-900/70 focus-visible:border-indigo-500/60 focus-visible:ring-4 focus-visible:ring-indigo-500/10 " +
+                          (firstMatch === def ? "border-indigo-500/30 bg-indigo-500/[0.06]" : "border-transparent")
+                        }
+                      >
+                        <span
+                          data-toolbox-icon=""
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 text-slate-400 transition duration-150 group-hover:border-indigo-500/40 group-hover:bg-indigo-500/10 group-hover:text-indigo-300 group-active:scale-90"
+                        >
+                          <Icon className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-medium text-slate-200">{def.name}</span>
+                          <span className="block truncate text-[11px] text-slate-500">{def.blurb}</span>
+                        </span>
+                        {firstMatch === def ? (
+                          <Kbd>↵</Kbd>
+                        ) : (
+                          <Plus className="h-4 w-4 shrink-0 text-slate-700 transition duration-150 group-hover:text-indigo-400" aria-hidden="true" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </section>
+          );
+        })}
+        {searching && !groups.length ? (
+          <div className="px-3 py-10 text-center">
+            <SearchX className="mx-auto mb-3 h-6 w-6 text-slate-700" aria-hidden="true" />
+            <p className="text-[13px] text-slate-400">No elements match “{query.trim()}”</p>
+            <p className="mt-1 text-[11px] text-slate-600">Try a broader word like “date”, “choice” or “file”.</p>
+          </div>
+        ) : null}
       </div>
       <div className="border-t border-slate-800/80 px-5 py-3 text-[11px] text-slate-500">
         <span className="fc-mono">{count}</span> {count === 1 ? "element" : "elements"} on canvas
@@ -1342,7 +8553,7 @@ function Toolbox({ onAdd, count }) {
 }
 
 /* ============================================================================
- * 8. Canvas (centre, design mode)
+ * 12. Canvas (centre, design mode)
  * ==========================================================================*/
 
 function CanvasCard({
@@ -1350,76 +8561,90 @@ function CanvasCard({
   index,
   total,
   selected,
+  flash,
   onSelect,
+  onEdit,
   onMove,
   onDuplicate,
   onDelete,
-  dragging,
-  dropTarget,
-  onDragStart,
-  onDragEnter,
-  onDragEnd,
-  onDrop,
+  onToggleRequired,
+  onCopyKey,
+  placeholder,
+  onDragPointer,
   s,
   lightArtboard,
 }) {
-  const bp = BLUEPRINT_MAP[field.type];
-  const Icon = bp.icon;
+  const def = defOf(field.type);
+  const Icon = def.icon;
   const span = field.width === "full" ? "sm:col-span-2" : "";
-  const isStatic = STATIC_TYPES.has(field.type);
+  const ref = useRef(null);
+  const canRequire = def.common.indexOf("required") !== -1;
 
-  const preview = (
-    <RenderedField
-      field={field}
-      value={emptyValueFor(field)}
-      onChange={() => {}}
-      idPrefix={"canvas-" + field.id + "-"}
-      s={s}
-    />
-  );
+  useEffect(() => {
+    if (!flash || !ref.current) return;
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    ref.current.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  }, [flash]);
+
+  const preview = <FieldBody field={field} value={emptyValueFor(field)} onChange={noop} idPrefix={"canvas-" + field.id + "-"} s={s} />;
+
+  /**
+   * Reordering moves this card's DOM node, which blurs the pressed button.
+   * Put focus back on the same button — or the card, once it hits an end.
+   */
+  const move = (event, delta) => {
+    const label = event.currentTarget.getAttribute("aria-label");
+    onMove(index, delta);
+    window.setTimeout(() => {
+      const card = ref.current;
+      if (!card) return;
+      const button = card.querySelector('button[aria-label="' + label + '"]');
+      if (button && !button.disabled) button.focus();
+      else card.focus();
+    }, 0);
+  };
 
   return (
-    <div
-      className={"relative min-w-0 " + span}
-      draggable
-      onDragStart={(event) => {
-        event.dataTransfer.effectAllowed = "move";
-        try {
-          event.dataTransfer.setData("text/plain", field.id);
-        } catch (err) {
-          /* Safari guards setData in some contexts */
-        }
-        onDragStart(index);
-      }}
-      onDragEnter={() => onDragEnter(index)}
-      onDragOver={(event) => event.preventDefault()}
-      onDragEnd={onDragEnd}
-      onDrop={(event) => {
-        event.preventDefault();
-        onDrop(index);
-      }}
-    >
+    <div className={"relative min-w-0 " + span} data-flip-id={field.id}>
       <div
-        role="button"
+        ref={ref}
+        role="group"
+        aria-roledescription="element"
         tabIndex={0}
+        data-canvas-card=""
+        data-field-id={field.id}
         aria-current={selected ? "true" : undefined}
+        aria-label={def.name + (def.common.indexOf("label") !== -1 && field.label ? ": " + field.label : "")}
         onClick={() => onSelect(field.id)}
+        onDoubleClick={() => onEdit(field.id)}
+        onPointerDown={(event) => {
+          /* Mouse and pen drag from anywhere on the card; touch only from the grip, so the canvas still scrolls. */
+          if (event.button !== 0 || event.target.closest("button, a, input, textarea, select")) return;
+          if (event.pointerType === "touch" && !event.target.closest("[data-drag-handle]")) return;
+          onDragPointer(event, field.id, ref.current);
+        }}
         onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
+          if (event.target !== event.currentTarget) return;
+          /* Enter on a selected card edits it; Enter/Space otherwise select. */
+          if (event.key === "Enter" && selected) {
+            event.preventDefault();
+            onEdit(field.id);
+          } else if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             onSelect(field.id);
           }
         }}
         className={
-          "fc-rise group relative cursor-pointer rounded-xl border bg-[#12151E] p-4 outline-none transition duration-200 " +
-          (selected
+          "fc-rise group relative cursor-pointer select-none rounded-xl border bg-[#12151E] p-4 outline-none transition-[border-color,box-shadow,background-color] duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500/60 " +
+          (placeholder
+            ? "fc-placeholder border-indigo-400/50"
+            : selected
             ? "border-indigo-500/80 shadow-[0_0_0_1px_rgba(99,102,241,0.5),0_12px_30px_-12px_rgba(99,102,241,0.55)]"
             : "border-slate-800 hover:border-slate-700 hover:shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)]") +
-          (dragging ? " opacity-40" : "") +
-          (dropTarget && !dragging ? " border-indigo-400/70 ring-4 ring-indigo-500/10" : "")
+          (flash ? " fc-flash" : "")
         }
       >
-        {selected ? (
+        {selected && !placeholder ? (
           <span className="fc-pop fc-display absolute -top-2.5 left-3 z-10 rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg shadow-indigo-500/30">
             Selected
           </span>
@@ -1427,45 +8652,53 @@ function CanvasCard({
 
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            <GripVertical
-              className="h-3.5 w-3.5 shrink-0 cursor-grab text-slate-700 transition group-hover:text-slate-500"
-              aria-hidden="true"
-            />
-            <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden="true" />
-            <span className="fc-display truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-              {bp.name}
+            <span data-drag-handle="" className="-m-1.5 flex shrink-0 cursor-grab touch-none items-center p-1.5 active:cursor-grabbing" title="Drag to reorder">
+              <GripVertical className="h-3.5 w-3.5 text-slate-700 transition group-hover:text-slate-500" aria-hidden="true" />
             </span>
+            <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden="true" />
+            <span className="fc-display truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{def.name}</span>
             {field.required ? (
               <span className="shrink-0 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-amber-400">
                 Required
               </span>
             ) : null}
           </div>
-          <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition duration-150 focus-within:opacity-100 group-hover:opacity-100">
-            <IconButton icon={ArrowUp} label="Move up" disabled={index === 0} onClick={() => onMove(index, -1)} />
-            <IconButton
-              icon={ArrowDown}
-              label="Move down"
-              disabled={index === total - 1}
-              onClick={() => onMove(index, 1)}
-            />
+          <div
+            className={
+              "flex shrink-0 items-center gap-0.5 transition duration-150 focus-within:opacity-100 group-hover:opacity-100 " +
+              (selected ? "opacity-100" : "opacity-0")
+            }
+          >
+            {canRequire ? (
+              <IconButton icon={Asterisk} label="Required" active={field.required} onClick={() => onToggleRequired(field.id)} />
+            ) : null}
+            <IconButton icon={ArrowUp} label="Move up" disabled={index === 0} onClick={(event) => move(event, -1)} />
+            <IconButton icon={ArrowDown} label="Move down" disabled={index === total - 1} onClick={(event) => move(event, 1)} />
             <IconButton icon={Copy} label="Duplicate" onClick={() => onDuplicate(field.id)} />
             <IconButton icon={Trash2} label="Delete" tone="danger" onClick={() => onDelete(field.id)} />
           </div>
         </div>
 
-        <div className="pointer-events-none select-none" aria-hidden="true">
-          {lightArtboard ? (
-            <div className="rounded-lg bg-white p-3 ring-1 ring-slate-200">{preview}</div>
-          ) : (
-            preview
-          )}
+        <div className="pointer-events-none select-none" aria-hidden="true" ref={setInert}>
+          {lightArtboard ? <div className="rounded-lg bg-white p-3 ring-1 ring-slate-200">{preview}</div> : preview}
         </div>
 
         <div className="mt-3 flex items-center gap-2 border-t border-slate-800/70 pt-2.5">
-          <span className="fc-mono truncate text-[10px] text-slate-600">
-            {isStatic ? bp.group.toLowerCase() : field.key}
-          </span>
+          {def.kind === "input" ? (
+            <button
+              type="button"
+              title="Copy field key"
+              onClick={(event) => {
+                event.stopPropagation();
+                onCopyKey(field.key);
+              }}
+              className="fc-mono -mx-1 truncate rounded px-1 text-[10px] text-slate-600 outline-none transition duration-150 hover:bg-slate-800/60 hover:text-indigo-300 focus-visible:ring-2 focus-visible:ring-indigo-500/60"
+            >
+              {field.key}
+            </button>
+          ) : (
+            <span className="fc-mono truncate text-[10px] text-slate-600">{def.group.toLowerCase()}</span>
+          )}
           <span className="ml-auto shrink-0 text-[10px] uppercase tracking-wider text-slate-500">
             {field.width === "full" ? "Full width" : "Half width"}
           </span>
@@ -1475,18 +8708,28 @@ function CanvasCard({
   );
 }
 
-function EmptyCanvas({ onAddFirst, onStarter }) {
+/** Where a dragged toolbox element will land, shown while it hovers the canvas. */
+function DropSlot({ type }) {
+  const def = defOf(type);
+  const Icon = def.icon;
+  return (
+    <div data-flip-id={NEW_SLOT} data-drop-slot="" className={"relative min-w-0 " + (def.defaults.width === "full" ? "sm:col-span-2" : "")}>
+      <div className="fc-slot flex min-h-[112px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-indigo-400/50 bg-indigo-500/[0.06] p-4 text-center">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-indigo-500/40 bg-indigo-500/15 text-indigo-300">
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <span className="text-[12px] font-medium text-indigo-200">Drop to add {def.name}</span>
+      </div>
+    </div>
+  );
+}
+
+function EmptyCanvas({ onAddFirst, onTemplates, onStarter }) {
   return (
     <div className="fc-rise flex min-h-[420px] flex-col items-center justify-center px-6 py-16 text-center">
       <div className="relative mb-7">
         <div className="absolute -inset-10 rounded-full bg-indigo-500/10 blur-3xl" aria-hidden="true" />
-        <svg
-          viewBox="0 0 148 120"
-          className="relative h-[120px] w-[148px]"
-          fill="none"
-          role="img"
-          aria-label="An empty form outline waiting for its first field"
-        >
+        <svg viewBox="0 0 148 120" className="relative h-[120px] w-[148px]" fill="none" role="img" aria-label="An empty form outline waiting for its first field">
           <rect x="12.5" y="10.5" width="123" height="99" rx="10" stroke="#2A3145" strokeDasharray="5 5" />
           <rect x="28" y="28" width="46" height="7" rx="3.5" fill="#2A3145" />
           <rect x="28" y="43" width="92" height="18" rx="6" fill="#151A26" stroke="#252B3D" />
@@ -1501,23 +8744,19 @@ function EmptyCanvas({ onAddFirst, onStarter }) {
       </div>
       <h3 className="fc-display text-lg font-semibold tracking-tight text-slate-100">Your canvas is empty</h3>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
-        Pick an element from the <span className="text-slate-300">Elements</span> panel on the left and it lands
-        here instantly. Select any field to edit its label, placeholder and rules in the Inspector.
+        Pick one of {TYPE_ORDER.length} elements on the left, start from a template, or press <Kbd>{isMacPlatform() ? "⌘" : "Ctrl"}</Kbd>{" "}
+        <Kbd>K</Kbd> to search everything.
       </p>
       <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
-        <button
-          type="button"
-          onClick={onStarter}
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-500/25 outline-none transition duration-150 hover:bg-indigo-400 focus-visible:ring-4 focus-visible:ring-indigo-500/30"
-        >
+        <button type="button" onClick={onTemplates} className={BUTTON.primary + " py-2.5"}>
+          <LayoutTemplate className="h-4 w-4" aria-hidden="true" />
+          Browse templates
+        </button>
+        <button type="button" onClick={onStarter} className={BUTTON.secondary + " py-2.5"}>
           <Sparkles className="h-4 w-4" aria-hidden="true" />
           Load starter form
         </button>
-        <button
-          type="button"
-          onClick={() => onAddFirst("text")}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-2.5 text-[13px] font-medium text-slate-300 outline-none transition duration-150 hover:border-slate-700 hover:text-white focus-visible:ring-4 focus-visible:ring-slate-700/40"
-        >
+        <button type="button" onClick={() => onAddFirst("text")} className={BUTTON.secondary + " py-2.5"}>
           <Plus className="h-4 w-4" aria-hidden="true" />
           Add a text field
         </button>
@@ -1527,84 +8766,15 @@ function EmptyCanvas({ onAddFirst, onStarter }) {
 }
 
 /* ============================================================================
- * 9. Inspector (right)
+ * 13. Inspector (right)
  * ==========================================================================*/
-
-function OptionsEditor({ field, onChange }) {
-  const update = (index, value) => {
-    const next = field.options.slice();
-    next[index] = value;
-    onChange(next);
-  };
-  const remove = (index) => onChange(field.options.filter((_, i) => i !== index));
-  const move = (index, delta) => {
-    const target = index + delta;
-    if (target < 0 || target >= field.options.length) return;
-    const next = field.options.slice();
-    const [item] = next.splice(index, 1);
-    next.splice(target, 0, item);
-    onChange(next);
-  };
-
-  return (
-    <div>
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Options</span>
-        <span className="fc-mono text-[10px] text-slate-600">{field.options.length}</span>
-      </div>
-      <div className="space-y-1.5">
-        {field.options.map((opt, i) => (
-          <div key={i} className="group flex items-center gap-1">
-            <span className="fc-mono w-5 shrink-0 text-center text-[10px] text-slate-600">{i + 1}</span>
-            <input
-              type="text"
-              value={opt}
-              placeholder="Option label"
-              onChange={(event) => update(i, event.target.value)}
-              className={PANEL_INPUT + " flex-1"}
-            />
-            <div className="flex shrink-0 opacity-0 transition duration-150 focus-within:opacity-100 group-hover:opacity-100">
-              <IconButton icon={ArrowUp} label="Move option up" disabled={i === 0} onClick={() => move(i, -1)} />
-              <IconButton
-                icon={ArrowDown}
-                label="Move option down"
-                disabled={i === field.options.length - 1}
-                onClick={() => move(i, 1)}
-              />
-              <IconButton icon={X} label="Remove option" tone="danger" onClick={() => remove(i)} />
-            </div>
-          </div>
-        ))}
-        {!field.options.length ? (
-          <p className="rounded-lg border border-dashed border-slate-800 px-3 py-2.5 text-[11px] text-slate-600">
-            No options yet.
-          </p>
-        ) : null}
-      </div>
-      <button
-        type="button"
-        onClick={() => onChange(field.options.concat("Option " + (field.options.length + 1)))}
-        className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-700 px-3 py-2 text-[12px] font-medium text-slate-400 outline-none transition duration-150 hover:border-indigo-500/60 hover:text-indigo-300 focus-visible:ring-4 focus-visible:ring-indigo-500/10"
-      >
-        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-        Add option
-      </button>
-    </div>
-  );
-}
 
 function FormSettings({ meta, onMeta }) {
   return (
     <aside className="flex w-full shrink-0 flex-col border-t border-slate-800/80 bg-[#0E1119] lg:h-full lg:w-[320px] lg:border-l lg:border-t-0">
       <SectionTitle icon={Settings2}>Form settings</SectionTitle>
       <div className="fc-scroll flex-1 space-y-4 overflow-y-auto px-5 pb-6">
-        <TextControl
-          id="meta-title"
-          label="Form title"
-          value={meta.title}
-          placeholder="Untitled form"
-          onChange={(value) => onMeta({ title: value })}
-        />
+        <TextControl id="meta-title" label="Form title" value={meta.title} placeholder="Untitled form" onChange={(value) => onMeta({ title: value })} />
         <TextControl
           id="meta-description"
           label="Description"
@@ -1615,6 +8785,7 @@ function FormSettings({ meta, onMeta }) {
         />
         <LabeledField label="Theme">
           <Segmented
+            label="Theme"
             value={meta.theme}
             onChange={(value) => onMeta({ theme: value })}
             options={[
@@ -1630,39 +8801,90 @@ function FormSettings({ meta, onMeta }) {
           </p>
         </LabeledField>
         <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-          <p className="fc-display text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Nothing selected
-          </p>
+          <p className="fc-display text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Nothing selected</p>
           <p className="mt-2 text-xs leading-relaxed text-slate-500">
-            Click any field on the canvas to edit its label, placeholder, helper text and validation here.
+            Click any element on the canvas to edit its label, placeholder, helper text and validation here.
           </p>
-          <dl className="mt-4 space-y-2 border-t border-slate-800 pt-3 text-[11px]">
-            <div className="flex items-center justify-between gap-3">
-              <dt className="text-slate-500">Reorder</dt>
-              <dd className="fc-mono text-slate-400">drag · Alt+↑↓</dd>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <dt className="text-slate-500">Delete selected</dt>
-              <dd className="fc-mono text-slate-400">Del</dd>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <dt className="text-slate-500">Undo</dt>
-              <dd className="fc-mono text-slate-400">Ctrl+Z</dd>
-            </div>
-          </dl>
         </div>
       </div>
     </aside>
   );
 }
 
-function Inspector({ field, fieldIndex, onUpdate, onDelete, onDeselect }) {
-  const bp = BLUEPRINT_MAP[field.type];
-  const Icon = bp.icon;
-  const isDivider = field.type === "divider";
-  const isHeading = field.type === "heading";
-  const isSubmit = field.type === "submit";
-  const isStatic = STATIC_TYPES.has(field.type);
+/**
+ * Field-key editor. Keys are slugged and de-duplicated, which would fight
+ * every keystroke — so it edits a draft and commits on blur or Enter.
+ */
+function KeyControl({ field, onCommit }) {
+  const [draft, setDraft] = useState(field.key);
+  const focused = useRef(false);
+  const cancelled = useRef(false);
+  useEffect(() => {
+    if (!focused.current) setDraft(field.key);
+  }, [field.key]);
+  const commit = () => {
+    if (draft.trim() && draft !== field.key) onCommit(draft);
+    else setDraft(field.key);
+  };
+  const preview = draft.trim() ? slugify(draft) : field.key;
+  return (
+    <LabeledField label="Field key" hint={field.autoKey ? "auto" : "custom"} htmlFor="insp-key">
+      <input
+        id="insp-key"
+        type="text"
+        value={draft}
+        spellCheck={false}
+        placeholder="field_key"
+        aria-describedby={preview !== draft ? "insp-key-note" : undefined}
+        onFocus={() => {
+          focused.current = true;
+        }}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => {
+          focused.current = false;
+          /* Escape already reverted: the blur that follows must not save the stale draft. */
+          if (cancelled.current) {
+            cancelled.current = false;
+            return;
+          }
+          commit();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commit();
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            cancelled.current = true;
+            setDraft(field.key);
+            event.currentTarget.blur();
+          }
+        }}
+        className={PANEL_INPUT + " fc-mono text-[12px]"}
+      />
+      {preview !== draft ? (
+        <p id="insp-key-note" className="mt-1.5 text-[11px] text-slate-500">
+          Saves as <span className="fc-mono text-slate-300">{preview}</span>
+        </p>
+      ) : null}
+    </LabeledField>
+  );
+}
+
+function Inspector({ field, fieldIndex, onUpdate, onDelete, onDeselect, labelRef }) {
+  const def = defOf(field.type);
+  const Icon = def.icon;
+  const has = (c) => def.common.indexOf(c) !== -1;
+  const plainSettings = def.settings.filter((st) => st.control !== "options" && (!st.when || st.when(field)));
+  const optionSettings = def.settings.filter((st) => st.control === "options" && (!st.when || st.when(field)));
+
+  /* Consecutive number settings share a row. */
+  const rows = [];
+  plainSettings.forEach((st) => {
+    const last = rows[rows.length - 1];
+    if (st.control === "number" && last && last.numbers && last.items.length < 3) last.items.push(st);
+    else rows.push({ numbers: st.control === "number", items: [st] });
+  });
 
   return (
     <aside className="flex w-full shrink-0 flex-col border-t border-slate-800/80 bg-[#0E1119] lg:h-full lg:w-[320px] lg:border-l lg:border-t-0">
@@ -1682,114 +8904,75 @@ function Inspector({ field, fieldIndex, onUpdate, onDelete, onDeselect }) {
         Inspector
       </SectionTitle>
 
-      <div
-        key={field.id}
-        className="fc-pop mx-5 mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/25 bg-indigo-500/[0.07] px-3.5 py-3"
-      >
+      <div key={field.id} className="fc-pop mx-5 mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/25 bg-indigo-500/[0.07] px-3.5 py-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-300">
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[13px] font-medium text-slate-100">
-            {isDivider ? "Divider" : field.label || "Untitled field"}
-          </p>
+          <p className="truncate text-[13px] font-medium text-slate-100">{has("label") ? field.label || "Untitled" : def.name}</p>
           <p className="fc-mono truncate text-[10px] text-indigo-300/70">
-            {bp.name} · #{fieldIndex + 1}
+            {def.name} · #{fieldIndex + 1}
           </p>
         </div>
       </div>
 
       <div className="fc-scroll flex-1 space-y-4 overflow-y-auto px-5 pb-6">
-        {!NO_LABEL_TYPES.has(field.type) ? (
+        {has("label") ? (
           <TextControl
             id="insp-label"
-            label={isSubmit ? "Button text" : isHeading ? "Heading" : "Field label"}
+            inputRef={labelRef}
+            label={def.inspect.label || "Field label"}
             value={field.label}
             placeholder="Label"
             onChange={(value) => onUpdate(field.id, { label: value })}
           />
         ) : null}
 
-        {!isStatic ? (
-          <TextControl
-            id="insp-key"
-            label="Field key"
-            hint={field.autoKey ? "auto" : "custom"}
-            mono
-            value={field.key}
-            placeholder="field_key"
-            onChange={(value) => onUpdate(field.id, { key: value })}
-          />
-        ) : null}
+        {has("key") ? <KeyControl key={field.id} field={field} onCommit={(value) => onUpdate(field.id, { key: value })} /> : null}
 
-        {PLACEHOLDER_TYPES.has(field.type) ? (
-          <TextControl
-            id="insp-placeholder"
-            label={field.type === "select" ? "Empty state text" : "Placeholder"}
-            value={field.placeholder}
-            placeholder="Placeholder text"
-            onChange={(value) => onUpdate(field.id, { placeholder: value })}
-          />
-        ) : null}
-
-        {!isDivider && !isSubmit ? (
+        {has("helper") ? (
           <TextControl
             id="insp-helper"
-            label={isHeading ? "Subtitle" : "Helper text"}
+            label={def.inspect.helper || "Helper text"}
             value={field.helper}
-            placeholder={isHeading ? "Optional line under the heading" : "Shown under the field"}
+            placeholder="Shown under the field"
             multiline
             onChange={(value) => onUpdate(field.id, { helper: value })}
           />
         ) : null}
 
-        {field.type === "range" ? (
-          <div className="grid grid-cols-3 gap-2">
-            <NumberControl
-              id="insp-min"
-              label="Min"
-              value={field.min}
-              onChange={(value) => onUpdate(field.id, { min: value })}
+        {rows.map((row) =>
+          row.numbers && row.items.length > 1 ? (
+            <div key={row.items[0].prop} className={"grid gap-2 " + (row.items.length === 2 ? "grid-cols-2" : "grid-cols-3")}>
+              {row.items.map((st) => (
+                <SettingControl key={st.prop} setting={st} field={field} onChange={(value) => onUpdate(field.id, { [st.prop]: value })} />
+              ))}
+            </div>
+          ) : (
+            <SettingControl
+              key={row.items[0].prop}
+              setting={row.items[0]}
+              field={field}
+              onChange={(value) => onUpdate(field.id, { [row.items[0].prop]: value })}
             />
-            <NumberControl
-              id="insp-max"
-              label="Max"
-              value={field.max}
-              onChange={(value) => onUpdate(field.id, { max: value })}
+          )
+        )}
+
+        {has("width") ? (
+          <LabeledField label="Width">
+            <Segmented
+              label="Width"
+              value={field.width}
+              onChange={(value) => onUpdate(field.id, { width: value })}
+              options={[
+                { value: "half", label: "Half" },
+                { value: "full", label: "Full" },
+              ]}
             />
-            <NumberControl
-              id="insp-step"
-              label="Step"
-              value={field.step}
-              onChange={(value) => onUpdate(field.id, { step: value })}
-            />
-          </div>
+          </LabeledField>
         ) : null}
 
-        {field.type === "file" ? (
-          <TextControl
-            id="insp-accept"
-            label="Accepted types"
-            hint="accept"
-            mono
-            value={field.accept}
-            placeholder=".pdf,.docx"
-            onChange={(value) => onUpdate(field.id, { accept: value })}
-          />
-        ) : null}
-
-        <LabeledField label="Width">
-          <Segmented
-            value={field.width}
-            onChange={(value) => onUpdate(field.id, { width: value })}
-            options={[
-              { value: "half", label: "Half" },
-              { value: "full", label: "Full" },
-            ]}
-          />
-        </LabeledField>
-
-        {!isStatic ? (
+        {has("required") ? (
           <Switch
             checked={field.required}
             onChange={(value) => onUpdate(field.id, { required: value })}
@@ -1798,13 +8981,13 @@ function Inspector({ field, fieldIndex, onUpdate, onDelete, onDeselect }) {
           />
         ) : null}
 
-        {CHOICE_TYPES.has(field.type) ? (
-          <OptionsEditor field={field} onChange={(options) => onUpdate(field.id, { options })} />
-        ) : null}
+        {optionSettings.map((st) => (
+          <SettingControl key={st.prop} setting={st} field={field} onChange={(value) => onUpdate(field.id, { [st.prop]: value })} />
+        ))}
 
-        {isDivider ? (
+        {def.kind === "static" && !def.common.some((c) => c !== "width") && !def.settings.length ? (
           <p className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 text-xs leading-relaxed text-slate-500">
-            A divider is purely visual — it holds no value and never appears in the submitted payload.
+            This element is purely visual — it holds no value and never appears in the submitted payload.
           </p>
         ) : null}
 
@@ -1822,10 +9005,10 @@ function Inspector({ field, fieldIndex, onUpdate, onDelete, onDeselect }) {
 }
 
 /* ============================================================================
- * 10. Live preview (centre, tab B)
+ * 14. Live preview (centre, tab B)
  * ==========================================================================*/
 
-function PreviewPane({ meta, fields, values, errors, onChange, onSubmit, submitted, onReset, s, light }) {
+function PreviewPane({ meta, fields, values, errors, onChange, onSubmit, submitted, onReset, onResetValues, s, light }) {
   const hasSubmit = fields.some((f) => f.type === "submit");
 
   if (!fields.length) {
@@ -1844,9 +9027,7 @@ function PreviewPane({ meta, fields, values, errors, onChange, onSubmit, submitt
           <div
             className={
               "fc-rise rounded-2xl border p-8 " +
-              (light
-                ? "border-emerald-300 bg-white shadow-xl shadow-slate-900/5"
-                : "border-emerald-500/25 bg-[#12151E] shadow-2xl shadow-black/40")
+              (light ? "border-emerald-300 bg-white shadow-xl shadow-slate-900/5" : "border-emerald-500/25 bg-[#12151E] shadow-2xl shadow-black/40")
             }
           >
             <span
@@ -1857,13 +9038,12 @@ function PreviewPane({ meta, fields, values, errors, onChange, onSubmit, submitt
             >
               <Check className="h-5 w-5" aria-hidden="true" />
             </span>
-            <h3 className={"fc-display text-xl font-semibold tracking-tight " + (light ? "text-slate-900" : "text-white")}>
-              Form submitted
-            </h3>
+            <h3 className={"fc-display text-xl font-semibold tracking-tight " + (light ? "text-slate-900" : "text-white")}>Form submitted</h3>
             <p className={"mt-2 text-sm " + (light ? "text-slate-600" : "text-slate-400")}>
               This is the payload your <span className="fc-mono">onSubmit</span> handler receives.
             </p>
             <pre
+              data-testid="submitted-payload"
               className={
                 "fc-scroll fc-mono mt-5 max-h-56 overflow-auto rounded-xl border p-4 text-[12px] leading-relaxed " +
                 (light ? "border-slate-200 bg-slate-50 text-emerald-700" : "border-slate-800 bg-[#0A0C12] text-emerald-200/90")
@@ -1894,25 +9074,16 @@ function PreviewPane({ meta, fields, values, errors, onChange, onSubmit, submitt
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               {fields.map((field) => (
-                <div
+                <FieldCell
                   key={field.id}
-                  className={
-                    (field.type === "submit" || field.type === "heading"
-                      ? "pt-2"
-                      : field.type === "divider"
-                      ? "py-1"
-                      : "min-w-0") + (field.width === "full" ? " sm:col-span-2" : "")
-                  }
-                >
-                  <RenderedField
-                    field={field}
-                    value={values[field.id] === undefined ? emptyValueFor(field) : values[field.id]}
-                    error={errors[field.id]}
-                    onChange={(value) => onChange(field.id, value)}
-                    idPrefix="preview-"
-                    s={s}
-                  />
-                </div>
+                  field={field}
+                  value={values[field.id] === undefined ? emptyValueFor(field) : values[field.id]}
+                  error={errors[field.id]}
+                  onChange={(value) => onChange(field.id, value)}
+                  onReset={onResetValues}
+                  idPrefix="preview-"
+                  s={s}
+                />
               ))}
             </div>
 
@@ -1928,15 +9099,47 @@ function PreviewPane({ meta, fields, values, errors, onChange, onSubmit, submitt
   );
 }
 
+
 /* ============================================================================
- * 11. Code exporter (bottom)
+ * 15. Code exporter (bottom)
  * ==========================================================================*/
 
-function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, fieldCount }) {
+/** Highlighted code with a line-number gutter kept outside the copyable text. */
+function CodeView({ code, mode, codeRef }) {
+  const lines = useMemo(() => code.split("\n"), [code]);
+  const tokens = useMemo(() => lines.map((line) => tokenizeLine(line, mode === "schema" ? "json" : "js")), [lines, mode]);
+  return (
+    <div className="flex min-w-max">
+      <div aria-hidden="true" className="sticky left-0 z-10 select-none whitespace-pre bg-[#0A0C12] pl-4 pr-4 text-right tabular-nums text-slate-700">
+        {lines.map((_, i) => i + 1).join("\n")}
+      </div>
+      <code ref={codeRef} className="block whitespace-pre pr-6 text-slate-300">
+        {tokens.map((segments, i) => (
+          <React.Fragment key={i}>
+            {segments.map(([text, kind], j) =>
+              kind ? (
+                <span key={j} className={TOKEN_CLASS[kind]}>
+                  {text}
+                </span>
+              ) : (
+                text
+              )
+            )}
+            {i < tokens.length - 1 ? "\n" : null}
+          </React.Fragment>
+        ))}
+      </code>
+    </div>
+  );
+}
+
+function ExportPanel({ open, onToggle, height, onResize, mode, onMode, theme, onTheme, code, fieldCount, title }) {
   /** "idle" | "copied" | "manual" — "manual" means the clipboard was refused. */
   const [copyState, setCopyState] = useState("idle");
+  const [dragging, setDragging] = useState(false);
   const timer = useRef(null);
   const codeRef = useRef(null);
+  const drag = useRef(null);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
   useEffect(() => {
@@ -1944,8 +9147,20 @@ function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, field
     window.clearTimeout(timer.current);
   }, [mode, theme]);
 
-  const isMac =
-    typeof navigator !== "undefined" && /Mac|iP(hone|ad)/.test(navigator.platform || navigator.userAgent);
+  const maxHeight = () => Math.max(PANEL_MIN, Math.round(window.innerHeight * 0.7));
+  const endDrag = () => {
+    drag.current = null;
+    setDragging(false);
+  };
+  const body = useRef(null);
+
+  /* A collapsed panel must also disappear for keyboard and screen-reader users. */
+  useEffect(() => {
+    const node = body.current;
+    if (!node) return;
+    if (open) node.removeAttribute("inert");
+    else node.setAttribute("inert", "");
+  }, [open]);
 
   /** Last resort: select the code so the keyboard shortcut is one keystroke away. */
   const selectCode = () => {
@@ -1959,41 +9174,28 @@ function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, field
   };
 
   const copy = async () => {
-    let ok = false;
-    try {
-      await navigator.clipboard.writeText(code);
-      ok = true;
-    } catch (err) {
-      try {
-        const area = document.createElement("textarea");
-        area.value = code;
-        area.setAttribute("readonly", "");
-        area.style.position = "fixed";
-        area.style.opacity = "0";
-        document.body.appendChild(area);
-        area.select();
-        ok = document.execCommand("copy");
-        document.body.removeChild(area);
-      } catch (err2) {
-        ok = false;
-      }
-    }
+    const ok = await copyText(code);
+    window.clearTimeout(timer.current);
     if (!ok) {
       if (!open) onToggle(true);
-      selectCode();
+      window.setTimeout(selectCode, 0);
       setCopyState("manual");
-      window.clearTimeout(timer.current);
       timer.current = window.setTimeout(() => setCopyState("idle"), 4000);
       return;
     }
     setCopyState("copied");
-    window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCopyState("idle"), 1800);
+  };
+
+  const download = () => {
+    const base = slugify(title, "form").replace(/_/g, "-");
+    if (mode === "schema") downloadText(base + ".schema.json", code + "\n", "application/json");
+    else downloadText("GeneratedForm.jsx", code + "\n", "text/javascript");
   };
 
   const copied = copyState === "copied";
   const manual = copyState === "manual";
-  const copyLabel = copied ? "Copied" : manual ? (isMac ? "Press ⌘C" : "Press Ctrl+C") : "Copy";
+  const copyLabel = copied ? "Copied" : manual ? (isMacPlatform() ? "Press ⌘C" : "Press Ctrl+C") : "Copy";
 
   const tabs = [
     { value: "schema", label: "Form schema", icon: Braces },
@@ -2001,20 +9203,69 @@ function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, field
   ];
 
   return (
-    <section className="shrink-0 border-t border-slate-800/80 bg-[#0E1119]">
+    <section aria-label="Code export" className="relative shrink-0 border-t border-slate-800/80 bg-[#0E1119]">
+      {open ? (
+        <div
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize the code panel"
+          aria-valuemin={PANEL_MIN}
+          aria-valuemax={maxHeight()}
+          aria-valuenow={Math.min(height, maxHeight())}
+          tabIndex={0}
+          onPointerDown={(event) => {
+            event.preventDefault();
+            drag.current = { startY: event.clientY, startHeight: Math.min(height, maxHeight()) };
+            event.currentTarget.setPointerCapture(event.pointerId);
+            setDragging(true);
+          }}
+          onPointerMove={(event) => {
+            if (!drag.current || !(event.buttons & 1)) return;
+            const next = drag.current.startHeight + (drag.current.startY - event.clientY);
+            onResize(Math.min(Math.max(next, PANEL_MIN), maxHeight()));
+          }}
+          onPointerUp={(event) => {
+            endDrag();
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+          }}
+          onPointerCancel={endDrag}
+          onLostPointerCapture={endDrag}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+              event.preventDefault();
+              event.stopPropagation();
+              const next = Math.min(height, maxHeight()) + (event.key === "ArrowUp" ? 32 : -32);
+              onResize(Math.min(Math.max(next, PANEL_MIN), maxHeight()));
+            }
+          }}
+          className="group absolute inset-x-0 -top-1.5 z-10 flex h-3 cursor-row-resize touch-none items-center justify-center outline-none"
+        >
+          <span
+            className={
+              "h-1 w-10 rounded-full transition duration-150 group-hover:bg-indigo-400/70 group-focus-visible:bg-indigo-400 " +
+              (dragging ? "bg-indigo-400" : "bg-slate-700")
+            }
+          />
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
-        <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1">
-          {tabs.map((tab) => {
+        <div role="tablist" aria-label="Export format" className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1">
+          {tabs.map((tab, i) => {
             const Icon = tab.icon;
             const active = mode === tab.value;
             return (
               <button
                 key={tab.value}
                 type="button"
+                role="tab"
+                aria-selected={active}
+                tabIndex={active ? 0 : -1}
                 onClick={() => {
                   onMode(tab.value);
                   if (!open) onToggle(true);
                 }}
+                onKeyDown={(event) => rovingKeyDown(event, i, tabs.length, (n) => onMode(tabs[n].value))}
                 className={
                   "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] font-medium outline-none transition duration-150 focus-visible:ring-2 focus-visible:ring-indigo-500/60 " +
                   (active ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300")
@@ -2033,6 +9284,7 @@ function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, field
             <div className="w-[168px]">
               <Segmented
                 size="sm"
+                label="Export theme"
                 value={theme}
                 onChange={onTheme}
                 options={[
@@ -2052,6 +9304,15 @@ function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, field
         <div className="ml-auto flex items-center gap-2">
           <button
             type="button"
+            onClick={download}
+            title={mode === "schema" ? "Download the schema as JSON" : "Download GeneratedForm.jsx"}
+            className={BUTTON.ghost}
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="hidden sm:inline">Download</span>
+          </button>
+          <button
+            type="button"
             onClick={copy}
             aria-live="polite"
             className={
@@ -2060,7 +9321,7 @@ function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, field
                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 focus-visible:ring-emerald-500/20"
                 : manual
                 ? "border-amber-500/40 bg-amber-500/10 text-amber-300 focus-visible:ring-amber-500/20"
-                : "border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700 hover:text-white focus-visible:ring-slate-700/30")
+                : "border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700 hover:text-white focus-visible:ring-indigo-400")
             }
           >
             {copied ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
@@ -2070,7 +9331,9 @@ function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, field
             type="button"
             onClick={() => onToggle(!open)}
             aria-expanded={open}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium text-slate-400 outline-none transition duration-150 hover:bg-slate-800/60 hover:text-white focus-visible:ring-2 focus-visible:ring-slate-600"
+            aria-controls="fc-code-panel"
+            aria-label={open ? "Hide code" : "Show code"}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium text-slate-400 outline-none transition duration-150 hover:bg-slate-800/60 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-400"
           >
             {open ? <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" /> : <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />}
             {open ? "Hide" : "Show"}
@@ -2079,13 +9342,18 @@ function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, field
       </div>
 
       <div
+        id="fc-code-panel"
+        ref={body}
+        aria-hidden={open ? undefined : "true"}
+        style={{ height: open ? Math.min(height, maxHeight()) : 0 }}
         className={
-          "overflow-hidden border-t border-slate-800/70 transition-all duration-300 ease-out " +
-          (open ? "max-h-[34vh] opacity-100" : "max-h-0 border-transparent opacity-0")
+          "overflow-hidden border-t ease-out " +
+          (open ? "border-slate-800/70 " : "border-transparent ") +
+          (dragging ? "" : "transition-[height] duration-300")
         }
       >
-        <pre className="fc-scroll fc-mono h-[34vh] overflow-auto bg-[#0A0C12] px-5 py-4 text-[12px] leading-[1.65] text-slate-300 selection:bg-indigo-500/30 selection:text-white">
-          <code ref={codeRef}>{code}</code>
+        <pre className="fc-scroll fc-mono h-full overflow-auto bg-[#0A0C12] py-4 text-[12px] leading-[1.65] selection:bg-indigo-500/30 selection:text-white">
+          <CodeView code={code} mode={mode} codeRef={codeRef} />
         </pre>
       </div>
     </section>
@@ -2093,44 +9361,575 @@ function ExportPanel({ open, onToggle, mode, onMode, theme, onTheme, code, field
 }
 
 /* ============================================================================
- * 12. Root application
+ * 16. Dialogs, menus and toasts
  * ==========================================================================*/
+
+/**
+ * Ranks a command against the query. Every query word must start a word of
+ * the command's text; hits in the label outrank hits in keywords, and a hit
+ * on the label's first word ranks highest.
+ */
+function scoreCommand(command, words) {
+  const labelWords = wordsOf(command.label);
+  const allWords = labelWords.concat(wordsOf(command.section), wordsOf((command.keywords || []).join(" ")));
+  let score = 0;
+  for (const word of words) {
+    if (!allWords.some((w) => w.indexOf(word) === 0)) return -1;
+    const inLabel = labelWords.findIndex((w) => w.indexOf(word) === 0);
+    score += inLabel === 0 ? 3 : inLabel > 0 ? 2 : 1;
+  }
+  return score;
+}
+
+function CommandPalette({ commands, onClose }) {
+  const [query, setQuery] = useState("");
+  const [active, setActive] = useState(0);
+  const listRef = useRef(null);
+
+  const results = useMemo(() => {
+    const words = wordsOf(query);
+    if (!words.length) return commands.filter((c) => c.pinned);
+    return commands
+      .map((c, i) => ({ c, i, score: scoreCommand(c, words) }))
+      .filter((r) => r.score >= 0)
+      .sort((a, b) => b.score - a.score || a.i - b.i)
+      .slice(0, 60)
+      .map((r) => r.c);
+  }, [commands, query]);
+
+  useEffect(() => setActive(0), [query]);
+  useEffect(() => {
+    const el = listRef.current && listRef.current.querySelector('[data-active="true"]');
+    if (el) el.scrollIntoView({ block: "nearest" });
+  }, [active]);
+
+  const run = (command) => {
+    onClose();
+    window.setTimeout(command.run, 0);
+  };
+
+  return (
+    <Modal title="Command palette" onClose={onClose} width="max-w-xl" bare>
+      <div className="flex items-center gap-3 border-b border-slate-800/80 px-4">
+        <Search className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+        <input
+          autoFocus
+          data-autofocus
+          type="text"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls="fc-palette-list"
+          aria-activedescendant={results[active] ? "fc-cmd-" + results[active].id : undefined}
+          aria-label="Search commands and elements"
+          placeholder="Add an element, jump to a field, or run a command…"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setActive((i) => Math.min(i + 1, results.length - 1));
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setActive((i) => Math.max(i - 1, 0));
+            } else if (event.key === "Enter" && results[active]) {
+              event.preventDefault();
+              run(results[active]);
+            }
+          }}
+          className="h-14 flex-1 bg-transparent text-[15px] text-slate-100 placeholder-slate-600 outline-none"
+        />
+        <Kbd>Esc</Kbd>
+      </div>
+      <ul id="fc-palette-list" ref={listRef} role="listbox" aria-label="Results" className="fc-scroll max-h-[52vh] overflow-y-auto p-2">
+        {results.map((command, i) => {
+          const Icon = command.icon;
+          const showSection = i === 0 || results[i - 1].section !== command.section;
+          return (
+            <React.Fragment key={command.id}>
+              {showSection ? (
+                <li role="presentation" className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600 first:pt-1">
+                  {command.section}
+                </li>
+              ) : null}
+              <li
+                id={"fc-cmd-" + command.id}
+                role="option"
+                aria-selected={i === active}
+                aria-label={command.section === "Actions" ? command.label : command.section === "Add element" ? "Add " + command.label : "Jump to " + command.label}
+                data-active={i === active ? "true" : undefined}
+                onMouseMove={() => setActive(i)}
+                onClick={() => run(command)}
+                className={
+                  "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors duration-100 " +
+                  (i === active ? "bg-indigo-500/15 text-white" : "text-slate-300")
+                }
+              >
+                <span className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-md " + (i === active ? "bg-indigo-500/20 text-indigo-200" : "bg-slate-900 text-slate-500")}>
+                  {Icon ? <Icon className="h-3.5 w-3.5" aria-hidden="true" /> : null}
+                </span>
+                <span className="min-w-0 flex-1 truncate">{command.label}</span>
+                {command.hint ? <span className="shrink-0 text-[11px] text-slate-500">{command.hint}</span> : null}
+              </li>
+            </React.Fragment>
+          );
+        })}
+        {!results.length ? <li className="px-3 py-10 text-center text-[13px] text-slate-500">Nothing matches “{query.trim()}”.</li> : null}
+      </ul>
+      <div className="flex items-center gap-4 border-t border-slate-800/80 px-4 py-2.5 text-[11px] text-slate-500">
+        <span className="inline-flex items-center gap-1.5">
+          <Kbd>↑</Kbd>
+          <Kbd>↓</Kbd> to move
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Kbd>↵</Kbd> to run
+        </span>
+      </div>
+    </Modal>
+  );
+}
+
+function TemplatesDialog({ onClose, onUse, hasContent }) {
+  return (
+    <Modal
+      title="Start from a template"
+      subtitle={hasContent ? "Replaces the current canvas — you can undo it afterwards." : "Every template is fully editable."}
+      icon={LayoutTemplate}
+      onClose={onClose}
+      width="max-w-3xl"
+    >
+      <div className="fc-scroll grid max-h-[65vh] grid-cols-1 gap-3 overflow-y-auto p-6 sm:grid-cols-2">
+        {TEMPLATES.map((template) => {
+          const Icon = template.icon;
+          const types = template.fields.filter((f) => TYPES[f.type]);
+          return (
+            <button
+              key={template.id}
+              type="button"
+              onClick={() => onUse(template)}
+              className="group flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-left outline-none transition duration-150 hover:border-indigo-500/50 hover:bg-indigo-500/[0.05] focus-visible:ring-2 focus-visible:ring-indigo-400"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-400 transition duration-150 group-hover:border-indigo-500/40 group-hover:text-indigo-300">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-[14px] font-semibold text-slate-100">{template.name}</p>
+                  <p className="truncate text-[12px] text-slate-500">{template.blurb}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {types.map((f, i) => (
+                  <span key={i} className="rounded-md border border-slate-800 bg-slate-900/80 px-1.5 py-0.5 text-[10px] text-slate-400">
+                    {TYPES[f.type].name}
+                  </span>
+                ))}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </Modal>
+  );
+}
+
+/** Where a JSON.parse error points, as "line 3, column 14" — best effort across engines. */
+function describeJsonError(text, error) {
+  const message = String(error && error.message ? error.message : error);
+  const lineCol = message.match(/line (\d+) column (\d+)/i);
+  if (lineCol) return "line " + lineCol[1] + ", column " + lineCol[2];
+  const pos = message.match(/position (\d+)/i);
+  if (!pos) return null;
+  const upto = text.slice(0, Number(pos[1]));
+  const line = upto.split("\n").length;
+  return "line " + line + ", column " + (upto.length - upto.lastIndexOf("\n"));
+}
+
+function ImportDialog({ onClose, onImport }) {
+  const [text, setText] = useState("");
+  const fileRef = useRef(null);
+
+  const parsed = useMemo(() => {
+    const trimmed = text.trim();
+    if (!trimmed) return null;
+    let json;
+    try {
+      json = JSON.parse(trimmed);
+    } catch (err) {
+      const where = describeJsonError(trimmed, err);
+      return { error: "This isn't valid JSON" + (where ? " — check " + where : "") + "." };
+    }
+    const doc = normalizeDocument(json);
+    if (!doc) return { error: "Expected a Formcraft schema: an object with a “fields” array." };
+    if (!doc.fields.length) return { error: "The schema has no fields Formcraft recognises." };
+    const raw = Array.isArray(json) ? json : Array.isArray(json.fields) ? json.fields : [];
+    const unknown = raw.filter((f) => !f || !TYPES[f.type]).length;
+    return { doc, unknown };
+  }, [text]);
+
+  const readFile = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setText(String(reader.result || ""));
+    reader.readAsText(file);
+  };
+
+  return (
+    <Modal
+      title="Import a schema"
+      subtitle="Paste JSON exported from Formcraft, or choose a .json file."
+      icon={Import}
+      onClose={onClose}
+      width="max-w-2xl"
+      footer={
+        <>
+          <button type="button" onClick={onClose} className={BUTTON.secondary}>
+            Cancel
+          </button>
+          <button type="button" disabled={!parsed || !parsed.doc} onClick={() => onImport(parsed.doc)} className={BUTTON.primary}>
+            <Import className="h-4 w-4" aria-hidden="true" />
+            Replace canvas
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-3 p-6">
+        <textarea
+          autoFocus
+          data-autofocus
+          aria-label="Schema JSON"
+          spellCheck={false}
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder={'{\n  "title": "Contact us",\n  "fields": [\n    { "type": "email", "label": "Email", "required": true }\n  ]\n}'}
+          className={PANEL_INPUT + " fc-mono h-60 resize-y text-[12px] leading-relaxed"}
+        />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div aria-live="polite" className="min-h-[1.25rem] text-[12px]">
+            {parsed && parsed.error ? (
+              <span className="inline-flex items-center gap-1.5 text-rose-300">
+                <CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                {parsed.error}
+              </span>
+            ) : parsed && parsed.doc ? (
+              <span className="inline-flex items-center gap-1.5 text-emerald-300">
+                <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                Ready: {parsed.doc.fields.length} element{parsed.doc.fields.length === 1 ? "" : "s"}
+                {parsed.doc.meta.title ? " in “" + parsed.doc.meta.title + "”" : ""}
+                {parsed.unknown ? " · " + parsed.unknown + " unknown element" + (parsed.unknown === 1 ? "" : "s") + " become short text" : ""}
+              </span>
+            ) : (
+              <span className="text-slate-500">Nothing pasted yet.</span>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept=".json,application/json" className="sr-only" tabIndex={-1} onChange={(event) => readFile(event.target.files && event.target.files[0])} />
+          <button type="button" onClick={() => fileRef.current && fileRef.current.click()} className={BUTTON.ghost}>
+            <FileUp className="h-3.5 w-3.5" aria-hidden="true" />
+            Choose a file
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function ShortcutsDialog({ onClose }) {
+  const mod = isMacPlatform() ? "⌘" : "Ctrl";
+  const groups = [
+    {
+      title: "Anywhere",
+      items: [
+        [[mod, "K"], "Command palette"],
+        [["/"], "Search elements"],
+        [[mod, "Z"], "Undo"],
+        [[mod, "Shift", "Z"], "Redo"],
+        [["?"], "This list"],
+      ],
+    },
+    {
+      title: "With an element selected",
+      items: [
+        [["↑"], "Select the previous element"],
+        [["↓"], "Select the next element"],
+        [["Alt", "↑"], "Move it up"],
+        [["Alt", "↓"], "Move it down"],
+        [[mod, "D"], "Duplicate"],
+        [["Enter"], "Edit its label"],
+        [["Del"], "Delete"],
+        [["Esc"], "Deselect"],
+      ],
+    },
+  ];
+  return (
+    <Modal title="Keyboard shortcuts" icon={Keyboard} onClose={onClose} width="max-w-md">
+      <div className="space-y-5 p-6">
+        {groups.map((group) => (
+          <div key={group.title}>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{group.title}</p>
+            <dl className="divide-y divide-slate-800/70">
+              {group.items.map(([keys, label]) => (
+                <div key={label} className="flex items-center justify-between gap-4 py-2">
+                  <dt className="text-[13px] text-slate-300">{label}</dt>
+                  <dd className="flex shrink-0 items-center gap-1">
+                    {keys.map((k) => (
+                      <Kbd key={k}>{k}</Kbd>
+                    ))}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
+      </div>
+    </Modal>
+  );
+}
+
+function ConfirmDialog({ title, body, confirmLabel, onConfirm, onClose }) {
+  return (
+    <Modal
+      title={title}
+      icon={TriangleAlert}
+      onClose={onClose}
+      width="max-w-sm"
+      footer={
+        <>
+          <button type="button" autoFocus data-autofocus onClick={onClose} className={BUTTON.secondary}>
+            Keep editing
+          </button>
+          <button type="button" onClick={onConfirm} className={BUTTON.danger}>
+            {confirmLabel}
+          </button>
+        </>
+      }
+    >
+      <p className="px-6 py-5 text-sm leading-relaxed text-slate-400">{body}</p>
+    </Modal>
+  );
+}
+
+/** Header menu listing document checks; picking one selects the element to fix. */
+/**
+ * Header disclosure listing document checks; picking one selects the element
+ * to fix. Closes on Escape, outside click or when focus leaves it, and hands
+ * focus back to its trigger.
+ */
+function HealthMenu({ issues, onPick }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef(null);
+  const trigger = useRef(null);
+  const warnings = issues.filter((i) => i.level === "warning").length;
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (event) => {
+      if (wrap.current && !wrap.current.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const close = (refocus) => {
+    setOpen(false);
+    if (refocus && trigger.current) trigger.current.focus();
+  };
+
+  return (
+    <div
+      ref={wrap}
+      className="relative"
+      onKeyDown={(event) => {
+        if (open && event.key === "Escape") {
+          event.preventDefault();
+          event.stopPropagation();
+          close(true);
+        }
+      }}
+      onBlur={(event) => {
+        if (open && wrap.current && event.relatedTarget && !wrap.current.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
+      <button
+        ref={trigger}
+        type="button"
+        aria-expanded={open}
+        aria-controls="fc-checks"
+        onClick={() => setOpen((v) => !v)}
+        className={
+          "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium outline-none transition duration-150 focus-visible:ring-2 focus-visible:ring-indigo-400 " +
+          (!issues.length
+            ? "border-emerald-500/25 bg-emerald-500/[0.07] text-emerald-300 hover:bg-emerald-500/15 focus-visible:ring-emerald-500/20"
+            : warnings
+            ? "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/15 focus-visible:ring-amber-500/20"
+            : "border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 focus-visible:ring-slate-700/40")
+        }
+      >
+        {issues.length ? <CircleAlert className="h-3.5 w-3.5" aria-hidden="true" /> : <CircleCheck className="h-3.5 w-3.5" aria-hidden="true" />}
+        {issues.length ? issues.length + (issues.length === 1 ? " check" : " checks") : "Looks good"}
+      </button>
+      {open ? (
+        <div
+          id="fc-checks"
+          className="fc-pop absolute right-0 top-full z-40 mt-2 w-80 overflow-hidden rounded-xl border border-slate-800 bg-[#12151E] shadow-2xl shadow-black/60"
+        >
+          <p className="border-b border-slate-800/80 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Form checks</p>
+          {issues.length ? (
+            <ul className="fc-scroll max-h-80 overflow-y-auto p-1.5">
+              {issues.map((issue) => (
+                <li key={issue.key}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (issue.fieldId) {
+                        close(false);
+                        onPick(issue.fieldId);
+                      } else close(true);
+                    }}
+                    className="flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12.5px] leading-snug text-slate-300 outline-none transition duration-150 hover:bg-slate-800/70 focus-visible:bg-slate-800/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400"
+                  >
+                    <span className={"mt-1 h-1.5 w-1.5 shrink-0 rounded-full " + (issue.level === "warning" ? "bg-amber-400" : "bg-slate-500")} aria-hidden="true" />
+                    <span className="flex-1">{issue.message}</span>
+                    {issue.fieldId ? <ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" /> : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-4 py-5 text-[12.5px] text-slate-400">No problems found. Every field has a label, choices have options, and there's a way to submit.</p>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Toasts pause while hovered or focused, so an Undo never vanishes under the pointer or keyboard. */
+function Toasts({ toasts, onDismiss, onHold, onRelease }) {
+  return (
+    <div role="status" aria-live="polite" className="pointer-events-none fixed right-4 top-16 z-40 flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2">
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          onMouseEnter={() => onHold(toast.id)}
+          onMouseLeave={() => onRelease(toast.id)}
+          onFocus={() => onHold(toast.id)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) onRelease(toast.id);
+          }}
+          className="fc-toast pointer-events-auto flex items-center gap-3 rounded-xl border border-slate-700 bg-[#171B26] px-4 py-2.5 shadow-2xl shadow-black/60"
+        >
+          {toast.tone === "success" ? (
+            <CircleCheck className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
+          ) : toast.tone === "error" ? (
+            <CircleAlert className="h-4 w-4 shrink-0 text-rose-400" aria-hidden="true" />
+          ) : null}
+          <span className="min-w-0 flex-1 text-[13px] text-slate-200">{toast.message}</span>
+          {toast.action ? (
+            <button
+              type="button"
+              onClick={() => {
+                onDismiss(toast.id);
+                toast.action.run();
+              }}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] font-semibold text-indigo-300 outline-none transition duration-150 hover:bg-slate-700 hover:text-indigo-200 focus-visible:ring-2 focus-visible:ring-indigo-500/60"
+            >
+              {toast.action.icon ? <toast.action.icon className="h-3.5 w-3.5" aria-hidden="true" /> : null}
+              {toast.action.label}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => onDismiss(toast.id)}
+            aria-label="Dismiss"
+            className="shrink-0 rounded-md p-1 text-slate-500 outline-none transition duration-150 hover:text-slate-200 focus-visible:ring-2 focus-visible:ring-slate-600"
+          >
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ---- end of builder components ---- */
+
+/* ============================================================================
+ * 17. Root application
+ * ==========================================================================*/
+
+/** Applies an Inspector patch to one field, coercing every value it touches. */
+function applyFieldPatch(field, patch, siblings) {
+  const def = defOf(field.type);
+  const next = { ...field };
+  Object.keys(patch).forEach((prop) => {
+    const setting = def.settings.find((st) => st.prop === prop);
+    if (setting) next[prop] = coerceSetting(setting, patch[prop]);
+    else if (prop === "label" || prop === "helper") next[prop] = String(patch[prop]);
+    else if (prop === "required") next.required = Boolean(patch.required) && def.common.indexOf("required") !== -1;
+    else if (prop === "width") next.width = patch.width === "full" ? "full" : "half";
+  });
+  if (patch.key !== undefined) {
+    next.key = uniqueKey(patch.key, siblings, field.id);
+    next.autoKey = false;
+  } else if (patch.label !== undefined && field.autoKey) {
+    next.key = uniqueKey(patch.label || def.name, siblings, field.id);
+  }
+  return sanitizeField(def, next);
+}
+
+const HISTORY_LIMIT = 200;
+/** Consecutive edits to the same property within this window undo as one step. */
+const COALESCE_MS = 1200;
 
 export default function FormBuilder() {
   const initial = useRef(null);
-  if (initial.current === null) initial.current = loadDocument();
+  if (initial.current === null) initial.current = { doc: loadDocument(), ui: loadUiPrefs() };
 
-  const [meta, setMeta] = useState(initial.current.meta);
-  const [fields, setFields] = useState(initial.current.fields);
+  const [meta, setMeta] = useState(initial.current.doc.meta);
+  const [fields, setFields] = useState(initial.current.doc.fields);
   const [selectedId, setSelectedId] = useState(null);
-  const [tab, setTab] = useState("design");
-  const [exportMode, setExportMode] = useState("schema");
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [tab, setTab] = useState(initial.current.ui.tab);
+  const [exportMode, setExportMode] = useState(initial.current.ui.exportMode);
+  const [panelOpen, setPanelOpen] = useState(initial.current.ui.panelOpen);
+  const [panelHeight, setPanelHeight] = useState(initial.current.ui.panelHeight);
+  const [collapsed, setCollapsed] = useState(initial.current.ui.collapsed);
   const [values, setValues] = useState({});
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(null);
   const [saved, setSaved] = useState(false);
-  const [confirmReset, setConfirmReset] = useState(false);
-  const [dragIndex, setDragIndex] = useState(null);
-  const [dropIndex, setDropIndex] = useState(null);
-  const [undoState, setUndoState] = useState(null);
+  const [dialog, setDialog] = useState(null);
+  /* null, { kind: "move", id, order } or { kind: "new", type, index } — index null while off the canvas. */
+  const [drag, setDrag] = useState(null);
+  const [flashId, setFlashId] = useState(null);
+  const [toasts, setToasts] = useState([]);
+  const [, setHistoryTick] = useState(0);
 
   const firstRun = useRef(true);
   const savedTimer = useRef(null);
-  const undoTimer = useRef(null);
+  const flashTimer = useRef(null);
+  const toastTimers = useRef({});
+  const labelRef = useRef(null);
+  const searchRef = useRef(null);
+  const scrollRef = useRef(null);
+  const gridRef = useRef(null);
+  /* A card that should arrive with motion on the next commit: { id, mode, rect, tilt, ghost }. */
+  const landingRef = useRef(null);
+  useFlip(gridRef);
 
   /**
-   * A live mirror of `fields`, so handlers that need to *read* the current
-   * schema (to mint a unique key) never have to do it inside a state updater.
-   * Updaters must stay pure — React may call them twice in StrictMode, which
-   * would otherwise generate two different ids and desync the selection.
+   * Live mirrors of state, so handlers that need to *read* the current value
+   * never do it inside a state updater. Updaters must stay pure — React may
+   * call them twice in StrictMode.
    */
   const fieldsRef = useRef(fields);
   fieldsRef.current = fields;
-  const metaRef = useRef(meta);
-  metaRef.current = meta;
   const selectedRef = useRef(selectedId);
   selectedRef.current = selectedId;
+  const dialogRef = useRef(dialog);
+  dialogRef.current = dialog;
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
+  const valuesRef = useRef(values);
+  valuesRef.current = values;
 
   /* ---- persistence ---- */
   useEffect(() => {
@@ -2148,124 +9947,263 @@ export default function FormBuilder() {
     }
   }, [meta, fields]);
 
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(UI_KEY, JSON.stringify({ tab, exportMode, panelOpen, panelHeight, collapsed }));
+    } catch (err) {
+      /* preferences are a convenience */
+    }
+  }, [tab, exportMode, panelOpen, panelHeight, collapsed]);
+
   useEffect(
     () => () => {
       window.clearTimeout(savedTimer.current);
-      window.clearTimeout(undoTimer.current);
+      window.clearTimeout(flashTimer.current);
+      Object.values(toastTimers.current).forEach((t) => window.clearTimeout(t));
     },
     []
   );
 
-  /* ---- keep preview values in sync with the schema ---- */
-  useEffect(() => {
-    setValues((prev) => {
-      const next = {};
-      let changed = false;
-      fields.forEach((field) => {
-        if (STATIC_TYPES.has(field.type)) return;
-        if (Object.prototype.hasOwnProperty.call(prev, field.id)) {
-          next[field.id] = prev[field.id];
-        } else {
-          next[field.id] = emptyValueFor(field);
-          changed = true;
-        }
-      });
-      if (!changed && Object.keys(next).length === Object.keys(prev).length) return prev;
-      return next;
-    });
-    setErrors((prev) => {
-      const ids = new Set(fields.map((f) => f.id));
-      const next = {};
-      let changed = false;
-      Object.keys(prev).forEach((id) => {
-        if (ids.has(id)) next[id] = prev[id];
-        else changed = true;
-      });
-      return changed ? next : prev;
-    });
-  }, [fields]);
-
-  /* ---- undo ---- */
-  const snapshot = useCallback((label) => {
-    setUndoState({
-      label,
-      fields: fieldsRef.current,
-      meta: metaRef.current,
-      selectedId: selectedRef.current,
-    });
-    window.clearTimeout(undoTimer.current);
-    undoTimer.current = window.setTimeout(() => setUndoState(null), 8000);
+  /* ---- toasts ---- */
+  const dismissToast = useCallback((id) => {
+    window.clearTimeout(toastTimers.current[id]);
+    delete toastTimers.current[id];
+    setToasts((list) => list.filter((t) => t.id !== id));
   }, []);
 
-  const undoRef = useRef(null);
-  undoRef.current = undoState;
+  /*
+   * historyVersion counts recorded history steps. A toast that offers "Undo"
+   * is stamped with the step it describes, and is withdrawn the moment
+   * history moves past it — so its Undo can never revert a different change.
+   */
+  const historyVersion = useRef(0);
 
-  const undo = useCallback(() => {
-    const snap = undoRef.current;
-    if (!snap) return;
+  const holdToast = useCallback((id) => {
+    window.clearTimeout(toastTimers.current[id]);
+  }, []);
+
+  const releaseToast = useCallback(
+    (id) => {
+      window.clearTimeout(toastTimers.current[id]);
+      toastTimers.current[id] = window.setTimeout(() => dismissToast(id), 4000);
+    },
+    [dismissToast]
+  );
+
+  const notify = useCallback(
+    (message, opts = {}) => {
+      const id = uid();
+      const stamp = opts.action ? historyVersion.current + 1 : null;
+      setToasts((list) => list.slice(-3).concat({ id, message, tone: opts.tone, action: opts.action, stamp }));
+      toastTimers.current[id] = window.setTimeout(() => dismissToast(id), opts.action ? 7000 : 3500);
+    },
+    [dismissToast]
+  );
+
+  const advanceHistory = useCallback(() => {
+    historyVersion.current += 1;
+    const version = historyVersion.current;
+    setToasts((list) => {
+      const next = list.filter((t) => !t.action || t.stamp === version);
+      return next.length === list.length ? list : next;
+    });
+  }, []);
+
+  /* ---- history (undo / redo) ---- */
+  const historyRef = useRef({ past: [], future: [] });
+  const docRef = useRef({ fields, meta });
+  const applyingHistory = useRef(false);
+  const changeTag = useRef(null);
+  const lastChange = useRef({ tag: null, at: 0 });
+
+  useEffect(() => {
+    const prev = docRef.current;
+    if (prev.fields === fields && prev.meta === meta) return;
+    docRef.current = { fields, meta };
+    if (applyingHistory.current) {
+      applyingHistory.current = false;
+      return;
+    }
+    const tag = changeTag.current;
+    changeTag.current = null;
+    const now = Date.now();
+    const h = historyRef.current;
+    const coalesce = tag !== null && tag === lastChange.current.tag && now - lastChange.current.at < COALESCE_MS;
+    if (!coalesce) {
+      h.past.push(prev);
+      if (h.past.length > HISTORY_LIMIT) h.past.shift();
+      advanceHistory();
+    }
+    lastChange.current = { tag, at: now };
+    h.future = [];
+    setHistoryTick((n) => n + 1);
+  }, [fields, meta, advanceHistory]);
+
+  const travel = useCallback((from, to) => {
+    const h = historyRef.current;
+    if (!h[from].length) return false;
+    const snap = h[from].pop();
+    h[to].push(docRef.current);
+    applyingHistory.current = true;
+    advanceHistory();
+    lastChange.current = { tag: null, at: 0 };
     setFields(snap.fields);
     setMeta(snap.meta);
-    setSelectedId(snap.selectedId);
+    setSelectedId((id) => (id && snap.fields.some((f) => f.id === id) ? id : null));
     setSubmitted(null);
-    setUndoState(null);
-    window.clearTimeout(undoTimer.current);
-  }, []);
+    setHistoryTick((n) => n + 1);
+    return true;
+  }, [advanceHistory]);
+  const undo = useCallback(() => travel("past", "future"), [travel]);
+  const redo = useCallback(() => travel("future", "past"), [travel]);
+  const canUndo = historyRef.current.past.length > 0;
+  const canRedo = historyRef.current.future.length > 0;
+
+  /*
+   * ---- keep preview values in sync with the schema ----
+   * A value the visitor never touched follows the field's config (raise a
+   * slider's minimum and its seeded value moves with it). A value they did
+   * enter is kept. Existing errors are re-checked against the new config, and
+   * a shown "submitted" payload is cleared because it no longer matches.
+   */
+  const seeded = useRef({});
+  const serial = (v) => JSON.stringify(v === undefined ? null : v);
+
+  useEffect(() => {
+    const prev = valuesRef.current;
+    const next = {};
+    let changed = false;
+    fields.forEach((field) => {
+      if (defOf(field.type).kind !== "input") return;
+      const fresh = emptyValueFor(field);
+      const has = Object.prototype.hasOwnProperty.call(prev, field.id);
+      const untouched = has && serial(prev[field.id]) === seeded.current[field.id];
+      if (!has || (untouched && serial(fresh) !== seeded.current[field.id])) {
+        next[field.id] = fresh;
+        seeded.current[field.id] = serial(fresh);
+        changed = true;
+      } else next[field.id] = prev[field.id];
+    });
+    if (changed || Object.keys(next).length !== Object.keys(prev).length) setValues(next);
+    setErrors((prevErrors) => {
+      const out = {};
+      let differs = false;
+      Object.keys(prevErrors).forEach((id) => {
+        const field = fields.find((f) => f.id === id);
+        const again = field && prevErrors[id] ? fieldError(field, next[id]) : null;
+        if (again) out[id] = again;
+        if (again !== prevErrors[id]) differs = true;
+      });
+      return differs ? out : prevErrors;
+    });
+    setSubmitted(null);
+  }, [fields]);
 
   /* ---- field mutations ---- */
-  const addField = useCallback((type) => {
-    const field = createField(type, fieldsRef.current);
-    setFields((prev) => prev.concat(field));
-    setSelectedId(field.id);
-    setSubmitted(null);
-    setTab("design");
+  const flash = useCallback((id) => {
+    setFlashId(id);
+    window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => setFlashId(null), 1000);
   }, []);
 
-  const updateField = useCallback((id, patch) => {
-    setFields((prev) =>
-      prev.map((field) => {
-        if (field.id !== id) return field;
-        const next = { ...field, ...patch };
-        if (patch.key !== undefined) {
-          next.key = uniqueKey(patch.key, prev, id);
-          next.autoKey = false;
-        } else if (patch.label !== undefined && field.autoKey) {
-          next.key = uniqueKey(patch.label, prev, id);
+  /**
+   * Adds after the selected element, or at `opts.index` (a drop). `opts.from`
+   * is the element it came from, so the new card can fly in from there;
+   * `opts.landing` hands over a drag ghost to settle into the new slot.
+   */
+  const addField = useCallback(
+    (type, opts) => {
+      const options = opts && typeof opts === "object" && !opts.nativeEvent ? opts : {};
+      const anchorId = selectedRef.current;
+      const field = createField(type, fieldsRef.current);
+      setFields((prev) => {
+        const next = prev.slice();
+        if (typeof options.index === "number") {
+          next.splice(Math.max(0, Math.min(options.index, prev.length)), 0, field);
+          return next;
         }
-        if (patch.min !== undefined) next.min = toNumber(patch.min, field.min);
-        if (patch.max !== undefined) next.max = toNumber(patch.max, field.max);
-        if (patch.step !== undefined) next.step = Math.max(toNumber(patch.step, field.step), 0.0001);
+        const at = prev.findIndex((f) => f.id === anchorId);
+        if (at === -1) return prev.concat(field);
+        next.splice(at + 1, 0, field);
         return next;
-      })
-    );
+      });
+      if (options.landing) landingRef.current = { ...options.landing, id: field.id };
+      else if (options.from && options.from.getBoundingClientRect)
+        landingRef.current = { id: field.id, mode: "fly", rect: options.from.getBoundingClientRect() };
+      else landingRef.current = { id: field.id, mode: "pop" };
+      setSelectedId(field.id);
+      setSubmitted(null);
+      setTab("design");
+      flash(field.id);
+      return field.id;
+    },
+    [flash]
+  );
+
+  const updateField = useCallback((id, patch) => {
+    changeTag.current = "field:" + id + ":" + Object.keys(patch).join(",");
+    setFields((prev) => {
+      let changed = false;
+      const next = prev.map((field) => {
+        if (field.id !== id) return field;
+        const updated = applyFieldPatch(field, patch, prev);
+        if (JSON.stringify(updated) === JSON.stringify(field)) return field;
+        changed = true;
+        return updated;
+      });
+      /* Returning the same array means "no change": no history step, no autosave. */
+      return changed ? next : prev;
+    });
+  }, []);
+
+  const updateMeta = useCallback((patch) => {
+    changeTag.current = "meta:" + Object.keys(patch).join(",");
+    setMeta((prev) => (Object.keys(patch).every((k) => prev[k] === patch[k]) ? prev : { ...prev, ...patch }));
   }, []);
 
   const deleteField = useCallback(
     (id) => {
-      const target = fieldsRef.current.find((field) => field.id === id);
-      snapshot(target ? (BLUEPRINT_MAP[target.type] || {}).name + " deleted" : "Element deleted");
+      const current = fieldsRef.current;
+      const index = current.findIndex((field) => field.id === id);
+      if (index === -1) return;
+      const target = current[index];
+      if (gridRef.current) animateExit(gridRef.current.querySelector('[data-canvas-card][data-field-id="' + id + '"]'));
       setFields((prev) => prev.filter((field) => field.id !== id));
-      setSelectedId((prev) => (prev === id ? null : prev));
+      if (selectedRef.current === id) {
+        const neighbour = current[index + 1] || current[index - 1];
+        setSelectedId(neighbour ? neighbour.id : null);
+      }
       setSubmitted(null);
+      notify(defOf(target.type).name + " deleted", { action: { label: "Undo", icon: Undo2, run: undo } });
     },
-    [snapshot]
+    [notify, undo]
   );
 
-  const duplicateField = useCallback((id) => {
-    const current = fieldsRef.current;
-    const index = current.findIndex((field) => field.id === id);
-    if (index === -1) return;
-    const source = current[index];
-    const clone = { ...source, id: uid(), options: source.options.slice(), autoKey: false };
-    clone.key = uniqueKey(source.key, current, clone.id);
-    setFields((prev) => {
-      const at = prev.findIndex((field) => field.id === id);
-      if (at === -1) return prev;
-      const next = prev.slice();
-      next.splice(at + 1, 0, clone);
-      return next;
-    });
-    setSelectedId(clone.id);
-  }, []);
+  const duplicateField = useCallback(
+    (id) => {
+      const current = fieldsRef.current;
+      const index = current.findIndex((field) => field.id === id);
+      if (index === -1) return;
+      const source = current[index];
+      const clone = { ...source, id: uid(), autoKey: false };
+      Object.keys(clone).forEach((k) => {
+        clone[k] = cloneValue(clone[k]);
+      });
+      clone.key = uniqueKey(source.key, current, clone.id);
+      setFields((prev) => {
+        const at = prev.findIndex((field) => field.id === id);
+        if (at === -1) return prev;
+        const next = prev.slice();
+        next.splice(at + 1, 0, clone);
+        return next;
+      });
+      const sourceCard = gridRef.current && gridRef.current.querySelector('[data-canvas-card][data-field-id="' + id + '"]');
+      landingRef.current = sourceCard ? { id: clone.id, mode: "slide", rect: sourceCard.getBoundingClientRect() } : { id: clone.id, mode: "pop" };
+      setSelectedId(clone.id);
+      flash(clone.id);
+    },
+    [flash]
+  );
 
   const moveField = useCallback((from, delta) => {
     setFields((prev) => {
@@ -2288,28 +10226,409 @@ export default function FormBuilder() {
     });
   }, []);
 
-  const resetCanvas = useCallback(() => {
-    snapshot("Canvas cleared");
+  const toggleRequired = useCallback((id) => {
+    const field = fieldsRef.current.find((f) => f.id === id);
+    if (field) updateField(id, { required: !field.required });
+  }, [updateField]);
+
+  /*
+   * ---- arrivals ----
+   * A card that was dropped, added or duplicated settles into its slot from
+   * wherever it visually came from: the drag ghost, the toolbox icon, or the
+   * card it was copied from.
+   */
+  useLayoutEffect(() => {
+    const landing = landingRef.current;
+    if (!landing) return;
+    landingRef.current = null;
+    const card = gridRef.current && gridRef.current.querySelector('[data-canvas-card][data-field-id="' + landing.id + '"]');
+    if (landing.ghost) landing.ghost.remove();
+    if (!card || !canAnimate(card)) return;
+    const scroller = scrollRef.current;
+    let to = card.getBoundingClientRect();
+    if (scroller && landing.mode !== "drop") {
+      const view = scroller.getBoundingClientRect();
+      if (to.top < view.top || to.bottom > view.bottom) {
+        card.scrollIntoView({ block: "nearest" });
+        to = card.getBoundingClientRect();
+      }
+    }
+    if (!to.width || !to.height) return;
+    const from = landing.rect;
+    const dx = from ? from.left + from.width / 2 - (to.left + to.width / 2) : 0;
+    const dy = from ? from.top + from.height / 2 - (to.top + to.height / 2) : 0;
+    if (landing.mode === "drop" && from) {
+      card.animate(
+        [
+          {
+            transform: "translate(" + dx + "px, " + dy + "px) scale(" + from.width / to.width + ") rotate(" + (landing.tilt || 0) + "deg)",
+            boxShadow: "0 30px 60px -20px rgba(0,0,0,0.9), 0 0 0 1px rgba(129,140,248,0.55)",
+            opacity: landing.chip ? 0.35 : 1,
+          },
+          { transform: "none", opacity: 1 },
+        ],
+        { duration: 440, easing: EASE_SPRING }
+      );
+    } else if (landing.mode === "fly" && from) {
+      const sx = Math.max(from.width / to.width, 0.08);
+      const sy = Math.max(from.height / to.height, 0.08);
+      card.animate(
+        [
+          { transform: "translate(" + dx + "px, " + dy + "px) scale(" + sx + ", " + sy + ")", opacity: 0 },
+          { opacity: 1, offset: 0.3 },
+          { transform: "none", opacity: 1 },
+        ],
+        { duration: 560, easing: EASE_SPRING }
+      );
+    } else if (landing.mode === "slide" && from) {
+      card.animate(
+        [
+          { transform: "translate(" + (from.left - to.left) + "px, " + (from.top - to.top) + "px)", opacity: 0.4 },
+          { transform: "none", opacity: 1 },
+        ],
+        { duration: 420, easing: EASE_SPRING }
+      );
+    } else {
+      card.animate([{ transform: "scale(0.92)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 380, easing: EASE_SPRING });
+    }
+  });
+
+  /*
+   * ---- pointer dragging ----
+   * One controller for both drags: a card being reordered ("move") and a
+   * toolbox element being placed ("new"). The dragged thing lifts into a
+   * ghost that follows the pointer; the canvas reflows live underneath it and
+   * the drop is committed as a single history step.
+   */
+  const dragSession = useRef(null);
+
+  const startDrag = useCallback(
+    (event, payload, sourceEl) => {
+      if (dragSession.current || !sourceEl) return;
+      const session = {
+        ...payload,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        x: event.clientX,
+        y: event.clientY,
+        lastX: event.clientX,
+        tilt: 0,
+        active: false,
+        cancelled: false,
+        ghost: null,
+        offsetX: 0,
+        offsetY: 0,
+        order: null,
+        prevOrder: null,
+        switchedAt: 0,
+        index: null,
+        raf: 0,
+      };
+      dragSession.current = session;
+
+      const inside = (r) => session.x >= r.left && session.x <= r.right && session.y >= r.top && session.y <= r.bottom;
+      const layoutRect = (grid, el) => {
+        const g = grid.getBoundingClientRect();
+        const left = g.left + el.offsetLeft;
+        const top = g.top + el.offsetTop;
+        return { left, top, width: el.offsetWidth, height: el.offsetHeight, right: left + el.offsetWidth, bottom: top + el.offsetHeight };
+      };
+
+      const paintGhost = () => {
+        if (!session.ghost) return;
+        session.ghost.outer.style.transform = "translate3d(" + (session.x - session.offsetX) + "px, " + (session.y - session.offsetY) + "px, 0)";
+        session.ghost.inner.style.transform = "scale(1.04) rotate(" + (-1 + session.tilt).toFixed(2) + "deg)";
+      };
+
+      const hitTest = () => {
+        const grid = gridRef.current;
+        if (session.kind === "new") {
+          const scroller = scrollRef.current;
+          let index = null;
+          if (scroller && inside(scroller.getBoundingClientRect())) {
+            if (!grid) index = 0;
+            else {
+              const slot = grid.querySelector("[data-drop-slot]");
+              if (slot && inside(layoutRect(grid, slot))) return;
+              const cards = Array.from(grid.querySelectorAll("[data-flip-id]")).filter((el) => el !== slot);
+              index = insertionIndex(cards.map((el) => layoutRect(grid, el)), session.x, session.y);
+            }
+          }
+          if (index !== session.index) {
+            session.index = index;
+            setDrag({ kind: "new", type: session.type, index });
+          }
+          return;
+        }
+        if (!grid) return;
+        const els = Array.from(grid.querySelectorAll("[data-flip-id]"));
+        const self = els.find((el) => el.getAttribute("data-flip-id") === session.id);
+        /* Over its own placeholder nothing changes — this is what stops two cards trading places forever. */
+        if (self && inside(layoutRect(grid, self))) return;
+        const others = els.filter((el) => el !== self);
+        const ids = others.map((el) => el.getAttribute("data-flip-id"));
+        ids.splice(insertionIndex(others.map((el) => layoutRect(grid, el)), session.x, session.y), 0, session.id);
+        const key = ids.join("|");
+        if (key === session.order.join("|")) return;
+        const now = Date.now();
+        if (session.prevOrder && key === session.prevOrder.join("|") && now - session.switchedAt < 150) return;
+        session.prevOrder = session.order;
+        session.order = ids;
+        session.switchedAt = now;
+        setDrag({ kind: "move", id: session.id, order: ids });
+      };
+
+      const frame = () => {
+        session.raf = 0;
+        if (!session.active || session.cancelled) return;
+        session.tilt *= 0.86;
+        const scroller = scrollRef.current;
+        if (scroller) {
+          const r = scroller.getBoundingClientRect();
+          const edge = Math.min(72, r.height / 4);
+          let speed = 0;
+          if (session.x >= r.left && session.x <= r.right) {
+            if (session.y < r.top + edge) speed = -Math.min(1, (r.top + edge - session.y) / edge);
+            else if (session.y > r.bottom - edge) speed = Math.min(1, (session.y - (r.bottom - edge)) / edge);
+          }
+          if (speed && (session.kind === "move" || session.index !== null)) {
+            scroller.scrollTop += speed * 16;
+            hitTest();
+          }
+        }
+        paintGhost();
+        session.raf = window.requestAnimationFrame(frame);
+      };
+
+      const activate = () => {
+        session.active = true;
+        const rect = sourceEl.getBoundingClientRect();
+        session.offsetX = session.startX - rect.left;
+        session.offsetY = session.startY - rect.top;
+        session.ghost = createDragGhost(sourceEl, rect, session.kind === "new" ? "chip" : null);
+        document.body.classList.add("fc-dragging");
+        if (session.kind === "move") {
+          session.order = fieldsRef.current.map((f) => f.id);
+          setDrag({ kind: "move", id: session.id, order: session.order });
+        } else {
+          if (tabRef.current !== "design") setTab("design");
+          setDrag({ kind: "new", type: session.type, index: null });
+        }
+        /* Lift: commit the resting style first so the transition has somewhere to start from. */
+        session.ghost.inner.getBoundingClientRect();
+        session.ghost.inner.classList.add("fc-ghost-lifted");
+        paintGhost();
+        if (window.requestAnimationFrame) session.raf = window.requestAnimationFrame(frame);
+      };
+
+      const finish = () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onCancel);
+        window.removeEventListener("keydown", onKey, true);
+        if (session.raf && window.cancelAnimationFrame) window.cancelAnimationFrame(session.raf);
+        document.body.classList.remove("fc-dragging");
+        if (dragSession.current === session) dragSession.current = null;
+      };
+
+      /* Sends a toolbox ghost home: back to where it was picked up, fading out. */
+      const returnGhost = () => {
+        const ghost = session.ghost;
+        session.ghost = null;
+        if (!ghost) return;
+        const home = sourceEl.getBoundingClientRect();
+        if (!canAnimate(ghost.outer) || !sourceEl.isConnected) return ghost.outer.remove();
+        const anim = ghost.outer.animate(
+          [
+            { transform: ghost.outer.style.transform, opacity: 1 },
+            { transform: "translate3d(" + home.left + "px, " + home.top + "px, 0)", opacity: 0 },
+          ],
+          { duration: 260, easing: EASE_OUT, fill: "forwards" }
+        );
+        anim.onfinish = () => ghost.outer.remove();
+      };
+
+      /* Hands the ghost to the landing animation, which removes it on the next commit. */
+      const handOver = () => {
+        const ghost = session.ghost;
+        session.ghost = null;
+        return { mode: "drop", rect: ghost.inner.getBoundingClientRect(), tilt: -1 + session.tilt, ghost: ghost.outer, chip: session.kind === "new" };
+      };
+
+      const drop = () => {
+        if (session.kind === "move") {
+          const from = fieldsRef.current.findIndex((f) => f.id === session.id);
+          const to = session.order.indexOf(session.id);
+          landingRef.current = { id: session.id, ...handOver() };
+          reorder(from, to);
+          setDrag(null);
+          setSelectedId(session.id);
+          if (from !== to) flash(session.id);
+        } else if (session.index !== null) {
+          const index = session.index;
+          const landing = handOver();
+          setDrag(null);
+          addField(session.type, { index, landing });
+        } else {
+          returnGhost();
+          setDrag(null);
+        }
+      };
+
+      const cancel = () => {
+        session.cancelled = true;
+        if (session.kind === "move" && session.ghost) landingRef.current = { id: session.id, ...handOver() };
+        else returnGhost();
+        setDrag(null);
+        document.body.classList.remove("fc-dragging");
+      };
+
+      function onMove(e) {
+        if (e.pointerId !== session.pointerId || session.cancelled) return;
+        session.x = e.clientX;
+        session.y = e.clientY;
+        if (!session.active) {
+          if (Math.hypot(session.x - session.startX, session.y - session.startY) < 5) return;
+          activate();
+        }
+        e.preventDefault();
+        session.tilt = Math.max(-6, Math.min(6, session.tilt * 0.6 + (session.x - session.lastX) * 0.3));
+        session.lastX = session.x;
+        paintGhost();
+        hitTest();
+      }
+
+      function onUp(e) {
+        if (e.pointerId !== session.pointerId) return;
+        /* The click that follows a drag must not select, add or toggle anything. */
+        if (session.active) suppressNextClick();
+        if (session.active && !session.cancelled) drop();
+        finish();
+      }
+
+      function onCancel(e) {
+        if (e.pointerId !== session.pointerId) return;
+        if (session.active && !session.cancelled) cancel();
+        finish();
+      }
+
+      function onKey(e) {
+        if (e.key !== "Escape" || !session.active || session.cancelled) return;
+        e.preventDefault();
+        e.stopPropagation();
+        cancel();
+      }
+
+      session.dispose = () => {
+        if (session.ghost) session.ghost.outer.remove();
+        finish();
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onCancel);
+      window.addEventListener("keydown", onKey, true);
+    },
+    [addField, flash, reorder]
+  );
+
+  useEffect(
+    () => () => {
+      if (dragSession.current) dragSession.current.dispose();
+    },
+    []
+  );
+
+  const startCardDrag = useCallback((event, id, el) => startDrag(event, { kind: "move", id }, el), [startDrag]);
+  const startToolboxDrag = useCallback((event, type, el) => startDrag(event, { kind: "new", type }, el), [startDrag]);
+
+  const replaceDocument = useCallback(
+    (doc, message) => {
+      setFields(doc.fields);
+      setMeta(doc.meta);
+      setSelectedId(null);
+      setSubmitted(null);
+      setErrors({});
+      setTab("design");
+      notify(message, { tone: "success", action: { label: "Undo", icon: Undo2, run: undo } });
+    },
+    [notify, undo]
+  );
+
+  const clearCanvas = useCallback(() => {
+    setDialog(null);
     setFields([]);
     setMeta((prev) => ({ ...DEFAULT_META, theme: prev.theme }));
     setSelectedId(null);
     setValues({});
     setErrors({});
     setSubmitted(null);
-    setConfirmReset(false);
-  }, [snapshot]);
+    notify("Canvas cleared", { action: { label: "Undo", icon: Undo2, run: undo } });
+  }, [notify, undo]);
 
-  const loadStarter = useCallback(() => {
-    const next = starterFields();
-    setFields(next);
-    setMeta((prev) => ({
-      ...prev,
-      title: "Request a demo",
-      description: "Tell us a little about your team and we will be in touch within one business day.",
-    }));
-    setSelectedId(next[1].id);
-    setSubmitted(null);
+  const applyTemplate = useCallback(
+    (template) => {
+      setDialog(null);
+      const doc = buildTemplate(template);
+      doc.meta.theme = docRef.current.meta.theme;
+      replaceDocument(doc, "Loaded “" + template.name + "”");
+    },
+    [replaceDocument]
+  );
+
+  const importDocument = useCallback(
+    (doc) => {
+      setDialog(null);
+      replaceDocument(doc, "Imported " + doc.fields.length + " element" + (doc.fields.length === 1 ? "" : "s"));
+    },
+    [replaceDocument]
+  );
+
+  const copyKey = useCallback(
+    async (key) => {
+      const ok = await copyText(key);
+      notify(ok ? "Copied “" + key + "”" : "Couldn't reach the clipboard", { tone: ok ? "success" : "error" });
+    },
+    [notify]
+  );
+
+  const focusLabel = useCallback(() => {
+    window.setTimeout(() => {
+      const el = labelRef.current;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    }, 0);
   }, []);
+
+  /** Puts keyboard focus on a canvas card once React has placed it. */
+  const focusCard = useCallback((id) => {
+    window.setTimeout(() => {
+      const safe = window.CSS && window.CSS.escape ? window.CSS.escape(id) : id;
+      const node = document.querySelector('[data-canvas-card][data-field-id="' + safe + '"]');
+      if (node) node.focus();
+    }, 0);
+  }, []);
+
+  const editField = useCallback(
+    (id) => {
+      setSelectedId(id);
+      setTab("design");
+      focusLabel();
+    },
+    [focusLabel]
+  );
+
+  const pickField = useCallback(
+    (id) => {
+      setTab("design");
+      setSelectedId(id);
+      flash(id);
+      focusCard(id);
+    },
+    [flash, focusCard]
+  );
 
   /* ---- preview behaviour ---- */
   const handlePreviewChange = useCallback((id, value) => {
@@ -2322,97 +10641,209 @@ export default function FormBuilder() {
       event.preventDefault();
       const nextErrors = {};
       fields.forEach((field) => {
-        if (STATIC_TYPES.has(field.type) || !field.required) return;
-        if (isBlank(field, values[field.id])) nextErrors[field.id] = field.label + " is required";
+        const value = values[field.id] === undefined ? emptyValueFor(field) : values[field.id];
+        const error = fieldError(field, value);
+        if (error) nextErrors[field.id] = error;
       });
       setErrors(nextErrors);
       if (Object.keys(nextErrors).length > 0) return;
       const payload = {};
       fields.forEach((field) => {
-        if (STATIC_TYPES.has(field.type)) return;
-        const raw = values[field.id] === undefined ? emptyValueFor(field) : values[field.id];
-        /* A File has no useful JSON form — show what the handler would receive. */
-        payload[field.key] = raw && typeof File !== "undefined" && raw instanceof File ? raw.name : raw;
+        if (defOf(field.type).kind !== "input") return;
+        payload[field.key] = toDisplay(values[field.id] === undefined ? emptyValueFor(field) : values[field.id]);
       });
       setSubmitted(payload);
     },
     [fields, values]
   );
 
+  const resetPreviewValues = useCallback(() => {
+    const next = {};
+    fieldsRef.current.forEach((field) => {
+      if (defOf(field.type).kind !== "input") return;
+      next[field.id] = emptyValueFor(field);
+      seeded.current[field.id] = serial(next[field.id]);
+    });
+    setErrors({});
+    setValues(next);
+  }, []);
+
   const resetPreview = useCallback(() => {
     setSubmitted(null);
-    setErrors({});
-    setValues(() => {
-      const next = {};
-      fields.forEach((field) => {
-        if (!STATIC_TYPES.has(field.type)) next[field.id] = emptyValueFor(field);
+    resetPreviewValues();
+  }, [resetPreviewValues]);
+
+  /* ---- derived ---- */
+  const selectedIndex = fields.findIndex((field) => field.id === selectedId);
+  const selectedField = selectedIndex === -1 ? null : fields[selectedIndex];
+  /* While a card is dragged the canvas shows the live order; a toolbox drag adds a drop slot. */
+  const canvasFields = useMemo(() => {
+    if (!drag || drag.kind !== "move") return fields;
+    const byId = new Map(fields.map((field) => [field.id, field]));
+    const ordered = drag.order.map((id) => byId.get(id)).filter(Boolean);
+    return ordered.length === fields.length ? ordered : fields;
+  }, [drag, fields]);
+  const slotIndex = drag && drag.kind === "new" && drag.index !== null ? Math.min(drag.index, canvasFields.length) : -1;
+  const canvasItems = canvasFields.map((field, index) => ({ field, index }));
+  if (slotIndex !== -1) canvasItems.splice(slotIndex, 0, NEW_SLOT);
+  const light = meta.theme === "light";
+  const s = useMemo(() => renderStyles(meta.theme), [meta.theme]);
+  const issues = useMemo(() => lintDocument(meta, fields), [meta, fields]);
+
+  const schemaCode = useMemo(() => JSON.stringify(buildSchema(meta, fields), null, 2), [meta, fields]);
+  const reactCode = useMemo(() => generateReactCode(meta, fields), [meta, fields]);
+  const exportCode = exportMode === "schema" ? schemaCode : reactCode;
+
+  /* ---- command palette ---- */
+  const commands = useMemo(() => {
+    const list = [];
+    const add = (section, id, label, icon, run, extra) => list.push({ section, id, label, icon, run, ...extra });
+    add("Actions", "templates", "Browse templates", LayoutTemplate, () => setDialog("templates"), { pinned: true, keywords: ["start", "starter"] });
+    add("Actions", "import", "Import a schema", Import, () => setDialog("import"), { pinned: true, keywords: ["json", "paste", "load"] });
+    add("Actions", "tab-design", "Go to the canvas", LayoutGrid, () => setTab("design"), { pinned: true, keywords: ["design", "edit"] });
+    add("Actions", "tab-preview", "Go to the live preview", Eye, () => setTab("preview"), { pinned: true, keywords: ["test", "try"] });
+    add("Actions", "copy-code", "Copy the " + (exportMode === "schema" ? "schema" : "React component"), Copy, async () => {
+      const ok = await copyText(exportCode);
+      notify(ok ? "Copied to the clipboard" : "Couldn't reach the clipboard", { tone: ok ? "success" : "error" });
+    }, { pinned: true, keywords: ["clipboard", "export"] });
+    add("Actions", "export-react", "Show the React component", Code2, () => {
+      setExportMode("react");
+      setPanelOpen(true);
+    }, { keywords: ["export", "code", "jsx"] });
+    add("Actions", "export-schema", "Show the JSON schema", Braces, () => {
+      setExportMode("schema");
+      setPanelOpen(true);
+    }, { keywords: ["export", "json"] });
+    add("Actions", "toggle-panel", panelOpen ? "Hide the code panel" : "Show the code panel", PanelBottom, () => setPanelOpen((v) => !v), { keywords: ["export", "code"] });
+    THEME_MODES.forEach((mode) =>
+      add("Actions", "theme-" + mode, "Use the " + mode + " theme", Contrast, () => updateMeta({ theme: mode }), { hint: meta.theme === mode ? "current" : "", keywords: ["theme", "colour", "color"] })
+    );
+    add("Actions", "undo", "Undo", Undo2, undo, { hint: canUndo ? "" : "nothing to undo" });
+    add("Actions", "redo", "Redo", Redo2, redo, { hint: canRedo ? "" : "nothing to redo" });
+    add("Actions", "shortcuts", "Keyboard shortcuts", Keyboard, () => setDialog("shortcuts"), { keywords: ["keys", "help"] });
+    if (fields.length) add("Actions", "clear", "Clear the canvas", Trash2, () => setDialog("confirm-clear"), { keywords: ["reset", "delete all"] });
+    fields.forEach((f) => {
+      const def = defOf(f.type);
+      add("Jump to", "field-" + f.id, (def.common.indexOf("label") !== -1 && f.label) || def.name, def.icon, () => pickField(f.id), {
+        hint: def.name,
+        keywords: [f.key, "select", "go"],
       });
-      return next;
     });
-  }, [fields]);
+    TYPE_ORDER.forEach((type) => {
+      const def = TYPES[type];
+      add("Add element", "add-" + type, def.name, def.icon, () => addField(type), { hint: def.group, keywords: ["add", "new", def.blurb].concat(def.keywords) });
+    });
+    return list;
+  }, [addField, canRedo, canUndo, exportCode, exportMode, fields, meta.theme, notify, panelOpen, pickField, redo, undo, updateMeta]);
 
   /* ---- keyboard shortcuts ---- */
   useEffect(() => {
     const onKeyDown = (event) => {
+      /* A control that handled the key itself (radio groups, the resize handle, OTP boxes…) wins. */
+      if (event.defaultPrevented) return;
       const el = event.target;
-      const typing =
-        el &&
-        (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable);
+      const typing = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable);
+      const mac = isMacPlatform();
+      const mod = mac ? event.metaKey : event.ctrlKey; /* on macOS, Ctrl+K is the text-field "kill line" */
+      const key = event.key.toLowerCase();
 
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
-        if (undoState) {
+      if (mod && key === "k") {
+        /* Never replace another open dialog (and whatever was typed into it). */
+        if (dialogRef.current && dialogRef.current !== "palette") return;
+        event.preventDefault();
+        setDialog((d) => (d === "palette" ? null : "palette"));
+        return;
+      }
+      if (dialogRef.current) {
+        /* Focus can fall to <body> inside a dialog; Escape must still close it. */
+        if (event.key === "Escape") {
           event.preventDefault();
-          undo();
+          setDialog(null);
         }
         return;
       }
-      if (event.key === "Escape") {
-        setConfirmReset(false);
-        setSelectedId(null);
-        if (typing && el.blur) el.blur();
+
+      if (mod && (key === "z" || key === "y")) {
+        /* Text boxes keep their own typing-undo; the search box and selects hold no document text. */
+        const ownsUndo = typing && el.tagName !== "SELECT" && el !== searchRef.current;
+        if (ownsUndo) return;
+        event.preventDefault();
+        if (key === "y" || event.shiftKey) redo();
+        else undo();
         return;
       }
-      if (typing) return;
+      if (typing) {
+        if (event.key === "Escape" && el.blur) el.blur();
+        return;
+      }
+      if (event.key === "/") {
+        event.preventDefault();
+        if (searchRef.current) searchRef.current.focus();
+        return;
+      }
+      if (event.key === "?") {
+        event.preventDefault();
+        setDialog("shortcuts");
+        return;
+      }
 
-      const id = selectedRef.current;
-      if (!id) return;
+      /*
+       * Structural shortcuts only act on the canvas: focus on <body> or on a
+       * canvas card, with the Canvas tab showing. Everywhere else (preview
+       * form, Inspector switches, radio groups, toasts) keys belong to the
+       * focused control.
+       */
+      const card = el && el.closest ? el.closest("[data-canvas-card]") : null;
+      const onCanvas = tabRef.current === "design" && (el === document.body || el === document.documentElement || card === el);
+      if (!onCanvas) return;
+      if (event.key === "Escape") {
+        setSelectedId(null);
+        return;
+      }
+
+      const list = fieldsRef.current;
+      /* A focused card is the element the user is looking at — act on it. */
+      const id = card ? card.getAttribute("data-field-id") : selectedRef.current;
+      const index = list.findIndex((f) => f.id === id);
+      if ((event.key === "ArrowDown" || event.key === "ArrowUp") && !event.altKey && list.length) {
+        event.preventDefault();
+        const next = index === -1 ? (event.key === "ArrowDown" ? 0 : list.length - 1) : Math.min(Math.max(index + (event.key === "ArrowDown" ? 1 : -1), 0), list.length - 1);
+        setSelectedId(list[next].id);
+        flash(list[next].id);
+        if (card) focusCard(list[next].id);
+        return;
+      }
+      if (index === -1) return;
       if (event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
-        const index = fieldsRef.current.findIndex((f) => f.id === id);
-        if (index === -1) return;
         event.preventDefault();
         moveField(index, event.key === "ArrowUp" ? -1 : 1);
-        return;
-      }
-      if (event.key === "Delete" || event.key === "Backspace") {
+        if (card) focusCard(id);
+      } else if (mod && key === "d") {
+        event.preventDefault();
+        duplicateField(id);
+      } else if (event.key === "Enter" && !card) {
+        event.preventDefault();
+        focusLabel();
+      } else if (event.key === "Delete" || event.key === "Backspace") {
         event.preventDefault();
         deleteField(id);
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [deleteField, moveField, undo, undoState]);
-
-  /* ---- derived ---- */
-  const selectedIndex = fields.findIndex((field) => field.id === selectedId);
-  const selectedField = selectedIndex === -1 ? null : fields[selectedIndex];
-  const light = meta.theme === "light";
-  const s = useMemo(() => renderStyles(meta.theme), [meta.theme]);
-
-  const schemaCode = useMemo(() => JSON.stringify(buildSchema(meta, fields), null, 2), [meta, fields]);
-  const reactCode = useMemo(() => generateReactCode(meta, fields), [meta, fields]);
-  const exportCode = exportMode === "schema" ? schemaCode : reactCode;
+  }, [deleteField, duplicateField, flash, focusCard, focusLabel, moveField, redo, undo]);
 
   const centreTabs = [
     { value: "design", label: "Canvas", icon: LayoutGrid },
     { value: "preview", label: "Live preview", icon: Eye },
   ];
+  const mod = isMacPlatform() ? "⌘" : "Ctrl+";
 
   return (
     <div className="fc-body flex min-h-screen flex-col bg-[#0A0C12] text-slate-200 antialiased lg:h-screen lg:overflow-hidden">
       <style>{RUNTIME_STYLES}</style>
 
-      {/* ---------------- Header ---------------- */}
-      <header className="z-20 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-slate-800/80 bg-[#0E1119] px-4 py-2.5">
+      <header className="z-20 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-slate-800/80 bg-[#0E1119] px-4 py-2.5">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 shadow-lg shadow-indigo-500/25">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
@@ -2432,49 +10863,78 @@ export default function FormBuilder() {
           value={meta.title}
           aria-label="Form title"
           placeholder="Untitled form"
-          onChange={(event) => setMeta((prev) => ({ ...prev, title: event.target.value }))}
+          onChange={(event) => updateMeta({ title: event.target.value })}
           className="fc-display min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-[14px] font-medium text-slate-100 outline-none transition duration-150 placeholder:text-slate-600 hover:border-slate-800 hover:bg-slate-950/60 focus:border-indigo-500/60 focus:bg-slate-950 focus:ring-4 focus:ring-indigo-500/10"
         />
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center rounded-lg border border-slate-800 bg-slate-950/60 p-0.5">
+            <IconButton icon={Undo2} label={"Undo (" + mod + "Z)"} disabled={!canUndo} onClick={undo} />
+            <IconButton icon={Redo2} label={"Redo (" + mod + (isMacPlatform() ? "⇧Z" : "Y") + ")"} disabled={!canRedo} onClick={redo} />
+          </div>
+          <HealthMenu issues={issues} onPick={pickField} />
           <span
             className={
-              "hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition duration-300 sm:inline-flex " +
-              (saved
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                : "border-slate-800 bg-slate-950/60 text-slate-500")
+              "hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition duration-300 xl:inline-flex " +
+              (saved ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-slate-800 bg-slate-950/60 text-slate-500")
             }
           >
             <span className={"h-1.5 w-1.5 rounded-full " + (saved ? "bg-emerald-400" : "bg-slate-600")} aria-hidden="true" />
             {saved ? "Saved" : "Autosave on"}
           </span>
+          <button type="button" onClick={() => setDialog("templates")} className={BUTTON.ghost} aria-label="Templates" title="Templates">
+            <LayoutTemplate className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="hidden md:inline">Templates</span>
+          </button>
+          <button type="button" onClick={() => setDialog("import")} className={BUTTON.ghost} aria-label="Import a schema" title="Import a schema">
+            <Import className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="hidden md:inline">Import</span>
+          </button>
+          <button type="button" onClick={() => setDialog("palette")} className={BUTTON.ghost + " pr-1.5"} aria-label="Command palette" title="Command palette">
+            <Command className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="hidden lg:inline">Commands</span>
+            <Kbd>{isMacPlatform() ? "⌘K" : "Ctrl K"}</Kbd>
+          </button>
           <button
             type="button"
-            onClick={() => setConfirmReset(true)}
+            onClick={() => setDialog("confirm-clear")}
             disabled={!fields.length}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-1.5 text-[12px] font-medium text-slate-300 outline-none transition duration-150 hover:border-rose-500/40 hover:text-rose-300 focus-visible:ring-4 focus-visible:ring-rose-500/15 disabled:pointer-events-none disabled:opacity-40"
+            aria-label="Reset the canvas"
+            title="Reset the canvas"
+            className={BUTTON.ghost + " hover:border-rose-500/40 hover:text-rose-300"}
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-            Reset
+            <span className="hidden md:inline">Reset</span>
           </button>
         </div>
       </header>
 
-      {/* ---------------- Workspace ---------------- */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <Toolbox onAdd={addField} count={fields.length} />
+        <Toolbox
+          onAdd={addField}
+          onDragPointer={startToolboxDrag}
+          count={fields.length}
+          collapsed={collapsed}
+          searchRef={searchRef}
+          anchorLabel={selectedField ? (defOf(selectedField.type).common.indexOf("label") !== -1 && selectedField.label) || defOf(selectedField.type).name : null}
+          onToggleGroup={(name) => setCollapsed((list) => (list.indexOf(name) === -1 ? list.concat(name) : list.filter((g) => g !== name)))}
+        />
 
         <main className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#0A0C12]">
           <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-slate-800/80 px-4 py-2.5">
-            <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1">
-              {centreTabs.map((item) => {
+            <div role="tablist" aria-label="View" className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1">
+              {centreTabs.map((item, i) => {
                 const Icon = item.icon;
                 const active = tab === item.value;
                 return (
                   <button
                     key={item.value}
                     type="button"
+                    role="tab"
+                    aria-selected={active}
+                    tabIndex={active ? 0 : -1}
                     onClick={() => setTab(item.value)}
+                    onKeyDown={(event) => rovingKeyDown(event, i, centreTabs.length, (n) => setTab(centreTabs[n].value))}
                     className={
                       "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium outline-none transition duration-150 focus-visible:ring-2 focus-visible:ring-indigo-500/60 " +
                       (active ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300")
@@ -2489,65 +10949,61 @@ export default function FormBuilder() {
             <p className="ml-auto truncate text-[11px] text-slate-600">
               {tab === "design"
                 ? selectedField
-                  ? "Editing " + (selectedField.label || "element")
-                  : "Click an element to edit it"
+                  ? "Editing " + ((defOf(selectedField.type).common.indexOf("label") !== -1 && selectedField.label) || defOf(selectedField.type).name) + " · double-click a card to rename"
+                  : "Click an element to edit it · press ? for shortcuts"
                 : "Type into the form — it behaves exactly like the export"}
             </p>
           </div>
 
           <div
+            ref={scrollRef}
             className={"fc-scroll min-h-0 flex-1 overflow-y-auto " + (tab === "design" ? "fc-grid-bg" : "")}
             onClick={(event) => {
               if (tab === "design" && event.target === event.currentTarget) setSelectedId(null);
             }}
           >
             {tab === "design" ? (
-              fields.length ? (
+              canvasFields.length || slotIndex !== -1 ? (
                 <div
                   className="px-5 py-8 sm:px-8"
                   onClick={(event) => {
                     if (event.target === event.currentTarget) setSelectedId(null);
                   }}
                 >
-                  <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
-                    {fields.map((field, index) => (
-                      <CanvasCard
-                        key={field.id}
-                        field={field}
-                        index={index}
-                        total={fields.length}
-                        selected={field.id === selectedId}
-                        onSelect={setSelectedId}
-                        onMove={moveField}
-                        onDuplicate={duplicateField}
-                        onDelete={deleteField}
-                        s={s}
-                        lightArtboard={light}
-                        dragging={dragIndex === index}
-                        dropTarget={dropIndex === index && dragIndex !== null}
-                        onDragStart={(i) => {
-                          setDragIndex(i);
-                          setDropIndex(i);
-                        }}
-                        onDragEnter={(i) => setDropIndex(i)}
-                        onDragEnd={() => {
-                          setDragIndex(null);
-                          setDropIndex(null);
-                        }}
-                        onDrop={(i) => {
-                          reorder(dragIndex, i);
-                          setDragIndex(null);
-                          setDropIndex(null);
-                        }}
-                      />
-                    ))}
+                  <div ref={gridRef} className="relative mx-auto grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+                    {canvasItems.map((item) =>
+                      item === NEW_SLOT ? (
+                        <DropSlot key={NEW_SLOT} type={drag.type} />
+                      ) : (
+                        <CanvasCard
+                          key={item.field.id}
+                          field={item.field}
+                          index={item.index}
+                          total={canvasFields.length}
+                          selected={item.field.id === selectedId}
+                          flash={item.field.id === flashId}
+                          onSelect={setSelectedId}
+                          onEdit={editField}
+                          onMove={moveField}
+                          onDuplicate={duplicateField}
+                          onDelete={deleteField}
+                          onToggleRequired={toggleRequired}
+                          onCopyKey={copyKey}
+                          placeholder={Boolean(drag && drag.kind === "move" && drag.id === item.field.id)}
+                          onDragPointer={startCardDrag}
+                          s={s}
+                          lightArtboard={light}
+                        />
+                      )
+                    )}
                   </div>
-                  <p className="mx-auto mt-6 max-w-3xl text-center text-[11px] text-slate-600">
-                    Drag a card to reorder · Alt+↑↓ to nudge · Del to remove
-                  </p>
                 </div>
               ) : (
-                <EmptyCanvas onAddFirst={addField} onStarter={loadStarter} />
+                <EmptyCanvas
+                  onAddFirst={addField}
+                  onTemplates={() => setDialog("templates")}
+                  onStarter={() => applyTemplate(TEMPLATES[0])}
+                />
               )
             ) : (
               <PreviewPane
@@ -2559,6 +11015,7 @@ export default function FormBuilder() {
                 onSubmit={handleSubmit}
                 submitted={submitted}
                 onReset={resetPreview}
+                onResetValues={resetPreviewValues}
                 s={s}
                 light={light}
               />
@@ -2573,86 +11030,47 @@ export default function FormBuilder() {
             onUpdate={updateField}
             onDelete={deleteField}
             onDeselect={() => setSelectedId(null)}
+            labelRef={labelRef}
           />
         ) : (
-          <FormSettings meta={meta} onMeta={(patch) => setMeta((prev) => ({ ...prev, ...patch }))} />
+          <FormSettings meta={meta} onMeta={updateMeta} />
         )}
       </div>
 
       <ExportPanel
         open={panelOpen}
         onToggle={setPanelOpen}
+        height={panelHeight}
+        onResize={setPanelHeight}
         mode={exportMode}
         onMode={setExportMode}
         theme={meta.theme}
-        onTheme={(value) => setMeta((prev) => ({ ...prev, theme: value }))}
+        onTheme={(value) => updateMeta({ theme: value })}
         code={exportCode}
         fieldCount={fields.length}
+        title={meta.title}
       />
 
-      {/* ---------------- Undo toast ---------------- */}
-      {undoState ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4">
-          <div className="fc-toast pointer-events-auto flex items-center gap-3 rounded-xl border border-slate-700 bg-[#171B26] px-4 py-2.5 shadow-2xl shadow-black/60">
-            <span className="text-[13px] text-slate-200">{undoState.label}</span>
-            <button
-              type="button"
-              onClick={undo}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] font-semibold text-indigo-300 outline-none transition duration-150 hover:bg-slate-700 hover:text-indigo-200 focus-visible:ring-2 focus-visible:ring-indigo-500/60"
-            >
-              <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
-              Undo
-            </button>
-            <button
-              type="button"
-              onClick={() => setUndoState(null)}
-              aria-label="Dismiss"
-              className="rounded-md p-1 text-slate-500 outline-none transition duration-150 hover:text-slate-200 focus-visible:ring-2 focus-visible:ring-slate-600"
-            >
-              <X className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <Toasts toasts={toasts} onDismiss={dismissToast} onHold={holdToast} onRelease={releaseToast} />
 
-      {/* ---------------- Reset confirmation ---------------- */}
-      {confirmReset ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="reset-title"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setConfirmReset(false);
-          }}
-        >
-          <div className="fc-pop w-full max-w-sm rounded-2xl border border-slate-800 bg-[#12151E] p-6 shadow-2xl shadow-black/60">
-            <h2 id="reset-title" className="fc-display text-lg font-semibold tracking-tight text-white">
-              Clear the canvas?
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              This removes all {fields.length} {fields.length === 1 ? "element" : "elements"} and the saved copy in
-              this browser. You can still undo it from the toast afterwards.
-            </p>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                autoFocus
-                onClick={() => setConfirmReset(false)}
-                className="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-2 text-[13px] font-medium text-slate-300 outline-none transition duration-150 hover:border-slate-700 hover:text-white focus-visible:ring-4 focus-visible:ring-slate-700/40"
-              >
-                Keep editing
-              </button>
-              <button
-                type="button"
-                onClick={resetCanvas}
-                className="rounded-lg bg-rose-500 px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-rose-500/25 outline-none transition duration-150 hover:bg-rose-400 focus-visible:ring-4 focus-visible:ring-rose-500/30"
-              >
-                Clear everything
-              </button>
-            </div>
-          </div>
-        </div>
+      {dialog === "palette" ? <CommandPalette commands={commands} onClose={() => setDialog(null)} /> : null}
+      {dialog === "templates" ? <TemplatesDialog hasContent={fields.length > 0} onUse={applyTemplate} onClose={() => setDialog(null)} /> : null}
+      {dialog === "import" ? <ImportDialog onImport={importDocument} onClose={() => setDialog(null)} /> : null}
+      {dialog === "shortcuts" ? <ShortcutsDialog onClose={() => setDialog(null)} /> : null}
+      {dialog === "confirm-clear" ? (
+        <ConfirmDialog
+          title="Clear the canvas?"
+          body={
+            "This removes all " +
+            fields.length +
+            " " +
+            (fields.length === 1 ? "element" : "elements") +
+            " and the saved copy in this browser. You can undo it afterwards."
+          }
+          confirmLabel="Clear everything"
+          onConfirm={clearCanvas}
+          onClose={() => setDialog(null)}
+        />
       ) : null}
     </div>
   );
