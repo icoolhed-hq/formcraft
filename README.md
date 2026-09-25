@@ -13,9 +13,9 @@ Formcraft is a single-file React application (`FormBuilder.jsx`) for building fo
 
 The repository includes:
 - **FormBuilder.jsx** — the main application (single file, ~6K lines)
-- **tools/** — build scripts (`assemble.mjs` maintains icon imports, `build-preview.mjs` generates `preview.html`, `serve.mjs` runs a dev server)
+- **tools/** — build scripts (`assemble.mjs` maintains icon imports, `build-preview.mjs` generates `preview.html`, `serve.mjs` runs a dev server, `docs.mjs` for documentation)
 - **tools/test/** — headless test runner (`run.mjs`) with spec files covering all element categories (text, choice, numbers, scales, contact)
-- **preview.html** — standalone demo built from the main file
+- **preview.html** — standalone demo built from the main file, served at the root on Vercel via `vercel.json`
 
 Run `npm install` in `tools/`, then `node tools/serve.mjs` to launch the dev server. The test suite runs via `node tools/test/run.mjs`.
 <!-- OVERVIEW:END -->
